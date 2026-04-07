@@ -9,57 +9,60 @@
     }
 
     .ai-banner {
-        background: linear-gradient(90deg, #1E293B, #0F172A);
-        padding: 10px 20px;
-        color: #fff;
+        background: #fff;
+        padding: 12px 24px;
+        color: var(--text-main);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid var(--border-color);
         flex-shrink: 0;
     }
 
     .ai-badge {
-        background: rgba(8, 217, 214, 0.15);
-        border: 1px solid rgba(8, 217, 214, 0.3);
-        color: var(--brand-secondary);
-        padding: 4px 10px;
-        border-radius: 8px;
+        background: #eef2ff;
+        border: 1px solid #e0e7ff;
+        color: var(--brand-primary);
+        padding: 5px 12px;
+        border-radius: 20px;
         font-size: 11px;
-        font-weight: 800;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 
     .weather-info {
         display: flex;
-        gap: 15px;
+        gap: 20px;
         font-size: 13px;
         font-weight: 600;
-        color: #cbd5e1;
+        color: var(--text-muted);
     }
 
     .ai-predict {
         font-size: 13px;
-        color: #e2e8f0;
+        color: var(--text-main);
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
     }
 
     .ai-tags {
         display: flex;
-        gap: 8px;
+        gap: 6px;
     }
 
     .ai-tag {
-        background: rgba(255, 46, 99, 0.15);
-        color: #ff8fa3;
-        padding: 2px 8px;
-        border-radius: 6px;
+        background: #fff1f2;
+        color: var(--brand-accent);
+        padding: 3px 10px;
+        border-radius: 20px;
         font-size: 11px;
         font-weight: 700;
-        border: 1px solid rgba(255, 46, 99, 0.3);
+        border: 1px solid #ffe4e6;
     }
 
     .pos-layout {
@@ -71,65 +74,63 @@
 
     /* Left Sidebar */
     .sidebar {
-        width: 180px;
+        width: var(--sidebar-width);
         background: #fff;
         border-right: 1px solid var(--border-color);
         display: flex;
         flex-direction: column;
         z-index: 10;
         flex-shrink: 0;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02);
     }
 
     .sidebar-search {
-        padding: 10px;
-        background: #F8FAFC;
-        border-bottom: 1px solid #E2E8F0;
+        padding: 20px;
     }
 
     .sidebar-search input {
         width: 100%;
-        padding: 8px 12px;
-        border-radius: 8px;
-        border: 1px solid #cbd5e1;
-        background: #fff;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        background: #f8fafc;
         box-sizing: border-box;
-        font-size: 13px;
+        font-size: 14px;
         font-family: inherit;
-        transition: 0.3s;
+        transition: 0.2s;
     }
 
     .sidebar-search input:focus {
         outline: none;
-        border-color: var(--brand-secondary);
-        box-shadow: 0 0 0 3px rgba(8, 217, 214, 0.1);
+        border-color: var(--brand-primary);
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
     }
 
     .category-btn {
-        padding: 16px 20px;
-        text-transform: uppercase;
-        font-size: 12px;
-        font-weight: 700;
+        padding: 14px 24px;
+        font-size: 14px;
+        font-weight: 600;
         cursor: pointer;
-        color: #64748b;
+        color: var(--text-muted);
         text-align: left;
         background: transparent;
         border: none;
-        border-bottom: 1px solid #f1f5f9;
-        transition: 0.3s;
-        border-right: 3px solid transparent;
-        letter-spacing: 0.5px;
+        transition: 0.2s;
+        margin: 2px 15px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
 
     .category-btn:hover {
-        background: #f8fafc;
-        color: #0f172a;
+        background: #f1f5f9;
+        color: var(--text-main);
     }
 
     .category-btn.active {
-        background: #eff6ff;
-        color: #1e3a8a;
-        border-right: 3px solid var(--brand-primary);
+        background: #eef2ff;
+        color: var(--brand-primary);
     }
 
     /* Center Area (Items / Tables switcher) */
@@ -194,21 +195,26 @@
 
     .item-card {
         background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 20px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 16px;
         cursor: pointer;
         text-align: center;
         user-select: none;
-        height: 90px;
+        min-height: 100px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    } 
+
+    .item-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--premium-shadow);
+        border-color: var(--brand-primary);
     }
 
     .item-card::before {
@@ -244,17 +250,55 @@
     }
 
     .item-name {
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 700;
-        color: #1e293b;
-        line-height: 1.3;
-        margin-bottom: 5px;
+        color: var(--text-main);
+        line-height: 1.4;
+        margin-bottom: 6px;
     }
 
     .item-price {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 600;
-        color: #64748b;
+        color: var(--brand-primary);
+        background: #eef2ff;
+        padding: 2px 10px;
+        border-radius: 20px;
+    }
+
+    .add-item-btn {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+        width: 28px;
+        height: 28px;
+        background: #f1f5f9;
+        color: var(--text-muted);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        transition: 0.2s;
+        opacity: 0.8;
+    }
+
+    .item-card:hover .add-item-btn {
+        background: var(--brand-primary);
+        color: #fff;
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    .item-checkbox {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        width: 16px;
+        height: 16px;
+        accent-color: var(--brand-primary);
+        cursor: pointer;
+        z-index: 5;
     }
 
     /* Table View */
@@ -277,111 +321,116 @@
 
     .table-box {
         background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        height: 120px;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        height: 140px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         cursor: pointer;
-        transition: 0.3s;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+        transition: 0.2s;
+        box-shadow: var(--soft-shadow);
     }
 
     .table-box:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--premium-shadow);
+        border-color: var(--brand-primary);
     }
 
     .table-num {
-        font-size: 24px;
+        font-size: 26px;
         font-weight: 800;
-        color: #1e293b;
+        color: var(--text-main);
     }
 
     .table-status {
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 10px;
-        margin-top: 10px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        margin-top: 12px;
     }
 
     .table-box.empty .table-status {
-        background: #dcfce7;
-        color: #166534;
+        background: #f0fdf4;
+        color: #16a34a;
     }
 
     .table-box.empty .table-status::after {
-        content: 'Empty';
+        content: 'Available';
     }
 
     .table-box.occupied .table-status {
-        background: #fee2e2;
-        color: #991b1b;
+        background: #fff1f2;
+        color: #e11d48;
     }
 
     .table-box.occupied .table-status::after {
-        content: 'Dining';
+        content: 'Occupied';
     }
 
     /* Right Cart */
     .cart-area {
-        width: 380px;
+        width: 420px;
         background: #fff;
-        border-left: 1px solid #e2e8f0;
+        border-left: 1px solid var(--border-color);
         display: flex;
         flex-direction: column;
         z-index: 10;
         flex-shrink: 0;
-        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.02);
     }
 
     .cart-tabs {
         display: flex;
         font-size: 13px;
-        font-weight: 800;
+        font-weight: 700;
         text-align: center;
         background: #f8fafc;
+        padding: 5px;
+        gap: 5px;
     }
 
     .cart-tab {
         flex: 1;
-        padding: 14px 0;
+        padding: 12px 0;
         cursor: pointer;
-        color: #64748b;
-        border-bottom: 2px solid transparent;
-        transition: 0.3s;
-        text-transform: uppercase;
+        color: var(--text-muted);
+        border-radius: 10px;
+        transition: 0.2s;
+        text-transform: capitalize;
     }
 
     .cart-tab.active {
         color: var(--brand-primary);
-        border-bottom-color: var(--brand-primary);
         background: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
     .cart-subtabs {
         display: flex;
         background: #fff;
-        border-bottom: 1px solid #e2e8f0;
-        padding: 5px;
+        border-bottom: 1px solid var(--border-color);
+        padding: 8px 15px;
+        gap: 10px;
     }
 
     .subtab {
-        flex: 1;
-        padding: 10px;
+        padding: 8px 12px;
         text-align: center;
-        color: #64748b;
-        font-size: 16px;
-        border-radius: 8px;
+        color: var(--text-muted);
+        font-size: 15px;
+        border-radius: 10px;
         cursor: pointer;
-        transition: 0.3s;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
-    .subtab:hover {
+    .subtab:hover, .subtab.active {
         background: #f1f5f9;
         color: var(--brand-primary);
     }
@@ -554,88 +603,79 @@
 
     .payment-types {
         display: flex;
-        padding: 10px;
-        gap: 5px;
+        padding: 15px;
+        gap: 10px;
+        flex-wrap: wrap;
     }
 
     .payment-type {
         flex: 1;
+        min-width: 90px;
         text-align: center;
-        padding: 10px 5px;
-        font-size: 11px;
-        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+        border-radius: 25px; /* Pill style */
         cursor: pointer;
         display: flex;
-        flex-direction: column;
         align-items: center;
-        gap: 4px;
-        font-weight: 700;
-        color: #64748b;
-        background: #fff;
-        border: 1px solid #e2e8f0;
-        transition: 0.3s;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 600;
+        color: var(--text-muted);
+        background: #f1f5f9;
+        border: 1px solid transparent;
+        transition: 0.2s;
     }
 
     .payment-type.active {
-        background: #e0f2fe;
-        color: #0284c7;
-        border-color: #bae6fd;
+        background: #eef2ff;
+        color: var(--brand-primary);
+        border-color: #cbd5e1;
     }
 
     .payment-type i {
-        font-size: 16px;
-        margin-bottom: 2px;
+        font-size: 15px;
     }
 
     .payment-type .fa-circle-check {
-        color: #10b981;
-        position: absolute;
-        top: 2px;
-        right: 2px;
-        font-size: 10px;
         display: none;
     }
 
-    .payment-type.active .fa-circle-check {
-        display: block;
-    }
-
-    .payment-type {
-        position: relative;
-    }
-
     .action-buttons {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
+        display: flex;
+        gap: 12px;
         padding: 0 15px;
     }
 
     .action-btn {
-        padding: 16px;
+        flex: 1;
+        padding: 18px;
         border: none;
-        font-size: 13px;
-        font-weight: 800;
+        font-size: 14px;
+        font-weight: 700;
         color: #fff;
         cursor: pointer;
-        border-radius: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        transition: 0.3s;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 16px;
+        transition: 0.2s;
+        box-shadow: var(--soft-shadow);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
     }
 
     .action-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        box-shadow: var(--premium-shadow);
+        filter: brightness(1.1);
     }
 
     .btn-red {
-        background: linear-gradient(135deg, var(--brand-primary), #FF5E83);
+        background: var(--brand-primary);
     }
 
     .btn-dark {
-        background: linear-gradient(135deg, #1E293B, #334155);
+        background: #1e293b;
     }
 
     /* Modal */
@@ -659,11 +699,11 @@
 
     .pos-modal-content {
         background: #fff;
-        border-radius: 24px;
-        width: 450px;
+        border-radius: 28px;
+        width: 480px;
         overflow: hidden;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-        transform: scale(0.9);
+        box-shadow: var(--premium-shadow);
+        transform: scale(0.95);
         transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
@@ -672,53 +712,52 @@
     }
 
     .modal-hdr {
-        background: #f8fafc;
-        padding: 20px 25px;
+        background: #fff;
+        padding: 24px 30px;
         display: flex;
         justify-content: space-between;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid var(--border-color);
         font-weight: 800;
-        font-size: 18px;
-        color: #0f172a;
+        font-size: 20px;
+        color: var(--text-main);
     }
 
     .modal-bd {
-        padding: 25px;
+        padding: 30px;
     }
 
     .form-group {
         display: flex;
         flex-direction: column;
-        margin-bottom: 15px;
-        gap: 5px;
+        margin-bottom: 18px;
+        gap: 8px;
     }
 
     .form-group label {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 700;
-        color: #64748b;
-        text-transform: uppercase;
+        color: var(--text-muted);
     }
 
     .form-group input {
         width: 100%;
-        padding: 12px 15px;
-        border: 1px solid #cbd5e1;
-        border-radius: 10px;
+        padding: 14px 18px;
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
         font-family: inherit;
         font-size: 15px;
         box-sizing: border-box;
         background: #f8fafc;
-        transition: 0.3s;
+        transition: 0.2s;
         font-weight: 600;
-        color: #1e293b;
+        color: var(--text-main);
     }
 
     .form-group input:focus {
         outline: none;
-        border-color: var(--brand-secondary);
+        border-color: var(--brand-primary);
         background: #fff;
-        box-shadow: 0 0 0 3px rgba(8, 217, 214, 0.1);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
     }
 
     .payment-radio-group {
@@ -754,35 +793,42 @@
     }
 
     .modal-ftr {
-        padding: 20px 25px;
-        border-top: 1px solid #e2e8f0;
+        padding: 24px 30px;
+        border-top: 1px solid var(--border-color);
         display: flex;
         justify-content: flex-end;
         gap: 15px;
-        background: #f8fafc;
+        background: #fff;
     }
 
     .b-cal {
-        padding: 12px 20px;
-        background: #e2e8f0;
-        color: #475569;
+        padding: 14px 24px;
+        background: #f1f5f9;
+        color: var(--text-muted);
         border: none;
-        border-radius: 10px;
+        border-radius: 14px;
         font-weight: 700;
         font-family: inherit;
         cursor: pointer;
+        transition: 0.2s;
     }
 
     .b-set {
-        padding: 12px 25px;
+        padding: 14px 30px;
         background: var(--brand-primary);
         color: #fff;
         border: none;
-        border-radius: 10px;
+        border-radius: 14px;
         font-weight: 800;
         font-family: inherit;
         cursor: pointer;
-        box-shadow: 0 4px 15px rgba(255, 46, 99, 0.3);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+        transition: 0.2s;
+    }
+
+    .b-set:hover {
+        filter: brightness(1.1);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
     }
 </style>
 
@@ -866,6 +912,7 @@
                                 data-price="{{ price }}" onclick="event.stopPropagation();">
                             <div class="item-name">{{ item_name }}</div>
                             <div class="item-price">₹{{ price }}</div>
+                            <div class="add-item-btn"><i class="fa-solid fa-plus"></i></div>
                         </div>
                         {% endfor %}
                     </div>
@@ -933,11 +980,14 @@
                 </div>
 
                 <div class="payment-types">
-                    <div class="payment-type active"><i class="fa-solid fa-circle-check"></i><i
+                    <div class="payment-type active" onclick="setPaymentType('CASH', this)"><i
                             class="fa-solid fa-money-bill-wave"></i> Cash</div>
-                    <div class="payment-type"><i class="fa-regular fa-credit-card"></i> Card</div>
-                    <div class="payment-type"><i class="fa-brands fa-google-pay"></i> UPI</div>
-                    <div class="payment-type"><i class="fa-solid fa-clock-rotate-left"></i> Due</div>
+                    <div class="payment-type" onclick="setPaymentType('CARD', this)"><i
+                            class="fa-regular fa-credit-card"></i> Card</div>
+                    <div class="payment-type" onclick="setPaymentType('UPI', this)"><i
+                            class="fa-brands fa-google-pay"></i> UPI</div>
+                    <div class="payment-type" onclick="setPaymentType('DUE', this)"><i
+                            class="fa-solid fa-clock-rotate-left"></i> Due</div>
                 </div>
 
                 <div class="action-buttons">
@@ -1137,23 +1187,22 @@
             total += itemTotal;
 
             // Escaping single quotes to make sure JS strings don't break
-            const safeName = itemName.replace(/'/g, "\\'");
+            const safeItemName = itemName.replace(/'/g, "\\'");
 
             html += `
                 <div class="cart-item-row">
                     <div class="col-item">${itemName}</div>
                     <div class="col-qty">
-                        <button type="button" class="qty-btn" onclick="changeQty('${safeName}', -1)">-</button>
-                        <input type="number" class="qty-input" value="${item.qty}" min="1" onchange="setQty('${safeName}', this.value)">
-                        <button type="button" class="qty-btn" onclick="changeQty('${safeName}', 1)">+</button>
+                        <button type="button" class="qty-btn" onclick="changeQty('${safeItemName}', -1)">-</button>
+                        <input type="text" class="qty-input" value="${item.qty}" onchange="setQty('${safeItemName}', this.value)">
+                        <button type="button" class="qty-btn" onclick="changeQty('${safeItemName}', 1)">+</button>
                     </div>
                     <div class="col-price">₹${itemTotal.toFixed(2)}</div>
                 </div>
             `;
-
             // Multiple checkboxes to ensure backend lists grab correct quantities
             for (let i = 0; i < item.qty; i++) {
-                hiddenHtml += '<input type="checkbox" name="food" value="' + itemName + '" checked>';
+                hiddenHtml += '<input type="checkbox" name="food" value="' + itemName + '" checked style="display:none;">';
             }
         });
 
