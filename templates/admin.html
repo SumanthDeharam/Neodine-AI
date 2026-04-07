@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block pos_header_left %}{% endblock %}
+{% block pos_header_right %}{% endblock %}
+{% block content %}
+<style>
+    .admin-container { padding: 40px; display: flex; flex-direction: column; gap: 40px; overflow-y: auto; height: 100%; box-sizing: border-box; }
+    
+    .sec-title { display: flex; align-items: center; gap: 15px; font-size: 22px; font-weight: 800; color: #0f172a; margin: 0 0 20px; }
+    .sec-title i { font-size: 24px; }
+    
+    .panel-card { background: #fff; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
+
+    /* Tables */
+    .admin-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+    .admin-table th { color: #64748b; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 0 20px 10px; border-bottom: 2px solid #f1f5f9; text-align: left; }
+    .admin-table td { background: #f8fafc; padding: 20px; font-size: 15px; color: #334155; font-weight: 500; }
+    .admin-table td:first-child { border-radius: 12px 0 0 12px; font-weight: 700; color: #0f172a; }
+    .admin-table td:last-child { border-radius: 0 12px 12px 0; text-align: right; }
+    .admin-table tr { transition: 0.3s; }
+    .admin-table tr:focus-within td, .admin-table tr:hover td { background: #f1f5f9; }
+
+    .pass-mask { font-family: monospace; background: #e2e8f0; padding: 6px 12px; border-radius: 8px; color: #475569; letter-spacing: 2px; }
+
+    .btn { padding: 10px 20px; border: none; border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn-approve { background: #dcfce7; color: #16a34a; }
+    .btn-approve:hover { background: #16a34a; color: #fff; box-shadow: 0 6px 15px rgba(22,163,74,0.3); }
+    .btn-revoke { background: #fee2e2; color: #dc2626; }
+    .btn-revoke:hover { background: #dc2626; color: #fff; box-shadow: 0 6px 15px rgba(220,38,38,0.3); }
+
+    /* Prediction Grid */
+    .ai-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
+    .ai-card { background: #fff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.03); transition: 0.3s; }
+    .ai-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.06); border-color: var(--brand-secondary); }
+    .ai-hdr { background: linear-gradient(135deg, #1E293B, #0F172A); padding: 24px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+    .ai-node-name { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; margin: 0; }
+    .ai-tag { background: rgba(8, 217, 214, 0.2); color: var(--brand-secondary); font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; }
+    
+    .ai-bd { padding: 0; }
+    .ing-table { width: 100%; border-collapse: collapse; }
+    .ing-table th { background: #f8fafc; color: #64748b; font-size: 12px; padding: 12px 24px; text-transform: uppercase; font-weight: 700; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    .ing-table td { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; font-weight: 600; }
+    .ing-table td:last-child { text-align: right; color: var(--brand-primary); font-size: 18px; font-weight: 800; }
+    
+</style>
+
+<div class="admin-container">
+
+    <!-- Pending -->
+    <div class="panel-card">
+        <h2 class="sec-title"><i class="fa-solid fa-user-clock" style="color: #f59e0b;"></i> Pending Clearances</h2>
+        {% if pending_users %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Enterprise ID</th>
+                    <th>Intercepted Passkey</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in pending_users %}
+                <tr>
+                    <td>{{ u.username }}</td>
+                    <td><span class="pass-mask">{{ u.raw_password }}</span></td>
+                    <td>
+                        <form action="/admin/approve/{{ u.id }}" method="POST" style="margin:0;">
+                            <button type="submit" class="btn btn-approve">Authorize Node</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align:center; padding: 30px; color:#94a3b8; font-weight:600;"><i class="fa-solid fa-check-double" style="font-size:32px; color:#cbd5e1; margin-bottom:10px;"></i><br>No pending requests.</div>
+        {% endif %}
+    </div>
+
+    <!-- Approved -->
+    <div class="panel-card">
+        <h2 class="sec-title"><i class="fa-solid fa-network-wired" style="color: #10b981;"></i> Active Nodes</h2>
+        {% if approved_users %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Enterprise ID</th>
+                    <th>Secure Passkey</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in approved_users %}
+                <tr>
+                    <td>{{ u.username }}</td>
+                    <td><span class="pass-mask">{{ u.raw_password }}</span></td>
+                    <td>
+                        <form action="/admin/revoke/{{ u.id }}" method="POST" style="margin:0;">
+                            <button type="submit" class="btn btn-revoke">Terminate</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align:center; padding: 30px; color:#94a3b8; font-weight:600;"><i class="fa-solid fa-ghost" style="font-size:32px; color:#cbd5e1; margin-bottom:10px;"></i><br>No active nodes.</div>
+        {% endif %}
+    </div>
+
+
+
+</div>
+{% endblock %}

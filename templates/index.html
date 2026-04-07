@@ -1,0 +1,1227 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .pos-master {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+    }
+
+    .ai-banner {
+        background: linear-gradient(90deg, #1E293B, #0F172A);
+        padding: 10px 20px;
+        color: #fff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
+    }
+
+    .ai-badge {
+        background: rgba(8, 217, 214, 0.15);
+        border: 1px solid rgba(8, 217, 214, 0.3);
+        color: var(--brand-secondary);
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .weather-info {
+        display: flex;
+        gap: 15px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #cbd5e1;
+    }
+
+    .ai-predict {
+        font-size: 13px;
+        color: #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .ai-tags {
+        display: flex;
+        gap: 8px;
+    }
+
+    .ai-tag {
+        background: rgba(255, 46, 99, 0.15);
+        color: #ff8fa3;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        border: 1px solid rgba(255, 46, 99, 0.3);
+    }
+
+    .pos-layout {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* Left Sidebar */
+    .sidebar {
+        width: 180px;
+        background: #fff;
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        z-index: 10;
+        flex-shrink: 0;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02);
+    }
+
+    .sidebar-search {
+        padding: 10px;
+        background: #F8FAFC;
+        border-bottom: 1px solid #E2E8F0;
+    }
+
+    .sidebar-search input {
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        box-sizing: border-box;
+        font-size: 13px;
+        font-family: inherit;
+        transition: 0.3s;
+    }
+
+    .sidebar-search input:focus {
+        outline: none;
+        border-color: var(--brand-secondary);
+        box-shadow: 0 0 0 3px rgba(8, 217, 214, 0.1);
+    }
+
+    .category-btn {
+        padding: 16px 20px;
+        text-transform: uppercase;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        color: #64748b;
+        text-align: left;
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid #f1f5f9;
+        transition: 0.3s;
+        border-right: 3px solid transparent;
+        letter-spacing: 0.5px;
+    }
+
+    .category-btn:hover {
+        background: #f8fafc;
+        color: #0f172a;
+    }
+
+    .category-btn.active {
+        background: #eff6ff;
+        color: #1e3a8a;
+        border-right: 3px solid var(--brand-primary);
+    }
+
+    /* Center Area (Items / Tables switcher) */
+    .center-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #F1F5F9;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* View Switcher */
+    .view-switcher {
+        background: #fff;
+        padding: 10px 20px;
+        display: flex;
+        gap: 10px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .view-btn {
+        padding: 8px 16px;
+        border: none;
+        background: #f1f5f9;
+        color: #64748b;
+        font-weight: 700;
+        font-family: inherit;
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .view-btn.active {
+        background: var(--brand-primary);
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(255, 46, 99, 0.2);
+    }
+
+    /* Items View */
+    .items-container {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: none;
+    }
+
+    .items-container.active {
+        display: block;
+    }
+
+    .items-grid {
+        display: none;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+    }
+
+    .items-grid.active {
+        display: grid;
+    }
+
+    .item-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px 10px;
+        cursor: pointer;
+        text-align: center;
+        user-select: none;
+        height: 90px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    }
+
+    .item-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        border-radius: 4px 0 0 4px;
+    }
+
+    .item-card.veg::before {
+        background: #10b981;
+    }
+
+    .item-card.nonveg::before {
+        background: #ef4444;
+    }
+
+    .item-card.default::before {
+        background: #3b82f6;
+    }
+
+    .item-card:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        border-color: #cbd5e1;
+    }
+
+    .item-card:active {
+        transform: scale(0.95);
+    }
+
+    .item-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+        line-height: 1.3;
+        margin-bottom: 5px;
+    }
+
+    .item-price {
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+    }
+
+    /* Table View */
+    .tables-container {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: none;
+    }
+
+    .tables-container.active {
+        display: block;
+    }
+
+    .tables-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 20px;
+    }
+
+    .table-box {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .table-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-num {
+        font-size: 24px;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    .table-status {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 10px;
+        margin-top: 10px;
+    }
+
+    .table-box.empty .table-status {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .table-box.empty .table-status::after {
+        content: 'Empty';
+    }
+
+    .table-box.occupied .table-status {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .table-box.occupied .table-status::after {
+        content: 'Dining';
+    }
+
+    /* Right Cart */
+    .cart-area {
+        width: 380px;
+        background: #fff;
+        border-left: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        z-index: 10;
+        flex-shrink: 0;
+        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.02);
+    }
+
+    .cart-tabs {
+        display: flex;
+        font-size: 13px;
+        font-weight: 800;
+        text-align: center;
+        background: #f8fafc;
+    }
+
+    .cart-tab {
+        flex: 1;
+        padding: 14px 0;
+        cursor: pointer;
+        color: #64748b;
+        border-bottom: 2px solid transparent;
+        transition: 0.3s;
+        text-transform: uppercase;
+    }
+
+    .cart-tab.active {
+        color: var(--brand-primary);
+        border-bottom-color: var(--brand-primary);
+        background: #fff;
+    }
+
+    .cart-subtabs {
+        display: flex;
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 5px;
+    }
+
+    .subtab {
+        flex: 1;
+        padding: 10px;
+        text-align: center;
+        color: #64748b;
+        font-size: 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .subtab:hover {
+        background: #f1f5f9;
+        color: var(--brand-primary);
+    }
+
+    .cart-headers {
+        display: flex;
+        background: #f8fafc;
+        padding: 10px 15px;
+        font-size: 11px;
+        font-weight: 800;
+        color: #94a3b8;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .col-item {
+        flex: 3;
+    }
+
+    .col-qty {
+        flex: 1;
+        text-align: center;
+    }
+
+    .col-price {
+        flex: 1;
+        text-align: right;
+    }
+
+    .cart-items {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+        background: #fff;
+    }
+
+    .cart-items::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .cart-items::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    .empty-cart {
+        text-align: center;
+        color: #94a3b8;
+        margin-top: 80px;
+    }
+
+    .empty-cart i {
+        font-size: 60px;
+        color: #e2e8f0;
+        margin-bottom: 15px;
+    }
+
+    .cart-item-row {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px dashed #e2e8f0;
+        font-size: 14px;
+        animation: slideInX 0.3s ease;
+    }
+
+    @keyframes slideInX {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .cart-item-row .col-item {
+        flex: 3;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .cart-item-row .col-qty {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .cart-item-row .col-price {
+        flex: 1;
+        text-align: right;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    .qty-btn {
+        cursor: pointer;
+        background: #f1f5f9;
+        color: #475569;
+        border: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        font-weight: bold;
+        transition: 0.2s;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .qty-btn:hover {
+        background: #e2e8f0;
+        color: #000;
+    }
+
+    .qty-btn:active {
+        transform: scale(0.9);
+    }
+
+    .qty-input {
+        width: 32px;
+        text-align: center;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-family: inherit;
+        font-weight: 700;
+        font-size: 13px;
+        color: #1e293b;
+        padding: 4px;
+        outline: none;
+    }
+
+    .qty-input::-webkit-inner-spin-button,
+    .qty-input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .item-checkbox {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 18px;
+        height: 18px;
+        accent-color: var(--brand-primary);
+        cursor: pointer;
+        z-index: 5;
+    }
+
+    /* Cart Footer */
+    .cart-footer {
+        border-top: 1px solid #e2e8f0;
+        background: #F8FAFC;
+        padding-bottom: 15px;
+    }
+
+    .cart-total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px 20px;
+        font-weight: 800;
+        font-size: 18px;
+        color: #0f172a;
+        background: #fff;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .payment-types {
+        display: flex;
+        padding: 10px;
+        gap: 5px;
+    }
+
+    .payment-type {
+        flex: 1;
+        text-align: center;
+        padding: 10px 5px;
+        font-size: 11px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        font-weight: 700;
+        color: #64748b;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        transition: 0.3s;
+    }
+
+    .payment-type.active {
+        background: #e0f2fe;
+        color: #0284c7;
+        border-color: #bae6fd;
+    }
+
+    .payment-type i {
+        font-size: 16px;
+        margin-bottom: 2px;
+    }
+
+    .payment-type .fa-circle-check {
+        color: #10b981;
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        font-size: 10px;
+        display: none;
+    }
+
+    .payment-type.active .fa-circle-check {
+        display: block;
+    }
+
+    .payment-type {
+        position: relative;
+    }
+
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        padding: 0 15px;
+    }
+
+    .action-btn {
+        padding: 16px;
+        border: none;
+        font-size: 13px;
+        font-weight: 800;
+        color: #fff;
+        cursor: pointer;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: 0.3s;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-red {
+        background: linear-gradient(135deg, var(--brand-primary), #FF5E83);
+    }
+
+    .btn-dark {
+        background: linear-gradient(135deg, #1E293B, #334155);
+    }
+
+    /* Modal */
+    .pos-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 2000;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: 0.3s;
+    }
+
+    .pos-modal.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .pos-modal-content {
+        background: #fff;
+        border-radius: 24px;
+        width: 450px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        transform: scale(0.9);
+        transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .pos-modal.active .pos-modal-content {
+        transform: scale(1);
+    }
+
+    .modal-hdr {
+        background: #f8fafc;
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid #e2e8f0;
+        font-weight: 800;
+        font-size: 18px;
+        color: #0f172a;
+    }
+
+    .modal-bd {
+        padding: 25px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 15px;
+        gap: 5px;
+    }
+
+    .form-group label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 15px;
+        box-sizing: border-box;
+        background: #f8fafc;
+        transition: 0.3s;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--brand-secondary);
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(8, 217, 214, 0.1);
+    }
+
+    .payment-radio-group {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+
+    .payment-radio-group label {
+        background: #f1f5f9;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        color: #475569;
+        transition: 0.2s;
+        border: 1px solid transparent;
+    }
+
+    .payment-radio-group input[type="radio"] {
+        display: none;
+    }
+
+    .payment-radio-group input[type="radio"]:checked+span {
+        color: var(--brand-primary);
+    }
+
+    .payment-radio-group label:has(input:checked) {
+        background: #fff0f2;
+        border-color: #ffb3c6;
+    }
+
+    .modal-ftr {
+        padding: 20px 25px;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        background: #f8fafc;
+    }
+
+    .b-cal {
+        padding: 12px 20px;
+        background: #e2e8f0;
+        color: #475569;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    .b-set {
+        padding: 12px 25px;
+        background: var(--brand-primary);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-weight: 800;
+        font-family: inherit;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(255, 46, 99, 0.3);
+    }
+</style>
+
+<div class="pos-master">
+    <!-- AI Weather & Prediction Bar -->
+    <div class="ai-banner">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <div class="ai-badge"><i class="fa-solid fa-microchip"></i> Neo AI Engine Active</div>
+            <div class="weather-info">
+                <span><i class="fa-solid fa-temperature-half" style="color:#ffb3c6;"></i> {% if temperature %}{{
+                    temperature }}{% else %}28{% endif %}°C</span>
+                <span><i class="fa-solid fa-cloud-rain" style="color:#bae6fd;"></i> {% if rainfall %}{{ rainfall }}{%
+                    else %}0{% endif %}mm</span>
+            </div>
+        </div>
+        <div class="ai-predict">
+            <strong><i class="fa-solid fa-arrow-trend-up" style="color:#10b981;"></i> Trending (Next 24h):</strong>
+            <div class="ai-tags">
+                {% if predicted_tomorrow %}
+                {% for item in predicted_tomorrow[:4] %}
+                <span class="ai-tag">{{ item }}</span>
+                {% endfor %}
+                {% else %}
+                <span class="ai-tag">Processing Data...</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" id="posForm" action="/" style="flex:1; display:flex; overflow:hidden; margin:0; padding:0;">
+        <div class="pos-layout" id="posLayout">
+
+            <!-- LEFT SIDEBAR -->
+            <div class="sidebar">
+                <div class="sidebar-search">
+                    <input type="text" placeholder="Search menu..." id="itemSearch">
+                </div>
+                <div id="categoryList" style="flex:1; overflow-y:auto;">
+                    {% for category in menu_data.keys() %}
+                    <button type="button" class="category-btn {% if loop.index == 1 %}active{% endif %}"
+                        data-target="cat-{{ loop.index }}">
+                        {{ category }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- CENTER AREA -->
+            <div class="center-area">
+                <div class="view-switcher" style="justify-content: space-between; align-items:center;">
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" class="view-btn active" id="btnMenuToggle"><i
+                                class="fa-solid fa-burger"></i>
+                            Menu View</button>
+                        <button type="button" class="view-btn" id="btnTableToggle"><i class="fa-solid fa-chair"></i>
+                            Table
+                            View</button>
+                    </div>
+                    <button type="button" class="action-btn btn-red"
+                        style="padding: 8px 16px; font-size: 12px; border-radius: 8px; box-shadow:none; margin:0;"
+                        onclick="addSelectedItems()">
+                        <i class="fa-solid fa-cart-plus"></i> Add Selected
+                    </button>
+                </div>
+
+                <!-- Items Grid -->
+                <div class="items-container active" id="itemsContainer">
+                    {% for category, items in menu_data.items() %}
+                    <div class="items-grid {% if loop.index == 1 %}active{% endif %}" id="cat-{{ loop.index }}">
+                        {% for item_name, price in items.items() %}
+                        <div class="item-card {% if 'Veg' in item_name or 'Soup' in item_name %}veg{% elif 'Chicken' in item_name or 'Meat' in item_name %}nonveg{% else %}default{% endif %}"
+                            onclick='handleItemClick(event, {{ item_name | tojson | safe }}, "{{ price }}")'>
+                            <input type="checkbox" class="item-checkbox" value="{{ item_name }}"
+                                data-price="{{ price }}" onclick="event.stopPropagation();">
+                            <div class="item-name">{{ item_name }}</div>
+                            <div class="item-price">₹{{ price }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Tables Grid -->
+                <div class="tables-container" id="tablesContainer">
+                    <div class="tables-grid">
+                        {% if tables %}
+                        {% for t in tables %}
+                        <div class="table-box {% if t.status == 'DINING' %}occupied{% else %}empty{% endif %}"
+                            onclick="selectTable({{ t.table_num }}, '{{ t.status }}')">
+                            <div class="table-num">T-{{ t.table_num }}</div>
+                            <div class="table-status"></div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT CART -->
+        <div class="cart-area">
+            <div class="cart-tabs">
+                <div class="cart-tab active" onclick="switchOrderType(this)">Dine In</div>
+                <div class="cart-tab" onclick="switchOrderType(this)">Delivery</div>
+                <div class="cart-tab" onclick="switchOrderType(this)">Pick Up</div>
+            </div>
+
+            <div class="cart-subtabs">
+                <div class="subtab" onclick="btnTable.click()"><i class="fa-solid fa-wine-glass"></i> <strong
+                        id="selectedTableLabel">--</strong>
+                </div>
+                <div class="subtab" onclick="openSettleModal()"><i class="fa-regular fa-user"></i></div>
+                <div class="subtab" onclick="showComingSoon('Group Service')"><i class="fa-solid fa-users"></i></div>
+                <div class="subtab" onclick="showComingSoon('Settings')"><i class="fa-solid fa-ellipsis-vertical"></i>
+                </div>
+            </div>
+
+            <div class="cart-headers">
+                <div class="col-item">ITEM DETAILS</div>
+                <div class="col-qty">QTY</div>
+                <div class="col-price">TOTAL</div>
+            </div>
+
+            <div class="cart-items" id="cartContainer">
+                <div class="empty-cart" id="emptyCart">
+                    <i class="fa-solid fa-cart-arrow-down"></i>
+                    <div style="font-weight:700; font-size:16px; color:#64748b;">Cart is Empty</div>
+                    <div style="font-size: 13px; margin-top:5px;">Select an item from the menu</div>
+                </div>
+                <div id="cartList"></div>
+            </div>
+
+            <div class="cart-footer">
+                <div class="cart-total-row">
+                    <div style="color:var(--brand-primary); cursor:pointer; font-size:14px; display:flex; align-items:center; gap:5px;"
+                        class="btn-cancel" onclick="window.location.href='/download_excel'">
+                        <i class="fa-solid fa-file-excel"></i> Export DB
+                    </div>
+                    <div>Grand Total: <span style="color:var(--brand-primary);">₹<span
+                                id="cartTotalText">0.00</span></span></div>
+                </div>
+
+                <div class="payment-types">
+                    <div class="payment-type active"><i class="fa-solid fa-circle-check"></i><i
+                            class="fa-solid fa-money-bill-wave"></i> Cash</div>
+                    <div class="payment-type"><i class="fa-regular fa-credit-card"></i> Card</div>
+                    <div class="payment-type"><i class="fa-brands fa-google-pay"></i> UPI</div>
+                    <div class="payment-type"><i class="fa-solid fa-clock-rotate-left"></i> Due</div>
+                </div>
+
+                <div class="action-buttons">
+                    <button type="button" class="action-btn btn-dark" onclick="openSettleModal()"><i
+                            class="fa-solid fa-kitchen-set"></i> Send KOT</button>
+                    <button type="button" class="action-btn btn-red" onclick="openSettleModal()"><i
+                            class="fa-solid fa-print"></i> Settle & Print</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTLE MODAL -->
+        <div class="pos-modal" id="settleModal">
+            <div class="pos-modal-content">
+                <div class="modal-hdr">
+                    <div>Checkout Terminal</div>
+                    <i class="fa-solid fa-xmark" style="cursor:pointer; color:#94a3b8;"
+                        onclick="closeSettleModal()"></i>
+                </div>
+                <div class="modal-bd">
+                    <div class="payment-radio-group">
+                        <label><input type="radio" name="paymentType" value="Cash" checked> <span>Cash</span></label>
+                        <label><input type="radio" name="paymentType" value="Card"> <span>Card</span></label>
+                        <label><input type="radio" name="paymentType" value="UPI"> <span>UPI</span></label>
+                        <label><input type="radio" name="paymentType" value="Due"> <span>Due</span></label>
+                    </div>
+
+                    <div style="display:flex; gap:15px;">
+                        <div class="form-group" style="flex:1;">
+                            <label>Amount Received (₹)</label>
+                            <input type="number" id="customerPaid" value="0" oninput="calculateReturn()"
+                                style="font-size:20px; color:var(--brand-primary);">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Change Due (₹)</label>
+                            <input type="text" id="returnCustomer" value="0.00" readonly
+                                style="background:#e0f2fe; color:#0284c7; font-size:20px; border-color:#bae6fd;">
+                        </div>
+                    </div>
+
+                    <hr style="border:0; height:1px; background:#e2e8f0; margin:5px 0 15px;">
+
+                    <div class="form-group">
+                        <label>Customer Alias</label>
+                        <input type="text" name="name" required placeholder="Guest">
+                    </div>
+                    <div style="display:flex; gap:15px;">
+                        <div class="form-group" style="flex:2;">
+                            <label>Contact Number</label>
+                            <input type="text" name="phone" required pattern="[0-9]{10}" placeholder="10 Digits">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Discount (%)</label>
+                            <input type="number" name="discount" value="0" min="0" max="100">
+                        </div>
+                    </div>
+                    <div style="display:none;">
+                        <input type="hidden" name="table_number" id="hiddenTableNum" value="">
+                    </div>
+                    <!-- Hidden inputs area for backend form parsing -->
+                    <div id="hiddenFoods" style="display:none;"></div>
+                </div>
+                <div class="modal-ftr">
+                    <button type="button" class="b-cal" onclick="closeSettleModal()">Cancel</button>
+                    <button type="submit" class="b-set">Complete Transaction</button>
+                </div>
+            </div>
+        </div>
+
+</div>
+</form>
+</div>
+
+<script>
+    // View Switcher (Menu vs Tables)
+    const btnMenu = document.getElementById('btnMenuToggle');
+    const btnTable = document.getElementById('btnTableToggle');
+    const itemsCont = document.getElementById('itemsContainer');
+    const tablesCont = document.getElementById('tablesContainer');
+
+    btnMenu.addEventListener('click', () => {
+        btnMenu.classList.add('active'); btnTable.classList.remove('active');
+        itemsCont.classList.add('active'); tablesCont.classList.remove('active');
+    });
+    btnTable.addEventListener('click', () => {
+        btnTable.classList.add('active'); btnMenu.classList.remove('active');
+        tablesCont.classList.add('active'); itemsCont.classList.remove('active');
+    });
+
+    function selectTable(num, status) {
+        if (status === 'DINING') {
+            if(confirm("Table " + num + " is currently dining. Mark as Empty to clear it?")) {
+                fetch('/api/table/clear/' + num, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => { if(data.success) location.reload(); });
+            }
+        } else {
+            document.getElementById('selectedTableLabel').innerText = 'T-' + num;
+            document.getElementById('hiddenTableNum').value = num;
+            btnMenu.click(); // Switch back to menu to start ordering
+        }
+    }
+
+    // Category Tabs Logic
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    const itemsGrids = document.querySelectorAll('.items-grid');
+
+    categoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            categoryBtns.forEach(b => b.classList.remove('active'));
+            itemsGrids.forEach(g => g.classList.remove('active'));
+
+            btn.classList.add('active');
+            let target = document.getElementById(btn.getAttribute('data-target'));
+            if (target) target.classList.add('active');
+        });
+    });
+
+    // Cart Logic that supports multiple dynamic selection
+    let cart = {};
+    let orderTotal = 0;
+
+    // We expose this globally so HTML onclick works
+    window.addToCart = function (itemName, price) {
+        if (cart[itemName]) {
+            cart[itemName].qty += 1;
+        } else {
+            cart[itemName] = { price: price, qty: 1 };
+        }
+        renderCart();
+    }
+
+    window.changeQty = function (itemName, delta) {
+        if (!cart[itemName]) return;
+        cart[itemName].qty += delta;
+        if (cart[itemName].qty <= 0) {
+            delete cart[itemName];
+        }
+        renderCart();
+    }
+
+    window.setQty = function (itemName, val) {
+        if (!cart[itemName]) return;
+        let newQty = parseInt(val, 10);
+        if (isNaN(newQty) || newQty <= 0) {
+            delete cart[itemName];
+        } else {
+            cart[itemName].qty = newQty;
+        }
+        renderCart();
+    }
+
+    window.handleItemClick = function (e, itemName, price) {
+        if (e.target.type === 'checkbox') return;
+        addToCart(itemName, price);
+    }
+
+    window.addSelectedItems = function () {
+        let checkboxes = document.querySelectorAll('.item-checkbox:checked');
+        if (checkboxes.length === 0) {
+            alert("No items selected for bulk add!");
+            return;
+        }
+        checkboxes.forEach(cb => {
+            let itemName = cb.value;
+            let price = cb.getAttribute('data-price');
+            addToCart(itemName, price);
+            cb.checked = false; // reset after adding
+        });
+    }
+
+    function renderCart() {
+        const cartList = document.getElementById('cartList');
+        const emptyCart = document.getElementById('emptyCart');
+        const hiddenFoods = document.getElementById('hiddenFoods');
+        const cartTotalText = document.getElementById('cartTotalText');
+
+        let total = 0;
+        let html = '';
+        let hiddenHtml = '';
+
+        const keys = Object.keys(cart);
+        if (keys.length === 0) {
+            emptyCart.style.display = 'block';
+            cartList.innerHTML = '';
+            cartTotalText.innerText = '0.00';
+            hiddenFoods.innerHTML = '';
+            orderTotal = 0;
+            return;
+        }
+
+        emptyCart.style.display = 'none';
+
+        keys.forEach(itemName => {
+            const item = cart[itemName];
+            const itemTotal = item.price * item.qty;
+            total += itemTotal;
+
+            // Escaping single quotes to make sure JS strings don't break
+            const safeName = itemName.replace(/'/g, "\\'");
+
+            html += `
+                <div class="cart-item-row">
+                    <div class="col-item">${itemName}</div>
+                    <div class="col-qty">
+                        <button type="button" class="qty-btn" onclick="changeQty('${safeName}', -1)">-</button>
+                        <input type="number" class="qty-input" value="${item.qty}" min="1" onchange="setQty('${safeName}', this.value)">
+                        <button type="button" class="qty-btn" onclick="changeQty('${safeName}', 1)">+</button>
+                    </div>
+                    <div class="col-price">₹${itemTotal.toFixed(2)}</div>
+                </div>
+            `;
+
+            // Multiple checkboxes to ensure backend lists grab correct quantities
+            for (let i = 0; i < item.qty; i++) {
+                hiddenHtml += '<input type="checkbox" name="food" value="' + itemName + '" checked>';
+            }
+        });
+
+        cartList.innerHTML = html;
+        hiddenFoods.innerHTML = hiddenHtml;
+        orderTotal = total;
+        cartTotalText.innerText = Number(total).toFixed(2);
+        calculateReturn();
+    }
+
+    // Search filter
+    document.getElementById('itemSearch').addEventListener('input', function (e) {
+        const val = e.target.value.toLowerCase();
+        document.querySelectorAll('.item-card').forEach(card => {
+            const name = card.querySelector('.item-name').innerText.toLowerCase();
+            if (name.includes(val)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+
+    // Modal
+    window.openSettleModal = function () {
+        if (Object.keys(cart).length === 0) {
+            // Show alert in custom style later, but normal alert for now
+            alert("No items in cart! Please add items first.");
+            return;
+        }
+        document.getElementById('customerPaid').value = orderTotal;
+        calculateReturn();
+        document.getElementById('settleModal').classList.add('active');
+    }
+
+    window.closeSettleModal = function () {
+        document.getElementById('settleModal').classList.remove('active');
+    }
+
+    window.calculateReturn = function () {
+        const paid = parseFloat(document.getElementById('customerPaid').value) || 0;
+        const refund = paid - orderTotal;
+        document.getElementById('returnCustomer').value = refund >= 0 ? refund.toFixed(2) : "0.00";
+    }
+
+    // Payment Tabs selection (Visual only)
+    const pTypes = document.querySelectorAll('.payment-type');
+    pTypes.forEach(p => {
+        p.addEventListener('click', () => {
+            pTypes.forEach(pt => pt.classList.remove('active'));
+            p.classList.add('active');
+        });
+    });
+
+    window.switchOrderType = function (el) {
+        document.querySelectorAll('.cart-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+    };
+
+    window.resetCart = function () {
+        if (Object.keys(cart).length > 0) {
+            if (confirm("Clear current order and start fresh?")) {
+                cart = {};
+                document.getElementById('selectedTableLabel').innerText = '--';
+                document.getElementById('hiddenTableNum').value = '';
+                renderCart();
+            }
+        } else {
+            cart = {};
+            document.getElementById('selectedTableLabel').innerText = '--';
+            document.getElementById('hiddenTableNum').value = '';
+            renderCart();
+        }
+    };
+
+
+</script>
+{% endblock %}

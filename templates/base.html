@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo Dine AI | Premium POS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --brand-primary: #FF2E63;
+            --brand-secondary: #08D9D6;
+            --bg-dark: #0F172A;
+            --bg-light: #F8FAFC;
+            --text-main: #1E293B;
+            --text-light: #94A3B8;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --sidebar-width: 320px;
+        }
+
+        /* Dark Mode overrides for Auth/Admin globally if preferred, but we use a Light/Premium theme here */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER STYLES */
+        .top-banner {
+            background: #1E293B;
+            color: #cbd5e1;
+            padding: 4px 20px;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .main-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 10px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .hamburger-btn {
+            font-size: 24px;
+            color: #334155;
+            cursor: pointer;
+            transition: 0.3s;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .hamburger-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--brand-primary);
+        }
+
+        /* NAVIGATION POPUP BUTTON */
+        .nav-popup-btn {
+            font-size: 22px;
+            color: #334155;
+            cursor: pointer;
+            transition: 0.3s;
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--brand-secondary), #05EDED);
+            color: #0F172A;
+            box-shadow: 0 4px 15px rgba(8, 217, 214, 0.3);
+        }
+
+        .nav-popup-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(8, 217, 214, 0.4);
+        }
+
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 20px;
+            color: #0F172A;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-wrap i {
+            color: var(--brand-primary);
+            font-size: 26px;
+        }
+
+        .new-order-btn {
+            background: linear-gradient(135deg, var(--brand-primary), #FF5E83);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 46, 99, 0.3);
+            transition: 0.3s;
+        }
+
+        .new-order-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 46, 99, 0.4);
+        }
+
+        .search-container {
+            display: flex;
+            gap: 12px;
+        }
+
+        .search-box {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid #cbd5e1;
+            padding: 8px 15px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+        }
+
+        .search-box:focus-within {
+            border-color: var(--brand-secondary);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(8, 217, 214, 0.1);
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-family: inherit;
+            font-size: 13px;
+            width: 140px;
+        }
+
+        .search-box i {
+            color: #94a3b8;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #475569;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .header-action i {
+            font-size: 18px;
+            margin-bottom: 4px;
+            color: #64748b;
+            transition: 0.3s;
+        }
+
+        .header-action:hover i,
+        .header-action:hover {
+            color: var(--brand-primary);
+        }
+
+        .support-box {
+            background: rgba(255, 46, 99, 0.05);
+            border: 1px solid rgba(255, 46, 99, 0.2);
+            padding: 6px 12px;
+            border-radius: 10px;
+            text-align: center;
+            color: var(--brand-primary);
+        }
+
+        .support-box .num {
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .support-box .lbl {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* SIDENAV HAMBURGER MENU */
+        .sidenav-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s;
+        }
+
+        .sidenav-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidenav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100%;
+            background: #1E293B;
+            z-index: 1000;
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidenav.active {
+            transform: translateX(0);
+        }
+
+        .sidenav-header {
+            padding: 25px 20px;
+            background: #0F172A;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidenav-header h2 {
+            margin: 0;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-sidenav {
+            color: #94A3B8;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            z-index: 1001;
+            position: relative;
+        }
+
+        .close-sidenav:hover {
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        .sidenav-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 0;
+        }
+
+        .sidenav-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidenav-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidenav-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .menu-section {
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 15px 20px 5px;
+        }
+
+        .menu-item {
+            color: #f1f5f9;
+            text-decoration: none;
+            padding: 12px 20px 12px 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+            color: #64748b;
+            font-size: 16px;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--brand-secondary);
+        }
+
+        .menu-item:hover i {
+            color: var(--brand-secondary);
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--brand-secondary);
+            transform: scaleY(0);
+            transition: 0.3s;
+        }
+
+        .menu-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .accordion {
+            width: 100%;
+            border: none;
+            outline: none;
+            text-align: left;
+            background: transparent;
+        }
+
+        .panel {
+            padding: 0;
+            background-color: #0F172A;
+            display: none;
+            overflow: hidden;
+        }
+
+        .sub-menu-item {
+            color: #94a3b8;
+            padding: 10px 20px 10px 60px;
+            display: block;
+            text-decoration: none;
+            font-size: 13px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .sub-menu-item:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* COMING SOON MODAL */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-box {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            transform: scale(0.9);
+            transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(8, 217, 214, 0.1);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px;
+            color: var(--brand-secondary);
+            font-size: 32px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0 0 10px;
+        }
+
+        .modal-desc {
+            color: #64748b;
+            font-size: 15px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .modal-btn {
+            background: #1e293b;
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .modal-btn:hover {
+            background: var(--brand-primary);
+            box-shadow: 0 4px 15px rgba(255, 46, 99, 0.3);
+        }
+
+        /* NAVIGATION POPUP MODAL */
+        .nav-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 3000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .nav-modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .nav-modal-box {
+            background: linear-gradient(145deg, #1E293B 0%, #0F172A 100%);
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: scale(0.8) translateY(20px);
+            transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-modal-overlay.active .nav-modal-box {
+            transform: scale(1) translateY(0);
+        }
+
+        .nav-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-modal-header h2 {
+            margin: 0;
+            color: #fff;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-modal-header h2 i {
+            color: var(--brand-secondary);
+        }
+
+        .nav-modal-close {
+            color: #94A3B8;
+            font-size: 24px;
+            cursor: pointer;
+            transition: 0.3s;
+            padding: 5px;
+        }
+
+        .nav-modal-close:hover {
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        .nav-modal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .nav-modal-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            color: #E2E8F0;
+            text-decoration: none;
+            display: block;
+        }
+
+        .nav-modal-item:hover {
+            background: rgba(8, 217, 214, 0.15);
+            border-color: var(--brand-secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(8, 217, 214, 0.2);
+        }
+
+        .nav-modal-item i {
+            font-size: 28px;
+            color: var(--brand-secondary);
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .nav-modal-item span {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .nav-modal-section-title {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 20px 0 12px 0;
+            padding-left: 5px;
+        }
+
+        .app-body {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+
+    {% if not current_user.is_authenticated %}
+    <!-- MINIMAL AUTH HEADER (Login/Register pages only) -->
+    <header style="background:#fff; border-bottom:1px solid #e2e8f0; padding:12px 28px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+        <div class="logo-wrap" style="font-size:20px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:10px;">
+            <i class="fa-solid fa-square-poll-vertical" style="color:var(--brand-primary); font-size:26px;"></i> NEO DINE
+        </div>
+        <div style="background:rgba(255,46,99,0.06); border:1px solid rgba(255,46,99,0.2); padding:8px 16px; border-radius:10px; text-align:center; color:var(--brand-primary);">
+            <div style="font-weight:800; font-size:14px; letter-spacing:0.5px;">7989052868</div>
+            <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Request Support</div>
+        </div>
+    </header>
+    {% else %}
+    <!-- FULL POS HEADER (Authenticated users only) -->
+    <div class="top-banner">
+        <i class="fa-solid fa-crown" style="color: #FFD700;"></i> Neo Dine AI - The Finest Restaurant Management
+        Platform
+    </div>
+
+    <header class="main-header">
+        <div class="header-left">
+            <div class="hamburger-btn" id="openMenuBtn"><i class="fa-solid fa-bars-staggered"></i></div>
+            <a href="/" style="text-decoration:none;">
+                <div class="logo-wrap"><i class="fa-solid fa-square-poll-vertical"></i> NEO DINE</div>
+            </a>
+            {% block pos_header_left %}
+            <button class="new-order-btn" id="newOrderBtn" onclick="handleNewOrder()"><i class="fa-solid fa-plus"></i> New Order</button>
+            <div class="search-container">
+                <div class="search-box"><i class="fa-solid fa-receipt"></i><input type="text"
+                        placeholder="Bill No / KOT"></div>
+            </div>
+            {% endblock %}
+        </div>
+
+        <div class="header-right">
+            {% block pos_header_right %}
+            <a href="/menu/inventory" class="header-action"><i class="fa-solid fa-shop"></i> Store</a>
+            <a href="/operations/orders" class="header-action"><i class="fa-solid fa-list-check"></i> Orders</a>
+            <a href="/reports/order_summary" class="header-action"><i class="fa-solid fa-clock-rotate-left"></i> Recent</a>
+            <a href="/operations/kots" class="header-action"><i class="fa-solid fa-pause"></i> Hold</a>
+            <a href="/settings/alerts" class="header-action"><i class="fa-solid fa-bell"></i> Alerts</a>
+            {% endblock %}
+
+            {% if current_user.is_authenticated %}
+            {% if current_user.status == 'Admin' %}
+            <a href="{{ url_for('admin_dashboard') }}" class="header-action"><i class="fa-solid fa-shield-halved"></i> Admin</a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="header-action"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="header-action"><i class="fa-solid fa-user-shield"></i> Auth</a>
+            {% endif %}
+
+            <div class="support-box">
+                <div class="num">7989052868</div>
+                <div class="lbl">Request Support</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- SIDEBAR HTML -->
+    <div class="sidenav-overlay" id="sideNavOverlay"></div>
+    <div class="sidenav" id="sideNav">
+        <div class="sidenav-header">
+            <h2><i class="fa-solid fa-rocket"></i> Navigation Center</h2>
+            <i class="fa-solid fa-xmark close-sidenav" id="closeMenuBtn"></i>
+        </div>
+        <div class="sidenav-content sidenav-scroll">
+
+            <div class="menu-section">Operations</div>
+            <!-- Accordion 1 -->
+            <button class="menu-item accordion"><i class="fa-solid fa-file-invoice-dollar"></i> Orders &amp; Billing</button>
+            <div class="panel">
+                <a class="sub-menu-item" href="/operations/orders">Orders</a>
+                <a class="sub-menu-item" href="/operations/online-orders">Online Orders</a>
+                <a class="sub-menu-item" href="/operations/kots">KOTs</a>
+                <a class="sub-menu-item" href="/operations/due-payment">Due Payment</a>
+                <a class="sub-menu-item" href="/operations/billing-screen">Billing Screen</a>
+                <a class="sub-menu-item" href="/operations/live-view">Live View</a>
+                <a class="sub-menu-item" href="/operations/bill-kot-print">Bill / KOT Print</a>
+                <a class="sub-menu-item" href="/operations/table">Table</a>
+                <a class="sub-menu-item" href="/operations/custom-order-status">Custom Order Status</a>
+                <a class="sub-menu-item" href="/operations/delivery-boys">Delivery Boys</a>
+            </div>
+            <!-- Accordion 2 -->
+            <button class="menu-item accordion"><i class="fa-solid fa-wallet"></i> Payment &amp; Finance</button>
+            <div class="panel">
+                <a class="sub-menu-item" href="/finance/cash-flow">Cash Flow</a>
+                <a class="sub-menu-item" href="/finance/expense">Expense</a>
+                <a class="sub-menu-item" href="/finance/withdrawal">Withdrawal</a>
+                <a class="sub-menu-item" href="/finance/cash-topup">Cash Top-Up</a>
+                <a class="sub-menu-item" href="/finance/currency-conversion">Currency Conversion</a>
+            </div>
+            <!-- Accordion 3 -->
+            <button class="menu-item accordion"><i class="fa-solid fa-boxes-stacked"></i> Menu &amp; Inventory</button>
+            <div class="panel">
+                <a class="sub-menu-item" href="/menu/menu">Menu</a>
+                <a class="sub-menu-item" href="/menu/menu-item-onoff">Menu Item On/Off</a>
+                <a class="sub-menu-item" href="/menu/tax">Tax</a>
+                <a class="sub-menu-item" href="/menu/discount">Discount</a>
+                <a class="sub-menu-item" href="/menu/customers">Customers</a>
+                <a class="sub-menu-item" href="/menu/feedback">Feedback</a>
+                <a class="sub-menu-item" href="/menu/inventory">Inventory</a>
+                <a class="sub-menu-item" href="/menu/recipes">Recipes</a>
+                <a class="sub-menu-item" href="/menu/dual-screen">Dual Screen</a>
+                <a class="sub-menu-item" href="/menu/table-view">Table View</a>
+            </div>
+            <!-- Accordion 4 -->
+            <button class="menu-item accordion"><i class="fa-solid fa-gears"></i> System Settings</button>
+            <div class="panel">
+                <a class="sub-menu-item" href="/settings/billing-user-profile">Billing User Profile</a>
+                <a class="sub-menu-item" href="/settings/manual-sync">Manual Sync</a>
+                <a class="sub-menu-item" href="/settings/alerts">Alerts</a>
+                <a class="sub-menu-item" href="/settings/service-renewal">Service Renewal</a>
+                <a class="sub-menu-item" href="/settings/help">Help</a>
+                <a class="sub-menu-item" href="/settings/settings">Settings</a>
+                <a class="sub-menu-item" href="/settings/language-profiles">Language Profiles</a>
+            </div>
+
+            <div class="menu-section" style="margin-top:10px;">Analytics</div>
+            <button class="menu-item accordion"><i class="fa-solid fa-chart-pie"></i> Reports</button>
+            <div class="panel">
+                <a class="sub-menu-item" href="/reports/category-summary">Category Summary</a>
+                <a class="sub-menu-item" href="/reports/item-summary">Item Summary</a>
+                <a class="sub-menu-item" href="/reports/sales-summary">Sales Summary</a>
+                <a class="sub-menu-item" href="/reports/order-summary">Order Summary</a>
+                <a class="sub-menu-item" href="/reports/executive-sales-summary">Executive Sales Summary</a>
+                <a class="sub-menu-item" href="/reports/tip-summary">Tip Summary</a>
+            </div>
+
+            <div class="menu-section" style="margin-top:10px;">Quick Access</div>
+            <a class="menu-item" href="/operations/live-view"><i class="fa-solid fa-satellite-dish"></i>
+                Live View</a>
+            <a class="menu-item" href="/operations/orders"><i class="fa-solid fa-list-check"></i>
+                Orders</a>
+
+        </div>
+    </div>
+
+    <!-- NAVIGATION POPUP MODAL -->
+    <div class="nav-modal-overlay" id="navModal" role="dialog" aria-modal="true" aria-labelledby="navModalTitle">
+        <div class="nav-modal-box">
+            <div class="nav-modal-header">
+                <h2 id="navModalTitle"><i class="fa-solid fa-layer-group"></i> Navigation Center</h2>
+                <i class="fa-solid fa-xmark nav-modal-close" onclick="closeNavModal()"></i>
+            </div>
+
+            <div class="nav-modal-grid">
+                <div class="nav-modal-section-title">Operations</div>
+                <a class="nav-modal-item" href="/operations/orders">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                    <span>Orders & Billing</span>
+                </a>
+                <a class="nav-modal-item" href="/operations/online-orders">
+                    <i class="fa-solid fa-globe"></i>
+                    <span>Online Orders</span>
+                </a>
+                <a class="nav-modal-item" href="/operations/table">
+                    <i class="fa-solid fa-chair"></i>
+                    <span>Table</span>
+                </a>
+                <a class="nav-modal-item" href="/operations/delivery-boys">
+                    <i class="fa-solid fa-truck-fast"></i>
+                    <span>Delivery Boys</span>
+                </a>
+
+                <div class="nav-modal-section-title">Payment & Finance</div>
+                <a class="nav-modal-item" href="/finance/cash-flow">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                    <span>Cash Flow</span>
+                </a>
+                <a class="nav-modal-item" href="/finance/expense">
+                    <i class="fa-solid fa-credit-card"></i>
+                    <span>Expense</span>
+                </a>
+                <a class="nav-modal-item" href="/finance/withdrawal">
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                    <span>Withdrawal</span>
+                </a>
+
+                <div class="nav-modal-section-title">Menu & Inventory</div>
+                <a class="nav-modal-item" href="/menu/menu">
+                    <i class="fa-solid fa-utensils"></i>
+                    <span>Menu Setup</span>
+                </a>
+                <a class="nav-modal-item" href="/menu/customers">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Customers</span>
+                </a>
+                <a class="nav-modal-item" href="/menu/inventory">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>Inventory</span>
+                </a>
+                <a class="nav-modal-item" href="/menu/discount">
+                    <i class="fa-solid fa-tag"></i>
+                    <span>Discount</span>
+                </a>
+
+                <div class="nav-modal-section-title">Analytics & Reports</div>
+                <a class="nav-modal-item" href="/reports/category-summary">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Reports</span>
+                </a>
+                <a class="nav-modal-item" href="/reports/sales-summary">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Sales Summary</span>
+                </a>
+
+                <div class="nav-modal-section-title">System</div>
+                <a class="nav-modal-item" href="/settings/settings">
+                    <i class="fa-solid fa-gears"></i>
+                    <span>Settings</span>
+                </a>
+                <a class="nav-modal-item" href="/settings/help">
+                    <i class="fa-solid fa-headset"></i>
+                    <span>Help Center</span>
+                </a>
+                <a class="nav-modal-item" href="/settings/alerts">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Alerts</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMING SOON MODAL -->
+    <div class="modal-overlay" id="featureModal">
+        <div class="modal-box">
+            <div class="modal-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <h3 class="modal-title">Feature in Development</h3>
+            <p class="modal-desc">The module for "<strong id="featureName"></strong>" is currently undergoing AI
+                reinforcement and secure integration. It will be rolling out in the upcoming software update.</p>
+            <button class="modal-btn" onclick="closeFeatureModal()">I Understand</button>
+        </div>
+    </div>
+    {% endif %}
+    <!-- ===== MODULE DASHBOARD (global, always available) ===== -->
+    <style>
+        .module-dashboard-global {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #f1f5f9;
+            z-index: 2500;
+            flex-direction: column;
+            overflow-y: auto;
+            animation: mdSlideIn 0.3s ease;
+        }
+        .module-dashboard-global.active { display: flex; }
+        @keyframes mdSlideIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .md-header {
+            padding: 14px 28px;
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 2501;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .md-breadcrumb {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: #94a3b8; font-weight: 600;
+        }
+        .md-breadcrumb strong { color: #1e293b; font-size: 18px; font-weight: 800; }
+        .md-breadcrumb i { font-size: 12px; }
+        .md-close-btn {
+            background: #f1f5f9; border: none; padding: 9px 16px;
+            border-radius: 10px; cursor: pointer; font-weight: 700;
+            font-size: 13px; color: #64748b; font-family: inherit;
+            transition: 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .md-close-btn:hover { background: #e2e8f0; color: #0f172a; }
+        .md-content {
+            padding: 24px 28px; flex: 1;
+            display: flex; flex-direction: column; gap: 24px;
+        }
+        .md-section {
+            background: #fff; border-radius: 14px;
+            border: 1px solid #e2e8f0; overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        .md-sec-hdr {
+            padding: 13px 20px; font-weight: 800; font-size: 12px;
+            color: #475569; text-transform: uppercase; letter-spacing: 0.6px;
+            background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .md-sec-hdr i { color: var(--brand-primary); }
+        .md-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+        .md-card {
+            background: #fff; padding: 18px 20px;
+            display: flex; align-items: center; gap: 14px;
+            cursor: pointer; transition: background 0.18s, color 0.18s;
+            color: #1e293b; font-weight: 600; font-size: 14px;
+            border-right: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9;
+        }
+        .md-card:hover { background: #fff5f7; color: var(--brand-primary); }
+        .md-icon {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: #f1f5f9; display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0;
+            color: #64748b; font-size: 16px; transition: 0.2s;
+        }
+        .md-card:hover .md-icon { background: rgba(255,46,99,0.12); color: var(--brand-primary); }
+    </style>
+
+    <div class="module-dashboard-global" id="globalModuleDashboard">
+        <div class="md-header">
+            <div class="md-breadcrumb">
+                <span>Neo Dine</span>
+                <i class="fa-solid fa-chevron-right"></i>
+                <strong id="globalModuleTitle">Operations</strong>
+            </div>
+            <button class="md-close-btn" onclick="closeGlobalModuleDashboard()">
+                <i class="fa-solid fa-arrow-left"></i> Back to POS
+            </button>
+        </div>
+        <div class="md-content">
+            <!-- Orders & Billing -->
+            <div class="md-section" id="gmod-operations">
+                <div class="md-sec-hdr"><i class="fa-solid fa-file-invoice-dollar"></i> Orders &amp; Billing</div>
+                <div class="md-grid">
+                    <div class="md-card" onclick="window.location='/operations/orders'"><div class="md-icon"><i class="fa-solid fa-list-check"></i></div> Orders</div>
+                    <div class="md-card" onclick="window.location='/operations/online-orders'"><div class="md-icon"><i class="fa-solid fa-globe"></i></div> Online Orders</div>
+                    <div class="md-card" onclick="window.location='/operations/kots'"><div class="md-icon"><i class="fa-solid fa-receipt"></i></div> KOTs</div>
+                    <div class="md-card" onclick="window.location='/operations/due-payment'"><div class="md-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div> Due Payment</div>
+                    <div class="md-card" onclick="window.location='/operations/billing-screen'"><div class="md-icon"><i class="fa-solid fa-desktop"></i></div> Billing Screen</div>
+                    <div class="md-card" onclick="window.location='/operations/live-view'"><div class="md-icon"><i class="fa-solid fa-satellite-dish"></i></div> Live View</div>
+                    <div class="md-card" onclick="window.location='/operations/bill-kot-print'"><div class="md-icon"><i class="fa-solid fa-print"></i></div> Bill / KOT Print</div>
+                    <div class="md-card" onclick="window.location='/operations/table'"><div class="md-icon"><i class="fa-solid fa-chair"></i></div> Table</div>
+                    <div class="md-card" onclick="window.location='/operations/custom-order-status'"><div class="md-icon"><i class="fa-solid fa-timeline"></i></div> Custom Order Status</div>
+                    <div class="md-card" onclick="window.location='/operations/delivery-boys'"><div class="md-icon"><i class="fa-solid fa-motorcycle"></i></div> Delivery Boys</div>
+                </div>
+            </div>
+            <!-- Payment & Finance -->
+            <div class="md-section" id="gmod-finance">
+                <div class="md-sec-hdr"><i class="fa-solid fa-wallet"></i> Payment &amp; Finance</div>
+                <div class="md-grid">
+                    <div class="md-card" onclick="window.location='/finance/cash-flow'"><div class="md-icon"><i class="fa-solid fa-money-bill-transfer"></i></div> Cash Flow</div>
+                    <div class="md-card" onclick="window.location='/finance/expense'"><div class="md-icon"><i class="fa-solid fa-chart-line"></i></div> Expense</div>
+                    <div class="md-card" onclick="window.location='/finance/withdrawal'"><div class="md-icon"><i class="fa-solid fa-money-bill-trend-up"></i></div> Withdrawal</div>
+                    <div class="md-card" onclick="window.location='/finance/cash-topup'"><div class="md-icon"><i class="fa-solid fa-coins"></i></div> Cash Top-Up</div>
+                    <div class="md-card" onclick="window.location='/finance/currency-conversion'"><div class="md-icon"><i class="fa-solid fa-money-check-dollar"></i></div> Currency Conversion</div>
+                </div>
+            </div>
+            <!-- Menu & Inventory -->
+            <div class="md-section" id="gmod-inventory">
+                <div class="md-sec-hdr"><i class="fa-solid fa-boxes-stacked"></i> Menu &amp; Inventory</div>
+                <div class="md-grid">
+                    <div class="md-card" onclick="window.location='/menu/menu'"><div class="md-icon"><i class="fa-solid fa-book-open"></i></div> Menu</div>
+                    <div class="md-card" onclick="window.location='/menu/menu-item-onoff'"><div class="md-icon"><i class="fa-solid fa-toggle-on"></i></div> Menu Item On/Off</div>
+                    <div class="md-card" onclick="window.location='/menu/tax'"><div class="md-icon"><i class="fa-solid fa-percent"></i></div> Tax</div>
+                    <div class="md-card" onclick="window.location='/menu/discount'"><div class="md-icon"><i class="fa-solid fa-tags"></i></div> Discount</div>
+                    <div class="md-card" onclick="window.location='/menu/customers'"><div class="md-icon"><i class="fa-solid fa-users"></i></div> Customers</div>
+                    <div class="md-card" onclick="window.location='/menu/feedback'"><div class="md-icon"><i class="fa-solid fa-comment-dots"></i></div> Feedback</div>
+                    <div class="md-card" onclick="window.location='/menu/inventory'"><div class="md-icon"><i class="fa-solid fa-boxes-stacked"></i></div> Inventory</div>
+                    <div class="md-card" onclick="window.location='/menu/dual-screen'"><div class="md-icon"><i class="fa-solid fa-display"></i></div> Dual Screen</div>
+                    <div class="md-card" onclick="window.location='/menu/table-view'"><div class="md-icon"><i class="fa-solid fa-map"></i></div> Table View</div>
+                </div>
+            </div>
+            <!-- System Settings -->
+            <div class="md-section" id="gmod-settings">
+                <div class="md-sec-hdr"><i class="fa-solid fa-gears"></i> System Settings</div>
+                <div class="md-grid">
+                    <div class="md-card" onclick="window.location='/settings/billing-user-profile'"><div class="md-icon"><i class="fa-solid fa-id-badge"></i></div> Billing User Profile</div>
+                    <div class="md-card" onclick="window.location='/settings/manual-sync'"><div class="md-icon"><i class="fa-solid fa-rotate"></i></div> Manual Sync</div>
+                    <div class="md-card" onclick="window.location='/settings/alerts'"><div class="md-icon"><i class="fa-solid fa-bell"></i></div> Alerts</div>
+                    <div class="md-card" onclick="window.location='/settings/service-renewal'"><div class="md-icon"><i class="fa-solid fa-arrows-rotate"></i></div> Service Renewal</div>
+                    <div class="md-card" onclick="window.location='/settings/help'"><div class="md-icon"><i class="fa-solid fa-circle-question"></i></div> Help</div>
+                    <div class="md-card" onclick="window.location='/settings/settings'"><div class="md-icon"><i class="fa-solid fa-gear"></i></div> Settings</div>
+                    <div class="md-card" onclick="window.location='/settings/language-profiles'"><div class="md-icon"><i class="fa-solid fa-language"></i></div> Language Profiles</div>
+                </div>
+            </div>
+            <!-- Reports -->
+            <div class="md-section" id="gmod-reports">
+                <div class="md-sec-hdr"><i class="fa-solid fa-chart-pie"></i> Reports &amp; Analytics</div>
+                <div class="md-grid">
+                    <div class="md-card" onclick="window.location='/reports/category-summary'"><div class="md-icon"><i class="fa-solid fa-layer-group"></i></div> Category Summary</div>
+                    <div class="md-card" onclick="window.location='/reports/item-summary'"><div class="md-icon"><i class="fa-solid fa-utensils"></i></div> Item Summary</div>
+                    <div class="md-card" onclick="window.location='/reports/sales-summary'"><div class="md-icon"><i class="fa-solid fa-chart-line"></i></div> Sales Summary</div>
+                    <div class="md-card" onclick="window.location='/reports/order-summary'"><div class="md-icon"><i class="fa-solid fa-clipboard-list"></i></div> Order Summary</div>
+                    <div class="md-card" onclick="window.location='/reports/executive-sales-summary'"><div class="md-icon"><i class="fa-solid fa-briefcase"></i></div> Executive Sales Summary</div>
+                    <div class="md-card" onclick="window.location='/reports/tip-summary'"><div class="md-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div> Tip Summary</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-body">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        // Debug logging for navigation
+        console.log('Base template JavaScript loading...');
+
+        {% if current_user.is_authenticated %}
+        // Sidebar logic
+        const openBtn = document.getElementById('openMenuBtn');
+        const closeBtn = document.getElementById('closeMenuBtn');
+        const sideNav = document.getElementById('sideNav');
+        const overlay = document.getElementById('sideNavOverlay');
+
+        if (openBtn && closeBtn && sideNav && overlay) {
+            function toggleMenu() {
+                sideNav.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+            function closeSideNav() {
+                sideNav.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+            openBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMenu();
+            });
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeSideNav();
+            });
+            overlay.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeSideNav();
+            });
+        }
+
+        // Accordion logic — uses data-module attribute to open the correct module dashboard
+        const accordions = document.getElementsByClassName("accordion");
+        for (let i = 0; i < accordions.length; i++) {
+            accordions[i].addEventListener("click", function () {
+                const moduleKey = this.dataset.module;
+                if (moduleKey) {
+                    invokeModuleDashboard(moduleKey);
+                } else {
+                    this.classList.toggle("active");
+                    let panel = this.nextElementSibling;
+                    if (panel && panel.classList.contains('panel')) {
+                        panel.style.display = (panel.style.display === "block") ? "none" : "block";
+                    }
+                }
+            });
+        }
+
+        // Make menu-section labels clickable too
+        document.querySelectorAll('.menu-section').forEach(sec => {
+            sec.style.cursor = 'pointer';
+            sec.addEventListener('click', function () {
+                const label = this.innerText.trim().toLowerCase();
+                if (label === 'operations') invokeModuleDashboard('operations');
+                else if (label === 'analytics') invokeModuleDashboard('reports');
+            });
+        });
+
+        // Feature coming soon modal
+        function showComingSoon(feature) {
+            const modal = document.getElementById('featureModal');
+            if (modal) {
+                document.getElementById('featureName').innerText = feature;
+                modal.classList.add('active');
+                if (typeof sideNav !== 'undefined' && sideNav.classList.contains('active')) closeSideNav();
+            }
+        }
+        function closeFeatureModal() {
+            const modal = document.getElementById('featureModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        // Navigation Modal Functions
+        let navModalToFocus = null;
+
+        function openNavModal() {
+            const navModal = document.getElementById('navModal');
+            if (!navModal) return;
+            navModalToFocus = document.activeElement;
+            navModal.classList.add('active');
+            if (typeof sideNav !== 'undefined' && sideNav.classList.contains('active')) closeSideNav();
+            const firstFocusable = navModal.querySelector('a, button');
+            if (firstFocusable) firstFocusable.focus();
+        }
+
+        function closeNavModal() {
+            const navModal = document.getElementById('navModal');
+            if (!navModal) return;
+            navModal.classList.remove('active');
+            if (navModalToFocus) {
+                navModalToFocus.focus();
+                navModalToFocus = null;
+            }
+        }
+
+        const navModalEl = document.getElementById('navModal');
+        if (navModalEl) {
+            navModalEl.addEventListener('click', function (e) {
+                if (e.target === this) {
+                    closeNavModal();
+                }
+            });
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeNavModal();
+            }
+        });
+
+        // Module Dashboard Logic (Global)
+        window.showGlobalModuleDashboard = function(moduleId) {
+            const dashboard = document.getElementById('globalModuleDashboard');
+            if (!dashboard) return;
+            
+            dashboard.classList.add('active');
+            
+            const sections = ['gmod-operations', 'gmod-finance', 'gmod-inventory', 'gmod-settings', 'gmod-reports'];
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            
+            const titleEl = document.getElementById('globalModuleTitle');
+            if (moduleId === 'operations') {
+                titleEl.innerText = 'Orders & Billing';
+                document.getElementById('gmod-operations').style.display = 'block';
+            } else if (moduleId === 'finance') {
+                titleEl.innerText = 'Payment & Finance';
+                document.getElementById('gmod-finance').style.display = 'block';
+            } else if (moduleId === 'inventory') {
+                titleEl.innerText = 'Menu & Inventory';
+                document.getElementById('gmod-inventory').style.display = 'block';
+            } else if (moduleId === 'settings') {
+                titleEl.innerText = 'System Settings';
+                document.getElementById('gmod-settings').style.display = 'block';
+            } else if (moduleId === 'reports') {
+                titleEl.innerText = 'Reports & Analytics';
+                document.getElementById('gmod-reports').style.display = 'block';
+            } else {
+                titleEl.innerText = 'All Modules';
+                sections.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'block';
+                });
+            }
+        };
+
+        window.closeGlobalModuleDashboard = function() {
+            const dashboard = document.getElementById('globalModuleDashboard');
+            if (dashboard) dashboard.classList.remove('active');
+        };
+
+        function invokeModuleDashboard(moduleId) {
+            if (typeof sideNav !== 'undefined' && sideNav.classList.contains('active')) closeSideNav();
+            showGlobalModuleDashboard(moduleId);
+        }
+
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mod = urlParams.get('module');
+            if (mod) {
+                showGlobalModuleDashboard(mod);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
+        window.handleNewOrder = function() {
+            if (window.location.pathname === '/') {
+                if (typeof resetCart === 'function') {
+                    resetCart();
+                } else {
+                    window.location.href = '/';
+                }
+            } else {
+                window.location.href = '/';
+            }
+        };
+
+        {% endif %}
+    </script>
+</body>
+
+</html>

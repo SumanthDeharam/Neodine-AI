@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Settings</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>System Settings</strong>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="mod-btn mod-btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    </div>
+  </div>
+  <div class="mod-body" style="padding-top:20px;">
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-store"></i> Restaurant Info</h3></div>
+      <div class="mod-form-grid">
+        <div class="mod-form-group"><label>Restaurant Name</label><input type="text" value="Neo Dine AI"></div>
+        <div class="mod-form-group"><label>City</label><input type="text" value="Bengaluru"></div>
+        <div class="mod-form-group"><label>Address</label><input type="text" placeholder="Full address"></div>
+        <div class="mod-form-group"><label>Phone</label><input type="tel" value="7989052868"></div>
+        <div class="mod-form-group"><label>Currency</label><select><option>₹ INR</option><option>$ USD</option><option>€ EUR</option></select></div>
+        <div class="mod-form-group"><label>Time Zone</label><select><option>Asia/Kolkata (IST)</option><option>UTC</option></select></div>
+      </div>
+    </div>
+    <div class="data-card" style="margin-top:16px;">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-sliders"></i> Operational Settings</h3></div>
+      {% set opts = [('Auto-print KOT on new order',true),('Require customer name for billing',false),('Show item images on POS',false),('Enable table management',true),('Auto-apply loyalty discount',false),('Show profit margin to staff',false)] %}
+      {% for opt in opts %}
+      <div class="toggle-row">
+        <div class="toggle-info"><div class="t-name">{{ opt[0] }}</div></div>
+        <label class="toggle-switch"><input type="checkbox" {{ 'checked' if opt[1] else '' }}><span class="toggle-slider"></span></label>
+      </div>
+      {% endfor %}
+      <div style="padding:16px 20px;">
+        <button class="mod-save-btn"><i class="fa-solid fa-floppy-disk"></i> Save All Settings</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

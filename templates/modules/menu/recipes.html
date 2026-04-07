@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Menu &amp; Inventory</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Recipes Editor</strong>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="mod-btn mod-btn-primary" onclick="toggleRecipeModal()"><i class="fa-solid fa-plus"></i> Add Ingredient to Recipe</button>
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    </div>
+  </div>
+
+  <div class="mod-body">
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-book-open-reader"></i> Current Menu Recipes</h3>
+      </div>
+      <table class="mod-table">
+        <thead><tr><th>Menu Item</th><th>Ingredient Linked</th><th>Quantity Required</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% if recipes %}
+          {% for rec in recipes %}
+          <tr>
+            <td><strong>{{ rec.menu_item.name }}</strong></td>
+            <td><span class="badge badge-blue">{{ rec.ingredient.ingredient_name }}</span></td>
+            <td><strong>{{ rec.quantity_required }} {{ rec.ingredient.unit_type }}</strong></td>
+            <td>
+                <button class="mod-btn" style="padding: 4px 8px; font-size: 11px;" onclick="deleteRecipe({{ rec.id }})"><i class="fa-solid fa-trash" style="color:var(--brand-primary)"></i> Remove</button>
+            </td>
+          </tr>
+          {% endfor %}
+          {% else %}
+          <tr><td colspan="4" style="text-align:center; padding: 20px;">No Recipes Found. Link ingredients to menu items to automatically track inventory.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add Recipe Modal -->
+  <div class="modal-overlay" id="addRecipeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+      <div class="modal-box" style="background:#fff; border-radius:12px; padding:24px; min-width:350px;">
+          <h3><i class="fa-solid fa-plus"></i> Map Ingredient</h3>
+          <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
+              <select id="r_menu_id" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
+                  <option value="" disabled selected>Select Menu Item...</option>
+                  {% for mi in menu_items %}
+                  <option value="{{ mi.id }}">{{ mi.name }}</option>
+                  {% endfor %}
+              </select>
+              <select id="r_inv_id" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
+                  <option value="" disabled selected>Select Ingredient (from Inventory)...</option>
+                  {% for inv in inventory_items %}
+                  <option value="{{ inv.id }}">{{ inv.ingredient_name }} ({{ inv.unit_type }})</option>
+                  {% endfor %}
+              </select>
+              <input type="number" step="0.01" id="r_qty" placeholder="Quantity Required" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
+              <div style="display:flex; gap:10px; margin-top:10px;">
+                  <button class="mod-btn mod-btn-primary" style="flex:1;" onclick="saveRecipe()">Save Recipe Rule</button>
+                  <button class="mod-btn" style="flex:1;" onclick="document.getElementById('addRecipeModal').style.display='none'">Cancel</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+      function toggleRecipeModal() {
+          const mod = document.getElementById('addRecipeModal');
+          mod.style.display = mod.style.display === 'flex' ? 'none' : 'flex';
+      }
+
+      function saveRecipe() {
+          const m_id = document.getElementById('r_menu_id').value;
+          const i_id = document.getElementById('r_inv_id').value;
+          const qty = document.getElementById('r_qty').value;
+
+          if(!m_id || !i_id || !qty) return alert("Please fill all fields");
+
+          fetch('/api/recipe/save', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                  menu_item_id: m_id,
+                  ingredient_id: i_id,
+                  quantity_required: qty
+              })
+          }).then(res => res.json()).then(data => {
+              if(data.success) {
+                  alert("Recipe Saved Successfully");
+                  location.reload();
+              } else alert('Failed to save recipe');
+          });
+      }
+
+      function deleteRecipe(id) {
+          if(confirm("Are you sure you want to decouple this ingredient from the recipe?")) {
+              fetch('/api/recipe/delete', { 
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({ id: id })
+              })
+              .then(res => res.json())
+              .then(data => { if(data.success) location.reload(); });
+          }
+      }
+  </script>
+</div>
+{% endblock %}

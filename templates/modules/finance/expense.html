@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Finance</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Expense Manager</strong>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="mod-btn mod-btn-primary" onclick="alert('Add expense feature coming soon!')"><i class="fa-solid fa-plus"></i> Add Expense</button>
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    </div>
+  </div>
+  <div class="mod-stats">
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;"><i class="fa-solid fa-credit-card"></i></div><div class="stat-body"><span class="stat-val">₹0</span><span class="stat-lbl">Today Expenses</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-calendar-week"></i></div><div class="stat-body"><span class="stat-val">₹0</span><span class="stat-lbl">This Week</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-calendar"></i></div><div class="stat-body"><span class="stat-val">₹0</span><span class="stat-lbl">This Month</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-chart-pie"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">Categories</span></div></div>
+  </div>
+  <div class="mod-body">
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-credit-card"></i> Expense Records</h3></div>
+      <div class="empty-state"><i class="fa-solid fa-credit-card"></i><p>No expenses recorded. Click "Add Expense" to log your first entry.</p></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

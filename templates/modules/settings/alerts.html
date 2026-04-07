@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Settings</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Alerts &amp; Notifications</strong>
+    </div>
+    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+  </div>
+  <div class="mod-body" style="padding-top:20px;">
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-bell"></i> Alert Preferences</h3></div>
+      {% set alerts = [('New Order Received','Play sound and show banner when a new order comes in',true),('Low Stock Warning','Alert when any ingredient falls below minimum level',true),('Payment Pending','Notify when a bill is awaiting payment confirmation',true),('High Traffic Alert','Warn when active orders exceed 10 simultaneously',false),('Daily Sales Report','Send end-of-day summary notification',true),('Printer Error','Alert immediately if printer goes offline',true),('Sync Failure','Notify if cloud sync fails for more than 5 minutes',false)] %}
+      {% for alert in alerts %}
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="t-name"><i class="fa-solid fa-bell" style="color:#FF2E63;font-size:12px;margin-right:6px;"></i>{{ alert[0] }}</div>
+          <div class="t-desc">{{ alert[1] }}</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" {{ 'checked' if alert[2] else '' }}>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      {% endfor %}
+      <div style="padding:16px 20px;">
+        <button class="mod-save-btn"><i class="fa-solid fa-floppy-disk"></i> Save Preferences</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

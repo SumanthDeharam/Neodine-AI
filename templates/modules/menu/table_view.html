@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<style>
+  .tv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;padding:20px;}
+  .tv-tile{border-radius:14px;padding:24px 16px;text-align:center;cursor:pointer;border:2px solid;transition:0.2s;}
+  .tv-tile.free{background:#f0fdf4;border-color:#bbf7d0;}
+  .tv-tile.busy{background:#fff1f2;border-color:#fecdd3;}
+  .tv-tile:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.08);}
+  .tv-num{font-size:24px;font-weight:800;color:#1e293b;}
+  .tv-seats{font-size:11px;color:#94a3b8;margin-top:4px;}
+  .tv-status{font-size:11px;font-weight:700;text-transform:uppercase;margin-top:6px;letter-spacing:0.5px;}
+  .tv-tile.free .tv-status{color:#166534;}
+  .tv-tile.busy .tv-status{color:#9f1239;}
+</style>
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Menu &amp; Inventory</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Table View</strong>
+    </div>
+    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+  </div>
+  <div class="mod-stats">
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-chair"></i></div><div class="stat-body"><span class="stat-val">12</span><span class="stat-lbl">Total Tables</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-users"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">Occupied</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-percent"></i></div><div class="stat-body"><span class="stat-val">0%</span><span class="stat-lbl">Occupancy Rate</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-clock"></i></div><div class="stat-body"><span class="stat-val">0 min</span><span class="stat-lbl">Avg. Dine Time</span></div></div>
+  </div>
+  <div class="mod-body">
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-map"></i> Floor Plan View</h3></div>
+      <div class="tv-grid">
+        {% for i in range(1, 13) %}
+        <div class="tv-tile free">
+          <div class="tv-num">T{{ i }}</div>
+          <div class="tv-seats"><i class="fa-solid fa-user"></i> 4 seats</div>
+          <div class="tv-status">Free</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

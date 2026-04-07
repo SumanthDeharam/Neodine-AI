@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Operations</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>KOTs (Kitchen Order Tickets)</strong>
+    </div>
+    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+  </div>
+  <div class="mod-stats">
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-receipt"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">Total KOTs</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-fire-burner"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">In Kitchen</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-check-double"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">Ready</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-stopwatch"></i></div><div class="stat-body"><span class="stat-val">0 min</span><span class="stat-lbl">Avg. Prep Time</span></div></div>
+  </div>
+  <div class="mod-body">
+    <div class="dev-notice"><i class="fa-solid fa-circle-info"></i><span><strong>KOT Module Active</strong> — Kitchen display integration is ready. Connect your KDS (Kitchen Display System) to start routing orders.</span></div>
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-receipt"></i> Active Kitchen Tickets</h3></div>
+      <div class="empty-state"><i class="fa-solid fa-utensils"></i><p>No active kitchen tickets. New orders will appear here automatically.</p></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

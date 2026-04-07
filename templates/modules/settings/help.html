@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<style>
+  .faq-item{border-bottom:1px solid #f1f5f9;padding:16px 0;}
+  .faq-q{font-weight:700;color:#1e293b;font-size:14px;display:flex;align-items:center;gap:8px;cursor:pointer;}
+  .faq-q i{color:#FF2E63;font-size:12px;}
+  .faq-a{font-size:13px;color:#64748b;line-height:1.6;margin-top:8px;padding-left:20px;}
+</style>
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Settings</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Help &amp; Support</strong>
+    </div>
+    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+  </div>
+  <div class="mod-body" style="padding-top:20px;">
+    <div class="dev-notice"><i class="fa-solid fa-headset"></i><span><strong>Need Help?</strong> Call our support team at <strong>7989052868</strong> — available daily 9AM–9PM.</span></div>
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-circle-question"></i> Frequently Asked Questions</h3></div>
+      <div style="padding:4px 20px 20px;">
+        {% set faqs = [('How do I add a new menu item?','Go to Menu &amp; Inventory → Menu → Click "Add Item" and fill in the details.'),('How do I apply a discount?','In the POS billing screen, click the discount field and enter the percentage before settling.'),('How do I print a KOT?','KOTs are printed automatically when an order is confirmed. Go to Operations → Bill/KOT Print to manage print settings.'),('Can I have multiple users?','Yes! Register new users from the login page. Admin can approve them from the Admin panel.'),('How is GST calculated?','GST (5%) is applied after applying any discounts. It is shown separately on every bill.')] %}
+        {% for faq in faqs %}
+        <div class="faq-item">
+          <div class="faq-q"><i class="fa-solid fa-chevron-right"></i>{{ faq[0] }}</div>
+          <div class="faq-a">{{ faq[1] }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="data-card" style="margin-top:16px;">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-envelope"></i> Contact Support</h3></div>
+      <div class="mod-form-grid">
+        <div class="mod-form-group"><label>Your Issue</label><input type="text" placeholder="Briefly describe your issue"></div>
+        <div class="mod-form-group"><label>Priority</label><select><option>Normal</option><option>Urgent</option></select></div>
+      </div>
+      <button class="mod-save-btn"><i class="fa-solid fa-paper-plane"></i> Send to Support</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

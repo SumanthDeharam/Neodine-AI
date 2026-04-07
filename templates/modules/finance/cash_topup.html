@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Finance</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Cash Top-Up</strong>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="mod-btn mod-btn-primary"><i class="fa-solid fa-coins"></i> Add Cash</button>
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    </div>
+  </div>
+  <div class="mod-stats">
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-coins"></i></div><div class="stat-body"><span class="stat-val">₹0</span><span class="stat-lbl">Current Float</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-arrow-up-from-bracket"></i></div><div class="stat-body"><span class="stat-val">₹0</span><span class="stat-lbl">Today Top-Ups</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-building-columns"></i></div><div class="stat-body"><span class="stat-val">₹0</span><span class="stat-lbl">Petty Cash</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-list"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">Top-Up Records</span></div></div>
+  </div>
+  <div class="mod-body">
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-coins"></i> Top-Up History</h3></div>
+      <div class="empty-state"><i class="fa-solid fa-coins"></i><p>No top-up records yet. Add cash to the register to begin.</p></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

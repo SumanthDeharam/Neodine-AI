@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<style>
+  .feedback-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;}
+  .feedback-card+.feedback-card{margin-top:12px;}
+  .fb-header{display:flex;justify-content:space-between;align-items:center;}
+  .fb-customer{font-weight:800;color:#1e293b;font-size:14px;}
+  .fb-stars{color:#f59e0b;font-size:14px;letter-spacing:2px;}
+  .fb-text{font-size:13px;color:#64748b;line-height:1.5;}
+  .fb-date{font-size:11px;color:#94a3b8;margin-top:4px;}
+  .star-avg{font-size:48px;font-weight:800;color:#1e293b;}
+  .star-row{display:flex;align-items:center;gap:8px;color:#64748b;font-size:13px;margin:4px 0;}
+  .star-bar{flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;}
+  .star-fill{height:100%;background:#f59e0b;border-radius:4px;}
+</style>
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Menu &amp; Inventory</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Customer Feedback</strong>
+    </div>
+    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+  </div>
+  <div class="mod-stats">
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-star"></i></div><div class="stat-body"><span class="stat-val">—</span><span class="stat-lbl">Avg. Rating</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-comment-dots"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">Total Reviews</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-thumbs-up"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">Positive</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;"><i class="fa-solid fa-thumbs-down"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">Negative</span></div></div>
+  </div>
+  <div class="mod-body">
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-comment-dots"></i> Feedback &amp; Reviews</h3></div>
+      <div class="empty-state"><i class="fa-solid fa-comments"></i><p>No feedback received yet. Share your feedback link with customers after their meals.</p></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

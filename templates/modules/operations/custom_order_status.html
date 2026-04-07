@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<style>
+  .status-pipeline{display:flex;gap:0;padding:20px;overflow-x:auto;}
+  .pipe-stage{flex:1;min-width:140px;background:#fff;border:1px solid #e2e8f0;padding:16px;text-align:center;position:relative;}
+  .pipe-stage:not(:last-child)::after{content:'›';position:absolute;right:-14px;top:50%;transform:translateY(-50%);font-size:24px;color:#cbd5e1;z-index:1;}
+  .pipe-stage:first-child{border-radius:12px 0 0 12px;}
+  .pipe-stage:last-child{border-radius:0 12px 12px 0;}
+  .pipe-icon{font-size:24px;margin-bottom:8px;}
+  .pipe-name{font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;}
+  .pipe-count{font-size:22px;font-weight:800;color:#1e293b;margin-top:4px;}
+</style>
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Operations</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Custom Order Status</strong>
+    </div>
+    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+  </div>
+  <div class="mod-body" style="padding-top:20px;">
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-timeline"></i> Order Status Pipeline</h3></div>
+      <div class="status-pipeline">
+        <div class="pipe-stage"><div class="pipe-icon">📋</div><div class="pipe-name">Received</div><div class="pipe-count">0</div></div>
+        <div class="pipe-stage"><div class="pipe-icon">🔥</div><div class="pipe-name">Kitchen</div><div class="pipe-count">0</div></div>
+        <div class="pipe-stage"><div class="pipe-icon">✅</div><div class="pipe-name">Ready</div><div class="pipe-count">0</div></div>
+        <div class="pipe-stage"><div class="pipe-icon">🚗</div><div class="pipe-name">Out for Delivery</div><div class="pipe-count">0</div></div>
+        <div class="pipe-stage"><div class="pipe-icon">🎉</div><div class="pipe-name">Delivered</div><div class="pipe-count">0</div></div>
+      </div>
+    </div>
+    <div class="data-card" style="margin-top:16px;">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-sliders"></i> Custom Status Labels</h3></div>
+      <div class="dev-notice"><i class="fa-solid fa-circle-info"></i><span>Configure custom order status labels for your workflow. Changes apply to all new orders.</span></div>
+      <div class="mod-form-grid">
+        <div class="mod-form-group"><label>Status 1 Label</label><input type="text" value="Received" placeholder="e.g. Received"></div>
+        <div class="mod-form-group"><label>Status 2 Label</label><input type="text" value="In Kitchen" placeholder="e.g. In Kitchen"></div>
+        <div class="mod-form-group"><label>Status 3 Label</label><input type="text" value="Ready" placeholder="e.g. Ready"></div>
+        <div class="mod-form-group"><label>Status 4 Label</label><input type="text" value="Dispatched" placeholder="e.g. Dispatched"></div>
+      </div>
+      <button class="mod-save-btn"><i class="fa-solid fa-floppy-disk"></i> Save Status Labels</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Menu &amp; Inventory</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Dual Screen</strong>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="mod-btn mod-btn-primary" onclick="window.open('/','_blank','width=800,height=600')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Launch Customer Display</button>
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    </div>
+  </div>
+  <div class="mod-body" style="padding-top:20px;">
+    <div class="dev-notice"><i class="fa-solid fa-display"></i><span><strong>Dual Screen Mode</strong> — Connect a second display to show a customer-facing screen while you operate the POS. Click "Launch Customer Display" to open on a secondary monitor.</span></div>
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-display"></i> Display Configuration</h3></div>
+      <div class="info-grid">
+        <div class="info-tile"><div class="t-lbl">Display Mode</div><div class="t-val">Dual Screen</div></div>
+        <div class="info-tile"><div class="t-lbl">Customer Screen</div><div class="t-val">Not Connected</div></div>
+        <div class="info-tile"><div class="t-lbl">Show Live Order</div><div class="t-val">Enabled</div></div>
+        <div class="info-tile"><div class="t-lbl">Show Total</div><div class="t-val">Enabled</div></div>
+        <div class="info-tile"><div class="t-lbl">Brand Banner</div><div class="t-val">Neo Dine AI</div></div>
+        <div class="info-tile"><div class="t-lbl">Show Promotions</div><div class="t-val">Disabled</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

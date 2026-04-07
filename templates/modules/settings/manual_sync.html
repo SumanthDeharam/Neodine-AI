@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Settings</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Manual Sync</strong>
+    </div>
+    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+  </div>
+  <div class="mod-body" style="padding-top:20px;">
+    <div class="dev-notice"><i class="fa-solid fa-rotate"></i><span><strong>Manual Sync</strong> — Force synchronize your local data with the cloud. Use this if you notice data discrepancies.</span></div>
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-rotate"></i> Sync Actions</h3></div>
+      <div class="info-grid">
+        <div class="info-tile"><div class="t-lbl">Last Sync</div><div class="t-val">Just now</div></div>
+        <div class="info-tile"><div class="t-lbl">Sync Status</div><div class="t-val" style="color:#10b981;">✓ In Sync</div></div>
+        <div class="info-tile"><div class="t-lbl">Pending Records</div><div class="t-val">0</div></div>
+        <div class="info-tile"><div class="t-lbl">Cloud Backup</div><div class="t-val">Enabled</div></div>
+      </div>
+      <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:10px;">
+        <button class="mod-save-btn" style="width:fit-content;" onclick="alert('Sync started! This runs in background.')"><i class="fa-solid fa-rotate"></i> Sync Orders &amp; Data</button>
+        <button class="mod-save-btn" style="width:fit-content;background:linear-gradient(135deg,#6366f1,#818cf8);" onclick="alert('Menu synced!')"><i class="fa-solid fa-book-open"></i> Sync Menu Items</button>
+        <button class="mod-save-btn" style="width:fit-content;background:linear-gradient(135deg,#0f172a,#334155);" onclick="alert('Full sync complete!')"><i class="fa-solid fa-cloud-arrow-up"></i> Full Cloud Sync</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Menu &amp; Inventory</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Inventory</strong>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="mod-btn mod-btn-primary" onclick="toggleStockModal()"><i class="fa-solid fa-plus"></i> Add Stock</button>
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    </div>
+  </div>
+  <div class="mod-stats">
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-boxes-stacked"></i></div><div class="stat-body"><span class="stat-val">{{ total_items|default(0) }}</span><span class="stat-lbl">Total Items</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="stat-body"><span class="stat-val">{{ low_stock|default(0) }}</span><span class="stat-lbl">Low Stock</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-check-circle"></i></div><div class="stat-body"><span class="stat-val">{{ well_stocked|default(0) }}</span><span class="stat-lbl">Well Stocked</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-rotate"></i></div><div class="stat-body"><span class="stat-val">{{ critical_stock|default(0) }}</span><span class="stat-lbl">Reorder Needed</span></div></div>
+  </div>
+  <div class="mod-body">
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-boxes-stacked"></i> Ingredient Stock Levels</h3>
+        <input type="text" placeholder="Search ingredients..." style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:13px;outline:none;">
+      </div>
+      <table class="mod-table">
+        <thead><tr><th>Ingredient</th><th>Current Stock</th><th>Min. Level</th><th>Status</th><th>Last Updated</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% if inventory_items %}
+          {% for ing in inventory_items %}
+          <tr>
+            <td><strong>{{ ing.ingredient_name }}</strong><br><span style="font-size:11px;color:#94a3b8;">{{ ing.supplier or 'No Supplier' }}</span></td>
+            <td>{{ ing.current_stock }} {{ ing.unit }}</td>
+            <td>{{ ing.min_level }} {{ ing.unit }}</td>
+            <td><span class="badge {{ 'badge-green' if ing.current_stock > ing.min_level else ('badge-red' if ing.current_stock <= 0 else 'badge-yellow') }}">{{ 'Good' if ing.current_stock > ing.min_level else ('Critical' if ing.current_stock <= 0 else 'Low') }}</span></td>
+            <td style="color:#94a3b8;font-size:12px;">{{ ing.last_updated.strftime('%Y-%m-%d %H:%M') if ing.last_updated else 'N/A' }}</td>
+            <td>
+                <button class="mod-btn" style="padding: 4px 8px; font-size: 11px;" onclick="adjustStock({{ ing.id }}, `{{ (ing.ingredient_name or '')|replace('`', '\\`') }}`, `{{ ing.unit }}`, 'add')" title="Add Stock"><i class="fa-solid fa-plus" style="color:var(--brand-secondary)"></i></button>
+                <button class="mod-btn" style="padding: 4px 8px; font-size: 11px;" onclick="adjustStock({{ ing.id }}, `{{ (ing.ingredient_name or '')|replace('`', '\\`') }}`, `{{ ing.unit }}`, 'reduce')" title="Reduce Stock"><i class="fa-solid fa-minus" style="color:#ef4444"></i></button>
+                <button class="mod-btn" style="padding: 4px 8px; font-size: 11px;" onclick="editStockItem({{ ing.id }}, `{{ (ing.ingredient_name or '')|replace('`', '\\`') }}`, `{{ ing.unit }}`, {{ ing.current_stock }}, {{ ing.min_level }}, `{{ (ing.supplier or '')|replace('`', '\\`') }}`)" title="Edit Item"><i class="fa-solid fa-pen-to-square" style="color:var(--text-light)"></i></button>
+                <button class="mod-btn" style="padding: 4px 8px; font-size: 11px;" onclick="deleteStockItem({{ ing.id }})" title="Delete"><i class="fa-solid fa-trash" style="color:var(--brand-primary)"></i></button>
+            </td>
+          </tr>
+          {% endfor %}
+          {% else %}
+          <tr><td colspan="6" style="text-align:center; padding: 20px;">No Inventory Data. Proceed to add stock to track ingredients.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add Stock Modal -->
+  <div class="modal-overlay" id="addStockModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+      <div class="modal-box" style="background:#fff; border-radius:12px; padding:24px; min-width:350px;">
+          <h3><i class="fa-solid fa-plus"></i> Add/Edit Ingredient Stock</h3>
+          <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
+              <input type="hidden" id="i_id">
+              <input type="text" id="i_name" placeholder="Ingredient Name (e.g Chicken)" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
+              <select id="i_unit" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
+                  <option value="kg">kilograms (kg)</option>
+                  <option value="g">grams (g)</option>
+                  <option value="L">Liters (L)</option>
+                  <option value="ml">milliliters (ml)</option>
+                  <option value="pieces">Pieces / Bottles</option>
+              </select>
+              <input type="number" step="0.01" id="i_stock" placeholder="Current Stock Amount" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
+              <input type="number" step="0.01" id="i_min" placeholder="Minimum Level Alert Limit" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
+              <input type="text" id="i_supplier" placeholder="Supplier Name (optional)" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
+              <div style="display:flex; gap:10px; margin-top:10px;">
+                  <button class="mod-btn mod-btn-primary" style="flex:1;" onclick="saveStockItem()">Save Stock</button>
+                  <button class="mod-btn" style="flex:1;" onclick="document.getElementById('addStockModal').style.display='none'">Cancel</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+      function toggleStockModal() {
+          const mod = document.getElementById('addStockModal');
+          if (!mod) {
+               console.error("Modal not found");
+               return;
+          }
+          if (mod.style.display === 'none' || mod.style.display === '') {
+              document.getElementById('i_id').value = '';
+              document.getElementById('i_name').value = '';
+              document.getElementById('i_unit').value = 'kg';
+              document.getElementById('i_stock').value = '';
+              document.getElementById('i_min').value = '';
+              document.getElementById('i_supplier').value = '';
+              mod.style.display = 'flex';
+          } else {
+              mod.style.display = 'none';
+          }
+      }
+
+      function adjustStock(id, name, unit, action_type) {
+          const qtyStr = prompt(`How much ${unit} to ${action_type} for ${name}?`);
+          if (!qtyStr) return;
+          const qty = parseFloat(qtyStr);
+          if (isNaN(qty) || qty <= 0) return alert("Invalid quantity");
+          
+          fetch('/add_stock', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                  items: [{ id: id, action: action_type, quantity: qty }]
+              })
+          }).then(res => res.json()).then(data => {
+              if(data.success) {
+                  alert("Stock Updated Successfully");
+                  location.reload();
+              } else alert('Failed to update stock');
+          });
+      }
+
+      function editStockItem(id, name, unit, stock, min, supplier) {
+          document.getElementById('i_id').value = id;
+          document.getElementById('i_name').value = name;
+          document.getElementById('i_unit').value = unit;
+          document.getElementById('i_stock').value = stock;
+          document.getElementById('i_min').value = min;
+          document.getElementById('i_supplier').value = supplier || '';
+          document.getElementById('addStockModal').style.display = 'flex';
+      }
+
+      function saveStockItem() {
+          fetch('/add_stock', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                  items: [{
+                      id: document.getElementById('i_id').value || null,
+                      ingredient_name: document.getElementById('i_name').value,
+                      unit: document.getElementById('i_unit').value,
+                      current_stock: document.getElementById('i_stock').value,
+                      min_level: document.getElementById('i_min').value,
+                      supplier: document.getElementById('i_supplier').value
+                  }]
+              })
+          }).then(res => res.json()).then(data => {
+              if(data.success) {
+                  alert("Stock Updated Successfully");
+                  location.reload();
+              } else alert('Failed to save inventory');
+          });
+      }
+
+      function deleteStockItem(id) {
+          if(confirm("Are you sure you want to delete this ingredient from Inventory?")) {
+              fetch('/delete_stock/' + id, { method: 'POST' })
+              .then(res => res.json())
+              .then(data => { if(data.success) location.reload(); });
+          }
+      }
+  </script>
+</div>
+{% endblock %}

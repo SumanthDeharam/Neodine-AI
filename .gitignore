@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.env
+
+# SQLite local database (Render provides a PostgreSQL DB, or uses a fresh ephemeral SQLite DB)
+saas_customers.db
+restaurant_database.xlsx
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db

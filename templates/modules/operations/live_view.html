@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<style>
+  .live-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;padding:20px;}
+  .live-tile{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;position:relative;overflow:hidden;}
+  .live-dot{width:10px;height:10px;border-radius:50%;background:#10b981;animation:pulse 1.5s infinite;position:absolute;top:16px;right:16px;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  .live-tile .section-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#94a3b8;margin-bottom:6px;}
+  .live-tile .section-count{font-size:28px;font-weight:800;color:#1e293b;}
+  .live-tile .section-status{font-size:12px;color:#64748b;margin-top:4px;}
+</style>
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Operations</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Live View</strong>
+    </div>
+    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+  </div>
+  <div class="mod-stats">
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-satellite-dish"></i></div><div class="stat-body"><span class="stat-val">Live</span><span class="stat-lbl">System Status</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-chair"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">Occupied Tables</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-truck-fast"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">Active Deliveries</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-fire-burner"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">Kitchen Queue</span></div></div>
+  </div>
+  <div class="mod-body">
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-satellite-dish"></i> Live Restaurant Dashboard</h3><span class="badge badge-green">● Live</span></div>
+      <div class="live-grid">
+        <div class="live-tile"><div class="live-dot"></div><div class="section-name">Dine-In</div><div class="section-count">0</div><div class="section-status">Active orders</div></div>
+        <div class="live-tile"><div class="live-dot"></div><div class="section-name">Takeaway</div><div class="section-count">0</div><div class="section-status">Pending pickup</div></div>
+        <div class="live-tile"><div class="live-dot"></div><div class="section-name">Delivery</div><div class="section-count">0</div><div class="section-status">Out for delivery</div></div>
+        <div class="live-tile"><div class="live-dot"></div><div class="section-name">Kitchen</div><div class="section-count">0</div><div class="section-status">Items in preparation</div></div>
+        <div class="live-tile"><div class="live-dot"></div><div class="section-name">Ready</div><div class="section-count">0</div><div class="section-status">Awaiting service</div></div>
+        <div class="live-tile"><div class="live-dot"></div><div class="section-name">Today Revenue</div><div class="section-count">₹0</div><div class="section-status">Billed amount</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

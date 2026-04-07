@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Settings</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Language Profiles</strong>
+    </div>
+    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+  </div>
+  <div class="mod-body" style="padding-top:20px;">
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-language"></i> Language &amp; Locale</h3></div>
+      <div class="mod-form-grid">
+        <div class="mod-form-group"><label>App Language</label>
+          <select>
+            <option selected>English</option>
+            <option>हिंदी (Hindi)</option>
+            <option>తెలుగు (Telugu)</option>
+            <option>தமிழ் (Tamil)</option>
+            <option>ಕನ್ನಡ (Kannada)</option>
+            <option>বাংলা (Bengali)</option>
+            <option>मराठी (Marathi)</option>
+          </select>
+        </div>
+        <div class="mod-form-group"><label>Receipt Language</label>
+          <select>
+            <option selected>English</option>
+            <option>हिंदी (Hindi)</option>
+            <option>తెలుగు (Telugu)</option>
+          </select>
+        </div>
+        <div class="mod-form-group"><label>Date Format</label>
+          <select><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select>
+        </div>
+        <div class="mod-form-group"><label>Time Format</label>
+          <select><option>12 Hour (AM/PM)</option><option>24 Hour</option></select>
+        </div>
+        <div class="mod-form-group"><label>Number Format</label>
+          <select><option>1,00,000 (Indian)</option><option>100,000 (International)</option></select>
+        </div>
+        <div class="mod-form-group"><label>Currency Symbol</label>
+          <select><option>₹ (Rupee Symbol)</option><option>INR (Text)</option></select>
+        </div>
+      </div>
+      <button class="mod-save-btn"><i class="fa-solid fa-floppy-disk"></i> Save Language Settings</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
