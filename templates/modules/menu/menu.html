@@ -9,7 +9,7 @@
       <strong>Menu</strong>
     </div>
     <div style="display:flex;gap:10px;">
-      <button class="mod-btn mod-btn-primary" onclick="toggleMenuModal()"><i class="fa-solid fa-plus"></i> Add Item</button>
+      <button class="mod-btn mod-btn-primary" id="addMenuItemBtn"><i class="fa-solid fa-plus"></i> Add Item</button>
       <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
     </div>
   </div>
@@ -64,8 +64,8 @@
   </div>
 
   <!-- Add Item Modal -->
-  <div class="modal-overlay" id="addMenuModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; overflow-y:auto; padding: 20px;">
-      <div class="modal-box" style="background:#fff; border-radius:12px; padding:24px; width:450px; max-width:90%; position:relative;">
+  <div class="modal-overlay" id="addMenuModal">
+      <div class="modal-box" style="max-width:500px; width:90%; text-align:left; padding:28px;">
           <h3><i class="fa-solid fa-plus"></i> Add/Edit Menu Item</h3>
           <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
               <input type="hidden" id="m_id">
@@ -98,56 +98,76 @@
 
               <div style="display:flex; gap:10px; margin-top:15px;">
                   <button class="mod-btn mod-btn-primary" style="flex:1;" onclick="saveMenuItem()">Save Item</button>
-                  <button class="mod-btn" style="flex:1;" onclick="document.getElementById('addMenuModal').style.display='none'">Cancel</button>
+                  <button class="mod-btn" style="flex:1;" id="cancelMenuModalBtn">Cancel</button>
               </div>
           </div>
       </div>
   </div>
 
   <script>
-      function toggleMenuModal() {
-          try {
-              const mod = document.getElementById('addMenuModal');
-              if (mod.style.display !== 'flex') {
-                  document.getElementById('m_id').value = '';
-                  document.getElementById('m_name').value = '';
-                  document.getElementById('m_cat').value = '';
-                  document.getElementById('m_price').value = '';
-                  document.getElementById('m_type').value = 'Veg';
-                  document.getElementById('m_desc').value = '';
-                  document.getElementById('m_status').value = 'Active';
-                  document.getElementById('m_best_seller').checked = false;
-                  document.getElementById('m_hidden').checked = false;
-                  document.getElementById('m_image').value = '';
-                  document.getElementById('m_prep_time').value = '15';
-                  document.getElementById('m_display_order').value = '0';
-              }
-              mod.style.display = mod.style.display === 'flex' ? 'none' : 'flex';
-          } catch(e) {
-              console.error("Failed to open Add Item modal:", e);
-          }
-      }
+      document.addEventListener('DOMContentLoaded', function() {
 
-      function editMenuItem(btn) {
-          try {
-              const d = btn.dataset;
-              document.getElementById('m_id').value = d.id;
-              document.getElementById('m_name').value = d.name;
-              document.getElementById('m_cat').value = d.cat;
-              document.getElementById('m_price').value = d.price;
-              document.getElementById('m_type').value = d.type;
-              document.getElementById('m_desc').value = d.desc;
-              document.getElementById('m_status').value = d.status;
-              document.getElementById('m_best_seller').checked = (d.bestSeller === 'true');
-              document.getElementById('m_hidden').checked = (d.hidden === 'true');
-              document.getElementById('m_prep_time').value = d.prepTime;
-              document.getElementById('m_display_order').value = d.displayOrder;
+          const modal = document.getElementById('addMenuModal');
+          const addBtn = document.getElementById('addMenuItemBtn');
+          const cancelBtn = document.getElementById('cancelMenuModalBtn');
+
+          function openMenuModal() {
+              if (!modal) { console.error('addMenuModal not found'); return; }
+              document.getElementById('m_id').value = '';
+              document.getElementById('m_name').value = '';
+              document.getElementById('m_cat').value = '';
+              document.getElementById('m_price').value = '';
+              document.getElementById('m_type').value = 'Veg';
+              document.getElementById('m_desc').value = '';
+              document.getElementById('m_status').value = 'Active';
+              document.getElementById('m_best_seller').checked = false;
+              document.getElementById('m_hidden').checked = false;
               document.getElementById('m_image').value = '';
-              document.getElementById('addMenuModal').style.display = 'flex';
-          } catch(e) {
-              console.error("Failed to open Edit Item modal:", e);
+              document.getElementById('m_prep_time').value = '15';
+              document.getElementById('m_display_order').value = '0';
+              modal.classList.add('active');
           }
-      }
+
+          function closeMenuModal() {
+              if (modal) modal.classList.remove('active');
+          }
+
+          if (addBtn) addBtn.addEventListener('click', openMenuModal);
+          if (cancelBtn) cancelBtn.addEventListener('click', closeMenuModal);
+
+          // Close on overlay click
+          if (modal) {
+              modal.addEventListener('click', function(e) {
+                  if (e.target === modal) closeMenuModal();
+              });
+          }
+
+          // Expose globally for inline onclick handlers (editMenuItem)
+          window.openMenuModal = openMenuModal;
+          window.closeMenuModal = closeMenuModal;
+
+          window.editMenuItem = function(btn) {
+              try {
+                  const d = btn.dataset;
+                  document.getElementById('m_id').value = d.id;
+                  document.getElementById('m_name').value = d.name;
+                  document.getElementById('m_cat').value = d.cat;
+                  document.getElementById('m_price').value = d.price;
+                  document.getElementById('m_type').value = d.type;
+                  document.getElementById('m_desc').value = d.desc;
+                  document.getElementById('m_status').value = d.status;
+                  document.getElementById('m_best_seller').checked = (d.bestSeller === 'true');
+                  document.getElementById('m_hidden').checked = (d.hidden === 'true');
+                  document.getElementById('m_prep_time').value = d.prepTime;
+                  document.getElementById('m_display_order').value = d.displayOrder;
+                  document.getElementById('m_image').value = '';
+                  modal.classList.add('active');
+              } catch(e) {
+                  console.error('Failed to open Edit Item modal:', e);
+              }
+          };
+
+      });
 
       function saveMenuItem() {
           const formData = new FormData();
@@ -162,26 +182,26 @@
           formData.append('is_hidden', document.getElementById('m_hidden').checked);
           formData.append('prep_time', document.getElementById('m_prep_time').value);
           formData.append('display_order', document.getElementById('m_display_order').value);
-          
+
           let imgFile = document.getElementById('m_image').files[0];
-          if(imgFile) formData.append('image', imgFile);
+          if (imgFile) formData.append('image', imgFile);
 
           fetch('/api/menu/save', {
               method: 'POST',
               body: formData
           }).then(res => res.json()).then(data => {
-              if(data.success) {
-                  alert("Menu Item Added Successfully");
+              if (data.success) {
+                  alert('Menu Item Saved Successfully');
                   location.reload();
               } else alert('Failed to save item: ' + (data.error || ''));
-          });
+          }).catch(err => console.error('saveMenuItem error:', err));
       }
 
       function deleteMenuItem(id) {
-          if(confirm("Are you sure you want to delete this menu item?")) {
+          if (confirm('Are you sure you want to delete this menu item?')) {
               fetch('/api/menu/delete/' + id, { method: 'POST' })
               .then(res => res.json())
-              .then(data => { if(data.success) location.reload(); });
+              .then(data => { if (data.success) location.reload(); });
           }
       }
   </script>
