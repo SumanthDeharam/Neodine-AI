@@ -9,7 +9,7 @@
       <strong>Inventory</strong>
     </div>
     <div style="display:flex;gap:10px;">
-      <button class="mod-btn mod-btn-primary" onclick="toggleStockModal()"><i class="fa-solid fa-plus"></i> Add Stock</button>
+      <button class="mod-btn mod-btn-primary" id="addStockBtn"><i class="fa-solid fa-plus"></i> Add Stock</button>
       <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
     </div>
   </div>
@@ -52,7 +52,7 @@
   </div>
 
   <!-- Add Stock Modal -->
-  <div class="modal-overlay" id="addStockModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+  <div class="modal-overlay" id="addStockModal">
       <div class="modal-box" style="background:#fff; border-radius:12px; padding:24px; min-width:350px;">
           <h3><i class="fa-solid fa-plus"></i> Add/Edit Ingredient Stock</h3>
           <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
@@ -70,61 +70,74 @@
               <input type="text" id="i_supplier" placeholder="Supplier Name (optional)" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
               <div style="display:flex; gap:10px; margin-top:10px;">
                   <button class="mod-btn mod-btn-primary" style="flex:1;" onclick="saveStockItem()">Save Stock</button>
-                  <button class="mod-btn" style="flex:1;" onclick="document.getElementById('addStockModal').style.display='none'">Cancel</button>
+                  <button class="mod-btn" style="flex:1;" onclick="closeStockModal()">Cancel</button>
               </div>
           </div>
       </div>
   </div>
 
   <script>
-      function toggleStockModal() {
-          const mod = document.getElementById('addStockModal');
-          if (!mod) {
-               console.error("Modal not found");
-               return;
-          }
-          if (mod.style.display === 'none' || mod.style.display === '') {
+      document.addEventListener('DOMContentLoaded', function() {
+
+          const modal = document.getElementById('addStockModal');
+          const addBtn = document.getElementById('addStockBtn');
+
+          function openStockModal() {
+              if (!modal) { console.error('addStockModal not found'); return; }
               document.getElementById('i_id').value = '';
               document.getElementById('i_name').value = '';
               document.getElementById('i_unit').value = 'kg';
               document.getElementById('i_stock').value = '';
               document.getElementById('i_min').value = '';
               document.getElementById('i_supplier').value = '';
-              mod.style.display = 'flex';
-          } else {
-              mod.style.display = 'none';
+              modal.classList.add('active');
           }
-      }
+
+          function closeStockModal() {
+              if (modal) modal.classList.remove('active');
+          }
+
+          if (addBtn) {
+              addBtn.addEventListener('click', openStockModal);
+          }
+
+          // Close modal on overlay click
+          if (modal) {
+              modal.addEventListener('click', function(e) {
+                  if (e.target === modal) closeStockModal();
+              });
+          }
+
+          // Expose functions globally so inline onclick handlers in the table still work
+          window.toggleStockModal = openStockModal;
+          window.closeStockModal = closeStockModal;
+          window.editStockItem = function(id, name, unit, stock, min, supplier) {
+              if (!modal) return;
+              document.getElementById('i_id').value = id;
+              document.getElementById('i_name').value = name;
+              document.getElementById('i_unit').value = unit;
+              document.getElementById('i_stock').value = stock;
+              document.getElementById('i_min').value = min;
+              document.getElementById('i_supplier').value = supplier || '';
+              modal.classList.add('active');
+          };
+      });
 
       function adjustStock(id, name, unit, action_type) {
           const qtyStr = prompt(`How much ${unit} to ${action_type} for ${name}?`);
           if (!qtyStr) return;
           const qty = parseFloat(qtyStr);
           if (isNaN(qty) || qty <= 0) return alert("Invalid quantity");
-          
           fetch('/add_stock', {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                  items: [{ id: id, action: action_type, quantity: qty }]
-              })
+              body: JSON.stringify({ items: [{ id: id, action: action_type, quantity: qty }] })
           }).then(res => res.json()).then(data => {
-              if(data.success) {
-                  alert("Stock Updated Successfully");
-                  location.reload();
-              } else alert('Failed to update stock');
+              if (data.success) { alert("Stock Updated Successfully."); location.reload(); }
+              else alert('Failed to update stock: ' + (data.error || ''));
           });
       }
 
-      function editStockItem(id, name, unit, stock, min, supplier) {
-          document.getElementById('i_id').value = id;
-          document.getElementById('i_name').value = name;
-          document.getElementById('i_unit').value = unit;
-          document.getElementById('i_stock').value = stock;
-          document.getElementById('i_min').value = min;
-          document.getElementById('i_supplier').value = supplier || '';
-          document.getElementById('addStockModal').style.display = 'flex';
-      }
 
       function saveStockItem() {
           fetch('/add_stock', {
@@ -142,9 +155,9 @@
               })
           }).then(res => res.json()).then(data => {
               if(data.success) {
-                  alert("Stock Updated Successfully");
+                  alert("Stock Saved Successfully.");
                   location.reload();
-              } else alert('Failed to save inventory');
+              } else alert('Failed to save inventory: ' + (data.error || ''));
           });
       }
 
@@ -158,3 +171,4 @@
   </script>
 </div>
 {% endblock %}
+
