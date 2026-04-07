@@ -56,6 +56,7 @@ class Order(db.Model):
     temperature = db.Column(db.Integer)
     rainfall = db.Column(db.Integer)
     date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    order_type = db.Column(db.String(50), default='Dine-In')
     items = db.relationship('OrderItem', backref='order_ref', lazy=True)
 
 
@@ -64,6 +65,7 @@ class OrderItem(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
     item_name = db.Column(db.String(100))
     price = db.Column(db.Float)
+    quantity = db.Column(db.Integer, default=1)
 
 class MenuItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -537,6 +539,7 @@ def index():
                 rainfall=rainfall
             )
             new_order.discount_pct = float(discount_pct)
+            new_order.order_type = request.form.get("order_type", "Dine-In")
             db.session.add(new_order)
             db.session.flush()  # Generate new SQL ID safely before child rows
 
@@ -555,13 +558,13 @@ def index():
                     item_names_str.append(f"{qty}x {item}")
 
                     # Store individual purchased item logic in SQL DB
-                    for _ in range(qty):
-                        order_item = OrderItem(
-                            order_id=new_order.id,
-                            item_name=item,
-                            price=item_price
-                        )
-                        db.session.add(order_item)
+                    order_item = OrderItem(
+                        order_id=new_order.id,
+                        item_name=item,
+                        price=item_price,
+                        quantity=qty
+                    )
+                    db.session.add(order_item)
                         
                     # --- Precise Recipe Inventory Deduction Logic ---
                     menu_item = MenuItem.query.filter_by(name=item, restaurant_id=current_user.id).first()
@@ -698,6 +701,13 @@ def render_module(category, page):
     elif category == 'menu' and page == 'recipes':
         context['menu_items'] = MenuItem.query.filter_by(restaurant_id=current_user.id).all()
         context['inventory_items'] = Inventory.query.filter_by(restaurant_id=current_user.id).all()
+    elif category == 'reports' or page in ['sales-summary', 'executive-sales-summary']:
+        restaurant_orders = Order.query.filter_by(restaurant_id=current_user.id).all()
+        context['total_sales'] = sum((o.total_price or 0) for o in restaurant_orders)
+        context['total_orders'] = len(restaurant_orders)
+        context['total_profit'] = round(context['total_sales'] * PROFIT_MARGIN, 2)
+    elif category == 'reports' and page == 'order-summary':
+        context['orders'] = Order.query.filter_by(restaurant_id=current_user.id).order_by(Order.date.desc()).limit(100).all()
         
     try:
         return render_template(f'modules/{category}/{page}.html', **context)
@@ -831,6 +841,48 @@ def add_stock():
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/search_bill')
+@login_required
+def api_search_bill():
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify({'success': False, 'error': 'No query provided'}), 400
+    
+    # Try searching by ID (Bill No) or UUID
+    order = None
+    if query.isdigit():
+        order = Order.query.filter_by(id=int(query), restaurant_id=current_user.id).first()
+    
+    if not order:
+        order = Order.query.filter(Order.order_uuid.like(f"{query}%"), Order.restaurant_id == current_user.id).first()
+    
+    if order:
+        items = []
+        for item in order.items:
+            items.append({
+                'name': item.item_name,
+                'price': item.price,
+                'qty': item.quantity,
+                'item_total': item.price * item.quantity
+            })
+            
+        return jsonify({
+            'success': True,
+            'bill': {
+                'id': order.id,
+                'order_type': order.order_type,
+                'customer_name': order.customer_name,
+                'subtotal': order.subtotal,
+                'discount_pct': order.discount_pct,
+                'gst_amount': order.gst_amount,
+                'total_price': order.total_price,
+                'date': order.date.strftime('%Y-%m-%d %H:%M'),
+                'items': items
+            }
+        })
+    
+    return jsonify({'success': False, 'error': 'Bill not found'})
+
 @app.route('/delete_stock/<int:item_id>', methods=['POST'])
 @login_required
 def api_inventory_delete(item_id):
@@ -885,324 +937,6 @@ def api_table_clear(table_num):
     if os.path.exists(filename):
         return send_file(filename, as_attachment=True)
     return "No orders yet to generate a report.", 404
-
-
-# ─── OPERATIONS MODULE ROUTES ───────────────────────────────────────────────
-
-@app.route('/operations/orders')
-@login_required
-def op_orders():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    orders = Order.query.filter_by(restaurant_id=current_user.id)\
-                        .order_by(Order.date.desc()).limit(50).all()
-    return render_template('modules/operations/orders.html', orders=orders)
-
-
-@app.route('/operations/online-orders')
-@login_required
-def op_online_orders():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/operations/online_orders.html')
-
-
-@app.route('/operations/kots')
-@login_required
-def op_kots():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/operations/kots.html')
-
-
-@app.route('/operations/due-payment')
-@login_required
-def op_due_payment():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/operations/due_payment.html')
-
-
-@app.route('/operations/billing-screen')
-@login_required
-def op_billing_screen():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/operations/billing_screen.html')
-
-
-@app.route('/operations/live-view')
-@login_required
-def op_live_view():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/operations/live_view.html')
-
-
-@app.route('/operations/bill-kot-print')
-@login_required
-def op_bill_kot_print():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/operations/bill_kot_print.html')
-
-
-@app.route('/operations/table')
-@login_required
-def op_table():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/operations/table.html')
-
-
-@app.route('/operations/custom-order-status')
-@login_required
-def op_custom_order_status():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/operations/custom_order_status.html')
-
-
-@app.route('/operations/delivery-boys')
-@login_required
-def op_delivery_boys():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/operations/delivery_boys.html')
-
-
-# ─── FINANCE MODULE ROUTES ───────────────────────────────────────────────────
-
-@app.route('/finance/cash-flow')
-@login_required
-def fin_cash_flow():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/finance/cash_flow.html')
-
-
-@app.route('/finance/expense')
-@login_required
-def fin_expense():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/finance/expense.html')
-
-
-@app.route('/finance/withdrawal')
-@login_required
-def fin_withdrawal():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/finance/withdrawal.html')
-
-
-@app.route('/finance/cash-topup')
-@login_required
-def fin_cash_topup():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/finance/cash_topup.html')
-
-
-@app.route('/finance/currency-conversion')
-@login_required
-def fin_currency_conversion():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/finance/currency_conversion.html')
-
-
-# ─── MENU & INVENTORY MODULE ROUTES ─────────────────────────────────────────
-
-@app.route('/menu/menu')
-@login_required
-def menu_menu():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/menu/menu.html')
-
-
-@app.route('/menu/menu-item-onoff')
-@login_required
-def menu_item_onoff():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/menu/menu_item_onoff.html')
-
-
-@app.route('/menu/tax')
-@login_required
-def menu_tax():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/menu/tax.html')
-
-
-@app.route('/menu/discount')
-@login_required
-def menu_discount():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/menu/discount.html')
-
-
-@app.route('/menu/customers')
-@login_required
-def menu_customers():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/menu/customers.html')
-
-
-@app.route('/menu/feedback')
-@login_required
-def menu_feedback():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/menu/feedback.html')
-
-
-
-
-@app.route('/menu/dual-screen')
-@login_required
-def menu_dual_screen():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/menu/dual_screen.html')
-
-
-@app.route('/menu/table-view')
-@login_required
-def menu_table_view():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/menu/table_view.html')
-
-
-# ─── SYSTEM SETTINGS MODULE ROUTES ──────────────────────────────────────────
-
-@app.route('/settings/billing-user-profile')
-@login_required
-def set_billing_user_profile():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/settings/billing_user_profile.html')
-
-
-@app.route('/settings/manual-sync')
-@login_required
-def set_manual_sync():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/settings/manual_sync.html')
-
-
-@app.route('/settings/alerts')
-@login_required
-def set_alerts():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/settings/alerts.html')
-
-
-@app.route('/settings/service-renewal')
-@login_required
-def set_service_renewal():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/settings/service_renewal.html')
-
-
-@app.route('/settings/help')
-@login_required
-def set_help():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/settings/help.html')
-
-
-@app.route('/settings/settings')
-@login_required
-def set_settings():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/settings/settings.html')
-
-
-@app.route('/settings/language-profiles')
-@login_required
-def set_language_profiles():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/settings/language_profiles.html')
-
-
-# ─── REPORTS / ANALYTICS MODULE ROUTES ──────────────────────────────────────
-
-@app.route('/reports/category-summary')
-@login_required
-def rep_category_summary():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/reports/category_summary.html')
-
-
-@app.route('/reports/item-summary')
-@login_required
-def rep_item_summary():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/reports/item_summary.html')
-
-
-@app.route('/reports/sales-summary')
-@login_required
-def rep_sales_summary():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    # Pass real sales data
-    restaurant_orders = Order.query.filter_by(
-        restaurant_id=current_user.id).all()
-    total_sales = sum((o.total_price or 0) for o in restaurant_orders)
-    total_orders = len(restaurant_orders)
-    return render_template('modules/reports/sales_summary.html',
-                           total_sales=total_sales,
-                           total_orders=total_orders)
-
-
-@app.route('/reports/order-summary')
-@login_required
-def rep_order_summary():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    orders = Order.query.filter_by(restaurant_id=current_user.id)\
-                        .order_by(Order.date.desc()).limit(100).all()
-    return render_template('modules/reports/order_summary.html', orders=orders)
-
-
-@app.route('/reports/executive-sales-summary')
-@login_required
-def rep_executive_sales_summary():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    restaurant_orders = Order.query.filter_by(
-        restaurant_id=current_user.id).all()
-    total_sales = sum((o.total_price or 0) for o in restaurant_orders)
-    total_profit = round(total_sales * PROFIT_MARGIN, 2)
-    return render_template('modules/reports/executive_sales_summary.html',
-                           total_sales=total_sales,
-                           total_profit=total_profit,
-                           total_orders=len(restaurant_orders))
-
-
-@app.route('/reports/tip-summary')
-@login_required
-def rep_tip_summary():
-    if current_user.status == 'Pending':
-        return "Access Denied by Firewall", 403
-    return render_template('modules/reports/tip_summary.html')
 
 
 if __name__ == "__main__":

@@ -788,6 +788,13 @@
 
 <div class="pos-master">
     <!-- AI Weather & Prediction Bar -->
+    <div id="posToast" style="display:none; position:fixed; top:80px; right:20px; z-index:10000; padding:15px 25px; border-radius:12px; background:#1e293b; color:#fff; box-shadow:0 10px 30px rgba(0,0,0,0.2); animation: slideInX 0.3s ease; border-left: 4px solid var(--brand-secondary);">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <i id="toastIcon" class="fa-solid fa-circle-check" style="color:var(--brand-secondary); font-size:20px;"></i>
+            <div id="toastMsg" style="font-weight:700;"></div>
+        </div>
+    </div>
+    
     <div class="ai-banner">
         <div style="display:flex; align-items:center; gap:15px;">
             <div class="ai-badge"><i class="fa-solid fa-microchip"></i> Neo AI Engine Active</div>
@@ -1221,6 +1228,71 @@
             renderCart();
         }
     };
+
+    // Global Bill Search
+    window.searchBill = function(query) {
+        const toast = document.getElementById('posToast');
+        const toastMsg = document.getElementById('toastMsg');
+        const toastIcon = document.getElementById('toastIcon');
+        
+        function showToast(msg, isError=false) {
+            toastMsg.innerText = msg;
+            toastIcon.className = isError ? "fa-solid fa-circle-exclamation" : "fa-solid fa-circle-check";
+            toastIcon.style.color = isError ? "#ef4444" : "var(--brand-secondary)";
+            toast.style.borderLeftColor = isError ? "#ef4444" : "var(--brand-secondary)";
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        }
+
+        fetch('/api/search_bill?q=' + query)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Clear existing cart
+                cart = {};
+                
+                // Load items
+                data.bill.items.forEach(item => {
+                    cart[item.name] = {
+                        price: item.price,
+                        qty: item.qty
+                    };
+                });
+                
+                // Update order meta
+                if (data.bill.order_type) {
+                    const tabs = document.querySelectorAll('.cart-tab');
+                    tabs.forEach(t => {
+                        if (t.innerText.trim() === data.bill.order_type) {
+                            switchOrderType(t);
+                        }
+                    });
+                }
+
+                // If customer name is known, we could load it into the settle modal fields but usually fine as is
+                
+                renderCart();
+                showToast(`Bill #${data.bill.id} loaded successfully!`);
+                
+                // Clear the search input if it's the one in the header
+                const topInput = document.getElementById('billSearchInput');
+                if (topInput) topInput.value = '';
+            } else {
+                showToast(data.error || "Bill not found", true);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast("Error searching for bill", true);
+        });
+    };
+
+    // Check for bill in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const billQuery = urlParams.get('bill');
+    if (billQuery) {
+        window.searchBill(billQuery);
+    }
 
 
 </script>

@@ -631,7 +631,7 @@
             <button class="new-order-btn" id="newOrderBtn" onclick="handleNewOrder()"><i class="fa-solid fa-plus"></i> New Order</button>
             <div class="search-container">
                 <div class="search-box"><i class="fa-solid fa-receipt"></i><input type="text"
-                        placeholder="Bill No / KOT"></div>
+                        placeholder="Bill No / KOT" id="billSearchInput"></div>
             </div>
             {% endblock %}
         </div>
@@ -1182,6 +1182,23 @@
                 window.location.href = '/';
             }
         };
+
+        // Bill Search Logic
+        const billSearch = document.getElementById('billSearchInput');
+        if (billSearch) {
+            billSearch.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const query = this.value.trim();
+                    if (!query) return;
+                    
+                    if (window.location.pathname === '/' && typeof window.searchBill === 'function') {
+                        window.searchBill(query);
+                    } else {
+                        window.location.href = '/?bill=' + query;
+                    }
+                }
+            });
+        }
 
         {% endif %}
     </script>
