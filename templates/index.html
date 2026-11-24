@@ -2255,6 +2255,22 @@
                         </div>
                     </div>
 
+                    <!-- UPI QR Container (shown when UPI payment is selected) -->
+                    <div id="upiQrContainer" style="display:none; text-align:center; margin:12px 0; padding:14px; background:linear-gradient(135deg,#f0fdf4,#eff6ff); border:1.5px dashed #818cf8; border-radius:12px;">
+                        <div id="upiQrLoading" style="color:#818cf8; font-size:13px; font-weight:600; padding:20px;">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Generating QR code…
+                        </div>
+                        <div id="upiQrContent" style="display:none;">
+                            <img id="upiQrImg" src="" alt="UPI QR Code" style="width:150px; height:150px; border-radius:8px; border:1px solid #c7d2fe; padding:4px; background:#fff; display:inline-block;">
+                            <div style="margin-top:8px; font-size:13px; font-weight:800; color:#1e293b;">Scan to Pay ₹<span id="upiQrAmount">0.00</span></div>
+                            <div style="font-size:11px; color:#64748b; margin-top:3px;">GPay · PhonePe · Paytm · BHIM</div>
+                            <div id="upiQrVpa" style="margin-top:5px; font-size:11px; color:#818cf8; font-weight:700;"></div>
+                        </div>
+                        <div id="upiQrError" style="display:none; color:#dc2626; font-size:12px; font-weight:600; padding:10px;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> <span id="upiQrErrorMsg">No UPI ID set. Go to Settings → UPI Payment QR.</span>
+                        </div>
+                    </div>
+
                     <hr style="border:0; height:1px; background:#e2e8f0; margin:5px 0 15px;">
 
                     <div class="form-group">
@@ -2646,6 +2662,8 @@
         }
         document.getElementById('customerPaid').value = Math.ceil(orderTotal);
         calculateReturn();
+        // Hide UPI QR on open (reset to Cash state)
+        document.getElementById('upiQrContainer').style.display = 'none';
         document.getElementById('settleModal').classList.add('active');
     }
 
@@ -2678,6 +2696,39 @@
         });
         pTypes.forEach(pt => pt.classList.remove('active'));
         el.classList.add('active');
+
+        // Show/hide UPI QR container
+        const upiContainer = document.getElementById('upiQrContainer');
+        if (type === 'UPI') {
+            upiContainer.style.display = 'block';
+            // Show loading, hide previous content/error
+            document.getElementById('upiQrLoading').style.display = 'block';
+            document.getElementById('upiQrContent').style.display = 'none';
+            document.getElementById('upiQrError').style.display = 'none';
+            // Fetch QR from backend
+            const amt = (typeof orderTotal !== 'undefined' ? orderTotal : 0).toFixed(2);
+            fetch(`/api/upi/qr?amount=${amt}`)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('upiQrLoading').style.display = 'none';
+                    if (data.success) {
+                        document.getElementById('upiQrImg').src = data.qr;
+                        document.getElementById('upiQrAmount').textContent = parseFloat(data.amount).toFixed(2);
+                        document.getElementById('upiQrVpa').textContent = data.vpa || '';
+                        document.getElementById('upiQrContent').style.display = 'block';
+                    } else {
+                        document.getElementById('upiQrErrorMsg').textContent = data.error || 'Failed to generate QR. Set your UPI ID in Settings.';
+                        document.getElementById('upiQrError').style.display = 'block';
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('upiQrLoading').style.display = 'none';
+                    document.getElementById('upiQrErrorMsg').textContent = 'Network error generating QR code.';
+                    document.getElementById('upiQrError').style.display = 'block';
+                });
+        } else {
+            upiContainer.style.display = 'none';
+        }
     };
 
     window.switchOrderType = function (el) {

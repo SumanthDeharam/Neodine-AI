@@ -2560,12 +2560,14 @@ def show_receipt(order_id):
 
         # Determine the restaurant owner for this session/order
         owner_username = current_user.username
+        owner_user = current_user
         if getattr(current_user, 'restaurant_id', None):
             owner = db.session.get(User, current_user.restaurant_id)
             if owner:
                 owner_username = owner.username
+                owner_user = owner
 
-        # Read ONLY this restaurant owner's settings file
+        # 1) Read this restaurant owner's settings file
         spath = os.path.join(app.instance_path, f"{owner_username}_settings.json")
         if os.path.exists(spath):
             try:
@@ -2576,10 +2578,32 @@ def show_receipt(order_id):
             except Exception:
                 pass
 
+        # 2) Fallback: check global_settings.json
+        if not vpa:
+            g_sett = get_global_settings()
+            if isinstance(g_sett, dict):
+                vpa = (g_sett.get("upi_id") or "").strip() or None
+                if not payee_name:
+                    payee_name = (g_sett.get("upi_payee_name") or "").strip() or None
+
+        # 3) Fallback: check environment variable DEFAULT_UPI_ID
+        if not vpa:
+            vpa = (os.environ.get("DEFAULT_UPI_ID") or "").strip() or None
+
+        # 4) Fallback: derive from restaurant phone number if available
+        if not vpa:
+            owner_id_for_qr = _current_restaurant_owner()
+            rest_det_for_qr = RestaurantDetail.query.filter_by(user_id=owner_id_for_qr).first()
+            if rest_det_for_qr and rest_det_for_qr.phone:
+                phone_clean = (rest_det_for_qr.phone or "").strip().lstrip("+").replace(" ", "")
+                if phone_clean and phone_clean.isdigit() and len(phone_clean) >= 10:
+                    vpa = f"{phone_clean[-10:]}@upi"
+                    payee_name = payee_name or (rest_det_for_qr.restaurant_name or owner_username)
+
         if vpa:
             upi_vpa = vpa
             import qrcode, base64, io as _io, urllib.parse
-            pn_str = urllib.parse.quote(payee_name or getattr(current_user, 'name', None) or owner_username)
+            pn_str = urllib.parse.quote(payee_name or getattr(owner_user, 'name', None) or owner_username)
             tn_str = urllib.parse.quote(f"Bill {str(order_id)[:8]}")
             upi_str = (
                 f"upi://pay?pa={vpa}"
@@ -2663,6 +2687,87 @@ def api_save_upi():
         json.dump(sdata, f)
 
     return jsonify({'success': True, 'upi_id': vpa, 'upi_payee_name': payee})
+
+
+@app.route('/api/upi/qr', methods=['GET'])
+@login_required
+def api_upi_qr():
+    """Generate a UPI QR code on-the-fly for the POS billing modal.
+    Query params:
+      amount   - bill total (float, required)
+      order_id - optional order reference string
+    Returns JSON: { success, qr: "data:image/png;base64,...", vpa, amount }
+    """
+    try:
+        amount = float(request.args.get('amount', 0) or 0)
+        order_ref = (request.args.get('order_id') or '').strip()[:8] or 'Bill'
+
+        # Resolve owner
+        owner_username = current_user.username
+        owner_user = current_user
+        if getattr(current_user, 'restaurant_id', None):
+            owner = db.session.get(User, current_user.restaurant_id)
+            if owner:
+                owner_username = owner.username
+                owner_user = owner
+
+        vpa = None
+        payee_name = None
+
+        # 1) Owner settings file
+        spath = os.path.join(app.instance_path, f"{owner_username}_settings.json")
+        if os.path.exists(spath):
+            try:
+                with open(spath) as f:
+                    sdata = json.load(f)
+                vpa = (sdata.get("upi_id") or "").strip() or None
+                payee_name = (sdata.get("upi_payee_name") or "").strip() or None
+            except Exception:
+                pass
+
+        # 2) Global settings fallback
+        if not vpa:
+            g_sett = get_global_settings()
+            if isinstance(g_sett, dict):
+                vpa = (g_sett.get("upi_id") or "").strip() or None
+                if not payee_name:
+                    payee_name = (g_sett.get("upi_payee_name") or "").strip() or None
+
+        # 3) Environment variable fallback
+        if not vpa:
+            vpa = (os.environ.get("DEFAULT_UPI_ID") or "").strip() or None
+
+        # 4) Phone-based fallback
+        if not vpa:
+            owner_id_qr = _current_restaurant_owner()
+            rest_det_qr = RestaurantDetail.query.filter_by(user_id=owner_id_qr).first()
+            if rest_det_qr and rest_det_qr.phone:
+                phone_clean = (rest_det_qr.phone or "").strip().lstrip("+").replace(" ", "")
+                if phone_clean and phone_clean.isdigit() and len(phone_clean) >= 10:
+                    vpa = f"{phone_clean[-10:]}@upi"
+                    payee_name = payee_name or (rest_det_qr.restaurant_name or owner_username)
+
+        if not vpa:
+            return jsonify({'success': False, 'error': 'No UPI ID configured. Go to Settings → UPI Payment QR to add one.'}), 404
+
+        import qrcode, base64, io as _io, urllib.parse
+        pn_str = urllib.parse.quote(payee_name or owner_username)
+        tn_str = urllib.parse.quote(f"Bill {order_ref}")
+        upi_str = (
+            f"upi://pay?pa={vpa}"
+            f"&pn={pn_str}"
+            f"&am={amount:.2f}"
+            f"&cu=INR&tn={tn_str}"
+        )
+        img = qrcode.make(upi_str)
+        buf = _io.BytesIO()
+        img.save(buf, format="PNG")
+        qr_data = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+        return jsonify({'success': True, 'qr': qr_data, 'vpa': vpa, 'amount': amount})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/download_excel')
