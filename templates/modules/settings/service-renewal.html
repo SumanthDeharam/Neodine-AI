@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<style>
+  .renewal-banner{background:linear-gradient(135deg,#1e1b4b,#311042,#111827);border-radius:16px;padding:30px;margin-bottom:20px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:20px;box-shadow:0 10px 25px rgba(0,0,0,0.15);}
+  .renewal-banner h2{margin:0;font-size:22px;font-weight:800;display:flex;align-items:center;gap:10px;}
+  .renewal-banner p{margin:8px 0 0;color:#94a3b8;font-size:14px;}
+  .renew-btn{background:linear-gradient(135deg,#FF8A00,#FF5500);color:#fff;border:none;padding:12px 28px;border-radius:12px;font-family:inherit;font-weight:800;cursor:pointer;font-size:14px;white-space:nowrap;box-shadow:0 4px 15px rgba(255,138,0,0.4);text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s;}
+  .renew-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,138,0,0.5);}
+  .plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-top:20px;}
+  .plan-card{background:#fff;border-radius:14px;border:2px solid #e2e8f0;padding:24px;text-align:center;transition:0.2s;position:relative;}
+  .plan-card.active-plan{border-color:#6366f1;background:#f5f3ff;}
+  .plan-name{font-size:18px;font-weight:800;color:#1e293b;margin-bottom:6px;text-transform:uppercase;}
+  .plan-price{font-size:28px;font-weight:800;color:#0f172a;margin-bottom:12px;}
+  .plan-price span{font-size:13px;color:#64748b;font-weight:600;}
+  .plan-features{list-style:none;padding:0;margin:16px 0;text-align:left;font-size:13px;color:#475569;}
+  .plan-features li{padding:6px 0;display:flex;gap:8px;align-items:center;}
+  .plan-features li::before{content:'✓';color:#10b981;font-weight:800;}
+</style>
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Settings</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Service Renewal &amp; Subscription</strong>
+    </div>
+    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+  </div>
+  <div class="mod-body" style="padding-top:20px;">
+    <div class="renewal-banner">
+      <div>
+        <h2>
+          <i class="fa-solid fa-crown" style="color:#FFD700;"></i>
+          {% if user_subscription and user_subscription.plan %}
+            {{ user_subscription.plan.name }} Plan
+          {% else %}
+            Enterprise Edition
+          {% endif %}
+        </h2>
+        <p>
+          {% if user_subscription and user_subscription.status == 'TRIAL' %}
+            You are currently on a <strong>Free Trial</strong> with {{ trial_days_left|default(0) }} day{{ 's' if trial_days_left != 1 else '' }} remaining.
+          {% elif user_subscription and user_subscription.status == 'ACTIVE' %}
+            Your subscription is <strong>Active</strong>. Renew or upgrade anytime.
+          {% else %}
+            Manage your subscription tier and explore plan renewals.
+          {% endif %}
+        </p>
+      </div>
+      <a href="{{ url_for('subscription_pricing') }}" class="renew-btn">
+        <i class="fa-solid fa-arrow-up-right-dots"></i> Upgrade / Renew Plan
+      </a>
+    </div>
+
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-calendar-check"></i> Subscription Details</h3></div>
+      <div class="info-grid">
+        <div class="info-tile">
+          <div class="t-lbl">Current Plan</div>
+          <div class="t-val">{{ user_subscription.plan.name if (user_subscription and user_subscription.plan) else 'Enterprise' }}</div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">Status</div>
+          <div class="t-val" style="color:{% if user_subscription and user_subscription.status == 'ACTIVE' %}#10b981{% elif user_subscription and user_subscription.status == 'TRIAL' %}#3b82f6{% else %}#ef4444{% endif %};">
+            {{ user_subscription.status if user_subscription else 'ACTIVE' }}
+          </div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">Renewal / Expiry Date</div>
+          <div class="t-val">
+            {% if user_subscription and user_subscription.subscription_end %}
+              {{ user_subscription.subscription_end.strftime('%d %b %Y') }}
+            {% elif user_subscription and user_subscription.trial_end %}
+              {{ user_subscription.trial_end.strftime('%d %b %Y') }}
+            {% else %}
+              Lifetime / Active
+            {% endif %}
+          </div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">Dedicated Support</div>
+          <div class="t-val"><i class="fa-solid fa-phone" style="font-size:12px;color:#10b981;"></i> 7989052868</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-card" style="margin-top:20px;">
+      <div class="data-card-hdr">
+        <h3><i class="fa-solid fa-layer-group"></i> Available SaaS Subscription Plans</h3>
+        <a href="{{ url_for('subscription_pricing') }}" class="mod-btn mod-btn-primary" style="padding:4px 12px;font-size:12px;text-decoration:none;"><i class="fa-solid fa-bolt"></i> View All Features</a>
+      </div>
+      <div class="plan-grid">
+        <div class="plan-card">
+          <div class="plan-name">Starter</div>
+          <div class="plan-price">₹999 <span>/ month</span></div>
+          <ul class="plan-features">
+            <li>Full POS Billing Engine</li>
+            <li>Menu &amp; Inventory Management</li>
+            <li>Basic Analytics &amp; Reports</li>
+            <li>Single Device Access</li>
+          </ul>
+        </div>
+        <div class="plan-card">
+          <div class="plan-name">Growth</div>
+          <div class="plan-price">₹2,499 <span>/ month</span></div>
+          <ul class="plan-features">
+            <li>All Starter Features</li>
+            <li>Stock Sense AI Forecasting</li>
+            <li>Holiday AI Footfall Predictor</li>
+            <li>KOT &amp; Kitchen Display System</li>
+            <li>Multi-Device Staff Portals</li>
+          </ul>
+        </div>
+        <div class="plan-card active-plan">
+          <div style="position:absolute;top:10px;right:10px;background:#6366f1;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">RECOMMENDED</div>
+          <div class="plan-name" style="color:#6366f1;">Enterprise</div>
+          <div class="plan-price" style="color:#6366f1;">₹4,999 <span>/ month</span></div>
+          <ul class="plan-features">
+            <li>All Growth Features</li>
+            <li>Location Intelligence Radar</li>
+            <li>Multi-Branch Sync</li>
+            <li>Executive Financial Suite</li>
+            <li>24/7 Priority Support</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

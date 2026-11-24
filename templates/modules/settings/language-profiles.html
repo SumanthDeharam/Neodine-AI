@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Settings</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Language Profiles</strong>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button type="button" class="mod-btn mod-btn-primary" id="btnSaveTopLang"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    </div>
+  </div>
+  <div class="mod-body" style="padding-top:20px;">
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-language"></i> Language &amp; Regional Locale</h3></div>
+      <form id="langForm" onsubmit="saveLanguageSettings(event)">
+        <div class="mod-form-grid">
+          <div class="mod-form-group">
+            <label for="selAppLang">App Interface Language</label>
+            <select id="selAppLang">
+              {% set cur_lang = (user_setting.language if user_setting else (json_setting.get('language', 'English'))) %}
+              <option value="English" {{ 'selected' if cur_lang == 'English' else '' }}>English</option>
+              <option value="Hindi" {{ 'selected' if cur_lang == 'Hindi' else '' }}>हिंदी (Hindi)</option>
+              <option value="Telugu" {{ 'selected' if cur_lang == 'Telugu' else '' }}>తెలుగు (Telugu)</option>
+              <option value="Tamil" {{ 'selected' if cur_lang == 'Tamil' else '' }}>தமிழ் (Tamil)</option>
+              <option value="Kannada" {{ 'selected' if cur_lang == 'Kannada' else '' }}>ಕನ್ನಡ (Kannada)</option>
+              <option value="Bengali" {{ 'selected' if cur_lang == 'Bengali' else '' }}>বাংলা (Bengali)</option>
+              <option value="Marathi" {{ 'selected' if cur_lang == 'Marathi' else '' }}>मराठी (Marathi)</option>
+            </select>
+          </div>
+          <div class="mod-form-group">
+            <label for="selReceiptLang">Receipt Print Language</label>
+            <select id="selReceiptLang">
+              {% set cur_rlang = json_setting.get('receipt_language', 'English') %}
+              <option value="English" {{ 'selected' if cur_rlang == 'English' else '' }}>English</option>
+              <option value="Hindi" {{ 'selected' if cur_rlang == 'Hindi' else '' }}>हिंदी (Hindi)</option>
+              <option value="Telugu" {{ 'selected' if cur_rlang == 'Telugu' else '' }}>తెలుగు (Telugu)</option>
+            </select>
+          </div>
+          <div class="mod-form-group">
+            <label for="selDateFormat">Date Format</label>
+            <select id="selDateFormat">
+              {% set cur_df = json_setting.get('date_format', 'DD/MM/YYYY') %}
+              <option value="DD/MM/YYYY" {{ 'selected' if cur_df == 'DD/MM/YYYY' else '' }}>DD/MM/YYYY</option>
+              <option value="MM/DD/YYYY" {{ 'selected' if cur_df == 'MM/DD/YYYY' else '' }}>MM/DD/YYYY</option>
+              <option value="YYYY-MM-DD" {{ 'selected' if cur_df == 'YYYY-MM-DD' else '' }}>YYYY-MM-DD</option>
+            </select>
+          </div>
+          <div class="mod-form-group">
+            <label for="selTimeFormat">Time Format</label>
+            <select id="selTimeFormat">
+              {% set cur_tf = json_setting.get('time_format', '12 Hour (AM/PM)') %}
+              <option value="12 Hour (AM/PM)" {{ 'selected' if cur_tf == '12 Hour (AM/PM)' else '' }}>12 Hour (AM/PM)</option>
+              <option value="24 Hour" {{ 'selected' if cur_tf == '24 Hour' else '' }}>24 Hour</option>
+            </select>
+          </div>
+          <div class="mod-form-group">
+            <label for="selNumFormat">Number Format</label>
+            <select id="selNumFormat">
+              {% set cur_nf = json_setting.get('number_format', '1,00,000 (Indian)') %}
+              <option value="1,00,000 (Indian)" {{ 'selected' if cur_nf == '1,00,000 (Indian)' else '' }}>1,00,000 (Indian Lakhs)</option>
+              <option value="100,000 (International)" {{ 'selected' if cur_nf == '100,000 (International)' else '' }}>100,000 (International Thousands)</option>
+            </select>
+          </div>
+          <div class="mod-form-group">
+            <label for="selCurrSymbol">Currency Representation</label>
+            <select id="selCurrSymbol">
+              {% set cur_sym = json_setting.get('currency_symbol', '₹ (Rupee Symbol)') %}
+              <option value="₹ (Rupee Symbol)" {{ 'selected' if '₹' in cur_sym else '' }}>₹ (Rupee Symbol)</option>
+              <option value="INR (Text)" {{ 'selected' if 'INR' in cur_sym else '' }}>INR (Text)</option>
+            </select>
+          </div>
+        </div>
+        <div style="padding:16px 20px; border-top:1px solid #e2e8f0; display:flex; align-items:center; gap:12px;">
+          <button type="submit" class="mod-save-btn" id="btnSubmitLang"><i class="fa-solid fa-floppy-disk"></i> Save Language Settings</button>
+          <span id="langMsg" style="font-size:13px; font-weight:600;"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+async function saveLanguageSettings(e) {
+  if (e) e.preventDefault();
+  const msg = document.getElementById('langMsg');
+  const btn = document.getElementById('btnSubmitLang');
+
+  const payload = {
+    language: document.getElementById('selAppLang').value,
+    receipt_language: document.getElementById('selReceiptLang').value,
+    date_format: document.getElementById('selDateFormat').value,
+    time_format: document.getElementById('selTimeFormat').value,
+    number_format: document.getElementById('selNumFormat').value,
+    currency_symbol: document.getElementById('selCurrSymbol').value
+  };
+
+  if (msg) {
+    msg.textContent = 'Saving...';
+    msg.style.color = '#64748b';
+  }
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/language_settings/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof window.setAppLanguageCookie === 'function') {
+        window.setAppLanguageCookie(payload.language);
+      }
+      if (msg) {
+        msg.textContent = '✅ ' + data.message + ' Applying changes...';
+        msg.style.color = '#16a34a';
+      }
+      setTimeout(() => { window.location.reload(); }, 600);
+    } else {
+      if (msg) {
+        msg.textContent = '❌ ' + (data.error || 'Failed to save settings.');
+        msg.style.color = '#dc2626';
+      }
+    }
+  } catch (err) {
+    if (msg) {
+      msg.textContent = '❌ Network error saving language settings.';
+      msg.style.color = '#dc2626';
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+document.getElementById('btnSaveTopLang').addEventListener('click', () => {
+  saveLanguageSettings(new Event('submit'));
+});
+</script>
+{% endblock %}

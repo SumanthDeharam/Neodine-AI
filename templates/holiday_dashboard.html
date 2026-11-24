@@ -1,0 +1,1105 @@
+<!-- Load local Apache ECharts Library -->
+<script src="{{ url_for('static', filename='js/echarts.min.js') }}"></script>
+
+<style>
+    #gmod-holiday, .ss-linear-theme {
+        background-color: #060913 !important;
+        background: #060913 !important;
+        color: #f0f6fc !important;
+        min-height: calc(100vh - 60px) !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        position: relative !important;
+        z-index: 10 !important;
+        font-family: 'Outfit', sans-serif !important;
+    }
+    .ss-card, .holiday-card {
+        background: #0d111e !important;
+        background-color: #0d111e !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+        padding: 24px !important;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .holiday-card:hover {
+        border-color: rgba(217, 119, 6, 0.25) !important;
+    }
+    .badge-high { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-med { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-low { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-info { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-gray { background: rgba(156, 163, 175, 0.15); color: #9ca3af; border: 1px solid rgba(156, 163, 175, 0.3); }
+    
+    .timeline-step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        padding: 12px 6px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+    }
+    .timeline-step.active {
+        background: rgba(217, 119, 6, 0.15);
+        border-color: rgba(217, 119, 6, 0.4);
+    }
+    .empty-state-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 36px 20px;
+        background: rgba(0,0,0,0.25);
+        border: 1px dashed rgba(255,255,255,0.12);
+        border-radius: 12px;
+        color: #9ca3af;
+    }
+    .empty-state-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.04);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+    .progress-bar-bg {
+        height: 6px;
+        width: 100%;
+        background: rgba(255,255,255,0.1);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+    }
+</style>
+
+<div class="ss-linear-theme" id="gmod-holiday" style="background: #060913 !important; min-height: 100vh; padding-bottom: 60px;">
+    
+    <!-- HSL Glassmorphic Background -->
+    <div class="ss-mesh-bg">
+        <div class="ss-mesh-blob ss-blob-blue" style="background: radial-gradient(circle, rgba(217, 119, 6, 0.15) 0%, transparent 65%);"></div>
+        <div class="ss-mesh-blob ss-blob-purple" style="background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 65%);"></div>
+    </div>
+
+    <!-- Active Alerts Ticker Banner -->
+    <div style="background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 10px 24px; display: flex; align-items: center; gap: 16px; overflow: hidden; position: relative;">
+        <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #d97706; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-bell fa-fade"></i> Actionable Guidance:
+        </span>
+        <div id="holiday-alert-ticker" style="display: flex; gap: 32px; white-space: nowrap; overflow-x: auto; scrollbar-width: none;">
+            <span style="font-size: 0.85rem; color: #9ca3af;">Loading event alerts...</span>
+        </div>
+    </div>
+
+    <div class="ss-container" style="padding: 24px; max-width: 1500px; margin: 0 auto; color: #f3f4f6;">
+        
+        <!-- Header Section -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 44px; height: 44px; background: rgba(217, 119, 6, 0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1.5px solid rgba(217, 119, 6, 0.3); box-shadow: 0 4px 15px rgba(217, 119, 6, 0.15);">
+                    <i class="fa-solid fa-calendar-check" style="color: #d97706; font-size: 1.3rem;"></i>
+                </div>
+                <div>
+                    <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600; background: linear-gradient(135deg, #fff, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI Holiday & Weekend Intelligence</h2>
+                    <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #9ca3af;">Command Center for Restaurant Event & Demand Forecasting</p>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <input type="date" id="forecastQueryDate" style="background: rgba(0,0,0,0.3); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 8px; color: #fff; padding: 8px 14px; font-size: 0.9rem; outline: none; font-family: inherit; width: 180px;">
+                <button id="runForecastBtn" onclick="triggerHolidayForecast()" style="background: linear-gradient(135deg, #d97706, #b45309); border: none; color: #fff; padding: 9px 20px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.25);">
+                    <i class="fa-solid fa-chart-line"></i> Run Event Forecast
+                </button>
+            </div>
+        </div>
+
+        <!-- 1. Hero Next Event Card & Visual Timeline -->
+        <div class="holiday-card" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(13,17,30,0.95), rgba(30,27,75,0.45)) !important; border-color: rgba(99,102,241,0.25) !important;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+                <div>
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: #6366f1; font-weight: 700; letter-spacing: 0.05em;">Target Event Command Center</span>
+                    <h3 id="target-event-title" style="margin: 4px 0 6px 0; font-size: 1.5rem; font-weight: 700; color: #fff;">Loading Target Event...</h3>
+                    <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #9ca3af;">
+                        <span id="target-event-date">--</span>
+                        <span>•</span>
+                        <span id="target-event-daysrem">-- days remaining</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;" id="target-event-badges">
+                    <!-- Dynamic Badges -->
+                </div>
+            </div>
+
+            <!-- 4-Step Event Timeline -->
+            <div style="display: flex; gap: 12px; position: relative;" id="target-event-timeline">
+                <div class="timeline-step" id="tstep-0">
+                    <div style="font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: 700;">TODAY</div>
+                    <div id="tdate-0" style="font-size: 0.85rem; font-weight: 600; color: #fff; margin-top: 2px;">--</div>
+                </div>
+                <div class="timeline-step" id="tstep-1">
+                    <div style="font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: 700;">TOMORROW</div>
+                    <div id="tdate-1" style="font-size: 0.85rem; font-weight: 600; color: #fff; margin-top: 2px;">--</div>
+                </div>
+                <div class="timeline-step active" id="tstep-2">
+                    <div style="font-size: 0.7rem; color: #d97706; text-transform: uppercase; font-weight: 700;">TARGET EVENT</div>
+                    <div id="tdate-2" style="font-size: 0.85rem; font-weight: 700; color: #d97706; margin-top: 2px;">--</div>
+                </div>
+                <div class="timeline-step" id="tstep-3">
+                    <div style="font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: 700;">FOLLOWING DAY</div>
+                    <div id="tdate-3" style="font-size: 0.85rem; font-weight: 600; color: #fff; margin-top: 2px;">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Primary KPI Row: Demand Outlook + Historical Demand Trend Chart -->
+        <div style="display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 24px; margin-bottom: 24px;">
+            
+            <!-- Visual Demand Outlook KPI Card -->
+            <div class="holiday-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; font-weight: 600;">Demand Outlook</span>
+                    <div style="margin: 12px 0 16px 0;">
+                        <span id="kpi-demand-outlook-badge" class="badge-info" style="font-size: 1.1rem; font-weight: 800; padding: 6px 16px; border-radius: 20px; display: inline-block;">
+                            ANALYZING...
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Gauge Container or Muted Illustration -->
+                <div id="demandGaugeContainer" style="height: 140px; width: 100%; display: flex; align-items: center; justify-content: center;">
+                    <!-- Rendered via JS -->
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 14px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-top: 10px;">
+                    <div>
+                        <div style="font-size: 0.75rem; color: #9ca3af;">Expected Orders</div>
+                        <div id="kpi-expected-orders" style="font-size: 1.2rem; font-weight: 700; color: #fff; margin-top: 2px;">--</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: #9ca3af;">Expected Revenue</div>
+                        <div id="kpi-expected-revenue" style="font-size: 1.2rem; font-weight: 700; color: #10b981; margin-top: 2px;">--</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #9ca3af;">
+                    <span>Evidence Level:</span>
+                    <span id="kpi-evidence-level-badge" class="badge-gray" style="padding: 3px 10px; border-radius: 12px; font-weight: 700;">--</span>
+                </div>
+            </div>
+
+            <!-- Historical Demand Trend Chart (Or Empty State Card) -->
+            <div class="holiday-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div>
+                            <span style="font-size: 0.75rem; text-transform: uppercase; color: #d97706; font-weight: 600; letter-spacing: 0.05em;">Historical Analytics</span>
+                            <h4 style="margin: 2px 0 0 0; font-size: 1.1rem; font-weight: 600; color: #fff;">Historical Demand Around Comparable Events</h4>
+                        </div>
+                        <span id="demand-series-count" style="font-size: 0.78rem; color: #9ca3af;">--</span>
+                    </div>
+
+                    <div id="demandTrendChartContainer" style="height: 230px; width: 100%;">
+                        <!-- ECharts Chart or Empty State Card -->
+                    </div>
+                </div>
+
+                <div style="font-size: 0.78rem; color: #6b7280; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+                    Observed order counts on comparable historical days for this restaurant. Zero synthetic future curves.
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 3. Secondary Row: Historical Revenue Trend + Event Calendar Heatmap -->
+        <div style="display: grid; grid-template-columns: 1.4fr 1.6fr; gap: 24px; margin-bottom: 24px;">
+            
+            <!-- Historical Revenue Trend Chart -->
+            <div class="holiday-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div>
+                            <span style="font-size: 0.75rem; text-transform: uppercase; color: #10b981; font-weight: 600; letter-spacing: 0.05em;">Revenue Trace</span>
+                            <h4 style="margin: 2px 0 0 0; font-size: 1.1rem; font-weight: 600; color: #fff;">Historical Revenue Around Comparable Events</h4>
+                        </div>
+                        <span id="revenue-series-count" style="font-size: 0.78rem; color: #9ca3af;">--</span>
+                    </div>
+
+                    <div id="revenueTrendChartContainer" style="height: 230px; width: 100%;">
+                        <!-- ECharts Revenue Chart or Empty State Card -->
+                    </div>
+                </div>
+
+                <div style="font-size: 0.78rem; color: #6b7280; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+                    Actual daily revenues recorded on comparable operating dates.
+                </div>
+            </div>
+
+            <!-- Real Database Calendar Heatmap -->
+            <div class="holiday-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: #d97706; font-weight: 600; letter-spacing: 0.05em;">Calendar Overview</span>
+                    <h4 style="margin: 2px 0 12px 0; font-size: 1.1rem; font-weight: 600; color: #fff;">Event Calendar Heatmap</h4>
+                    <div id="calendarHeatmapChart" style="height: 230px; width: 100%;"></div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #9ca3af; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+                    <span><i class="fa-solid fa-square" style="color: rgba(255,255,255,0.1);"></i> Normal</span>
+                    <span><i class="fa-solid fa-square" style="color: #3b82f6;"></i> Weekend</span>
+                    <span><i class="fa-solid fa-square" style="color: #d97706;"></i> Festival</span>
+                    <span><i class="fa-solid fa-square" style="color: #ef4444;"></i> National Holiday</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 4. Scrollable Upcoming Events Timeline with Category Filter Tabs -->
+        <div class="holiday-card" style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                <div>
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: #6366f1; font-weight: 700; letter-spacing: 0.05em;">Upcoming Intelligence</span>
+                    <h3 style="margin: 2px 0 0 0; font-size: 1.25rem; font-weight: 700; color: #fff;">Upcoming Festivals, Weekends & Government Holidays</h3>
+                </div>
+                <!-- Filter Tabs -->
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="timelineFilterTabs">
+                    <button onclick="filterUpcomingTimeline('all', this)" class="badge-med" style="padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; cursor: pointer; border: 1px solid rgba(245, 158, 11, 0.4);">
+                        All Upcoming
+                    </button>
+                    <button onclick="filterUpcomingTimeline('festivals', this)" class="badge-gray" style="padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        🎉 Festivals
+                    </button>
+                    <button onclick="filterUpcomingTimeline('weekends', this)" class="badge-gray" style="padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        🏖️ Long Weekends & Weekends
+                    </button>
+                    <button onclick="filterUpcomingTimeline('govt', this)" class="badge-gray" style="padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        🏛️ Government & National Holidays
+                    </button>
+                </div>
+            </div>
+
+            <div id="upcoming-events-timeline-container" style="display: flex; gap: 16px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: thin;">
+                <!-- Timeline Event Cards via JS -->
+            </div>
+            <div style="font-size: 0.76rem; color: #9ca3af; margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-hand-pointer" style="color: #6366f1;"></i> Tip: Click on any upcoming festival or holiday card above to instantly calculate its sales forecast and kitchen prep recommendations!
+            </div>
+        </div>
+
+        <!-- 5. Menu Item Performance Visual Analytics & Top Opportunities -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+            
+            <!-- Menu Performance Table with Mini Progress Bars -->
+            <div class="holiday-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <span style="font-size: 0.75rem; text-transform: uppercase; color: #d97706; font-weight: 600; letter-spacing: 0.05em;">Menu Intelligence</span>
+                        <h3 style="margin: 2px 0 0 0; font-size: 1.15rem; font-weight: 600; color: #fff;">Active Menu Item Event Performance</h3>
+                    </div>
+                    <span style="font-size: 0.78rem; color: #9ca3af;">Derived from OrderItem history</span>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="ss-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #9ca3af; font-size: 0.78rem;">
+                                <th style="padding: 10px;">Menu Item</th>
+                                <th style="padding: 10px;">Category</th>
+                                <th style="padding: 10px; text-align: center;">Normal</th>
+                                <th style="padding: 10px; text-align: center;">Comparable</th>
+                                <th style="padding: 10px; width: 120px;">Demand Comparison</th>
+                                <th style="padding: 10px; text-align: center;">Change %</th>
+                                <th style="padding: 10px; text-align: center;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="menu-opportunities-table-body" style="color: #fff; font-size: 0.85rem;">
+                            <tr><td colspan="7" style="text-align:center; padding:24px; color:#9ca3af;">Run forecast to analyze active menu items.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top Menu Opportunities Cards -->
+            <div class="holiday-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: #10b981; font-weight: 700; letter-spacing: 0.05em;">Top Menu Opportunities</span>
+                    <h4 style="margin: 4px 0 16px 0; font-size: 1.1rem; font-weight: 600; color: #fff;">Historically Strong Items</h4>
+                    <div id="top-menu-opportunities-container" style="display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Cards via JS -->
+                    </div>
+                </div>
+
+                <div style="font-size: 0.75rem; color: #6b7280; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+                    Only items backed by real historical order data are listed here.
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 6. Owner Alert Center & Weather Section -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+            
+            <!-- Proactive Owner Alert Center -->
+            <div class="holiday-card">
+                <span style="font-size: 0.75rem; text-transform: uppercase; color: #d97706; font-weight: 600; letter-spacing: 0.05em;">Actionable Guidance</span>
+                <h3 style="margin: 4px 0 16px 0; font-size: 1.2rem; font-weight: 600; color: #fff;">Proactive Owner Alert Center</h3>
+                
+                <div id="actionable-alerts-container" style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="text-align: center; color: #9ca3af; padding: 16px;">Loading alerts...</div>
+                </div>
+            </div>
+
+            <!-- Real Weather Card or Clean Unavailable Card -->
+            <div class="holiday-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: #3b82f6; font-weight: 700; letter-spacing: 0.05em;">Weather Forecast</span>
+                    <h4 style="margin: 4px 0 16px 0; font-size: 1.1rem; font-weight: 600; color: #fff;">Environmental Evidence</h4>
+
+                    <div id="weather-card-content">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <div style="font-size: 0.75rem; color: #6b7280; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;" id="weather-source-footnote">
+                    Source: Live OpenWeatherMap API
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 7. Evidence & AI Explainability Flow Diagram + Data Lineage Footer -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+            
+            <!-- Evidence Flow Diagram -->
+            <div class="holiday-card">
+                <span style="font-size: 0.75rem; text-transform: uppercase; color: #d97706; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-diagram-project"></i> Evidence & Traceability Flow
+                </span>
+                <h4 style="margin: 6px 0 16px 0; font-size: 1.15rem; font-weight: 600; color: #fff;">How this forecast was computed</h4>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: center;" id="evidence-flow-diagram">
+                    <div style="flex: 1; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;">
+                        <div style="font-size: 0.7rem; color: #9ca3af; text-transform: uppercase;">Historical Orders</div>
+                        <div id="eflow-orders" style="font-size: 1.2rem; font-weight: 700; color: #fff; margin-top: 2px;">--</div>
+                    </div>
+                    <i class="fa-solid fa-arrow-right" style="color: #4b5563;"></i>
+                    <div style="flex: 1; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;">
+                        <div style="font-size: 0.7rem; color: #9ca3af; text-transform: uppercase;">Comparable Days</div>
+                        <div id="eflow-compdays" style="font-size: 1.2rem; font-weight: 700; color: #d97706; margin-top: 2px;">--</div>
+                    </div>
+                    <i class="fa-solid fa-arrow-right" style="color: #4b5563;"></i>
+                    <div style="flex: 1; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;">
+                        <div style="font-size: 0.7rem; color: #9ca3af; text-transform: uppercase;">Baseline Days</div>
+                        <div id="eflow-basedays" style="font-size: 1.2rem; font-weight: 700; color: #6366f1; margin-top: 2px;">--</div>
+                    </div>
+                    <i class="fa-solid fa-arrow-right" style="color: #4b5563;"></i>
+                    <div style="flex: 1; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;">
+                        <div style="font-size: 0.7rem; color: #9ca3af; text-transform: uppercase;">Demand Outlook</div>
+                        <div id="eflow-outlook" style="font-size: 0.95rem; font-weight: 700; color: #10b981; margin-top: 4px;">--</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px; padding: 12px 16px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.83rem; color: #d1d5db;">
+                    <span style="font-weight: 700; color: #fff;">Observed Summary:</span> <span id="eflow-summary">--</span>
+                </div>
+            </div>
+
+            <!-- Data Lineage Audit Footer -->
+            <div class="holiday-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <span style="font-size: 0.75rem; text-transform: uppercase; color: #10b981; font-weight: 700; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-shield-halved"></i> Data Lineage & Audit
+                    </span>
+                    <h4 style="margin: 4px 0 14px 0; font-size: 1.1rem; font-weight: 600; color: #fff;">Source Provenance</h4>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.82rem; color: #9ca3af;">
+                        <div>Orders Analyzed: <b id="lineage-orders" style="color: #fff;">--</b></div>
+                        <div>Active Menu Items: <b id="lineage-items" style="color: #fff;">--</b></div>
+                        <div>Comparable Days: <b id="lineage-compdays" style="color: #fff;">--</b></div>
+                        <div>Calendar Source: <b id="lineage-cal" style="color: #fff;">--</b></div>
+                        <div>Weather Provider: <b id="lineage-weather" style="color: #fff;">--</b></div>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; font-size: 0.75rem; color: #6b7280;">
+                    Generated At: <span id="lineage-timestamp">--</span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let holidayCharts = {};
+
+    window.initHolidayIntelligence = function() {
+        if (!document.getElementById("forecastQueryDate").value) {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const yyyy = tomorrow.getFullYear();
+            const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const dd = String(tomorrow.getDate()).padStart(2, '0');
+            document.getElementById("forecastQueryDate").value = `${yyyy}-${mm}-${dd}`;
+        }
+        initRealCalendarHeatmap();
+        triggerHolidayForecast();
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+        window.initHolidayIntelligence();
+    });
+
+    async function initRealCalendarHeatmap() {
+        const chartDom = document.getElementById('calendarHeatmapChart');
+        if (!chartDom) return;
+        
+        if (holidayCharts.calendar) echarts.dispose(holidayCharts.calendar);
+        holidayCharts.calendar = echarts.init(chartDom, 'dark');
+        
+        try {
+            const res = await fetch('/api/holiday/calendar-list');
+            if (!res.ok) return;
+            const data = await res.json();
+            
+            if (data.success && data.calendar) {
+                const dateData = data.calendar.map(entry => {
+                    const isoDate = entry.date_str; // YYYY-MM-DD
+                    let val = 1;
+                    if (entry.is_weekend) val = 2;
+                    if (entry.category && entry.category.includes('Festival')) val = 3;
+                    if (entry.category && entry.category.includes('National')) val = 4;
+                    return [isoDate, val, entry.holiday_name];
+                });
+
+                const option = {
+                    backgroundColor: 'transparent',
+                    tooltip: {
+                        position: 'top',
+                        formatter: function (p) {
+                            return `<b>${p.value[0]}</b><br/>${p.value[2]}<br/><span style="color:#f59e0b;">Click to forecast date</span>`;
+                        }
+                    },
+                    visualMap: {
+                        min: 1, max: 4, show: false,
+                        inRange: { color: ['rgba(255,255,255,0.05)', '#3b82f6', '#d97706', '#ef4444'] }
+                    },
+                    calendar: {
+                        top: 20, bottom: 10, left: 40, right: 10,
+                        cellSize: ['auto', 14],
+                        range: new Date().getFullYear().toString(),
+                        itemStyle: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+                        splitLine: { show: false },
+                        dayLabel: { color: '#9ca3af', fontSize: 10 },
+                        monthLabel: { color: '#9ca3af', fontSize: 10 }
+                    },
+                    series: { type: 'heatmap', coordinateSystem: 'calendar', data: dateData }
+                };
+
+                holidayCharts.calendar.setOption(option);
+                holidayCharts.calendar.on('click', function (params) {
+                    if (params.value && params.value[0]) {
+                        document.getElementById("forecastQueryDate").value = params.value[0];
+                        triggerHolidayForecast();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("Calendar load failed:", e);
+        }
+    }
+
+    async function triggerHolidayForecast() {
+        const queryDate = document.getElementById("forecastQueryDate").value;
+        if (!queryDate) return;
+
+        const runBtn = document.getElementById("runForecastBtn");
+        runBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Analyzing...`;
+        runBtn.disabled = true;
+
+        try {
+            const res = await fetch(`/api/holiday/predictions?date=${queryDate}`);
+            if (!res.ok) throw new Error("API call failed");
+            const data = await res.json();
+
+            if (data.success) {
+                renderTargetEventHero(data.event, queryDate);
+                renderDemandOutlookKPI(data);
+                renderDemandTrendChart(data.historical_demand_series, data.forecast);
+                renderRevenueTrendChart(data.historical_revenue_series, data.forecast);
+                renderUpcomingTimeline(data.upcoming_events_timeline);
+                renderMenuOpportunities(data.menu_opportunities);
+                renderActionableAlerts(data.alerts);
+                renderWeatherCard(data.weather);
+                renderEvidenceFlow(data);
+                renderDataLineage(data.data_lineage);
+            }
+        } catch (e) {
+            console.error("Forecast execution failed:", e);
+        } finally {
+            runBtn.innerHTML = `<i class="fa-solid fa-chart-line"></i> Run Event Forecast`;
+            runBtn.disabled = false;
+        }
+    }
+
+    function renderTargetEventHero(event, queryDate) {
+        if (!event) return;
+        document.getElementById("target-event-title").innerText = event.event_name || "Event";
+        
+        const fullDateFormatted = event.full_date_str || (new Date(queryDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
+        document.getElementById("target-event-date").innerHTML = `<i class="fa-solid fa-calendar-day" style="color:#818cf8;"></i> <span style="color:#fff; font-weight:700;">${fullDateFormatted}</span>`;
+        
+        const daysRem = event.days_remaining;
+        document.getElementById("target-event-daysrem").innerText = daysRem === 0 ? "Today" : (daysRem > 0 ? `${daysRem} days remaining` : `${Math.abs(daysRem)} days ago`);
+        
+        const badgeContainer = document.getElementById("target-event-badges");
+        badgeContainer.innerHTML = "";
+        
+        if (event.is_long_weekend) {
+            badgeContainer.innerHTML += `<span class="badge-high" style="padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.8rem;"><i class="fa-solid fa-calendar-days"></i> Long Weekend</span>`;
+        }
+        if (event.is_weekend) {
+            badgeContainer.innerHTML += `<span class="badge-info" style="padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.8rem;"><i class="fa-solid fa-couch"></i> Weekend</span>`;
+        }
+        if (event.category && event.category !== 'Normal' && event.category !== 'Weekend') {
+            badgeContainer.innerHTML += `<span class="badge-med" style="padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.8rem;"><i class="fa-solid fa-star"></i> ${event.category}</span>`;
+        }
+
+        // Render 4-step Timeline dates
+        try {
+            const dt = new Date(queryDate);
+            const today = new Date();
+            const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+            const prev = new Date(dt); prev.setDate(dt.getDate() - 1);
+            const next = new Date(dt); next.setDate(dt.getDate() + 1);
+
+            document.getElementById("tdate-0").innerText = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            document.getElementById("tdate-1").innerText = tomorrow.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            document.getElementById("tdate-2").innerText = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            document.getElementById("tdate-3").innerText = next.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        } catch (e) {}
+    }
+
+    function renderDemandOutlookKPI(data) {
+        const forecast = data.forecast || {};
+        const state = data.data_state;
+        const badgeEl = document.getElementById("kpi-demand-outlook-badge");
+        const ordersEl = document.getElementById("kpi-expected-orders");
+        const revEl = document.getElementById("kpi-expected-revenue");
+        const evBadge = document.getElementById("kpi-evidence-level-badge");
+        const gaugeContainer = document.getElementById("demandGaugeContainer");
+
+        if (state === "INSUFFICIENT_DATA") {
+            badgeEl.className = "badge-gray";
+            badgeEl.innerText = "INSUFFICIENT DATA";
+            ordersEl.innerText = "Insufficient Data";
+            ordersEl.style.color = "#9ca3af";
+            revEl.innerText = "Insufficient Data";
+            revEl.style.color = "#9ca3af";
+            evBadge.className = "badge-gray";
+            evBadge.innerText = "INSUFFICIENT DATA";
+
+            // Render Premium Empty State Illustration (NO FAKE SCORE!)
+            gaugeContainer.innerHTML = `
+                <div class="empty-state-card" style="padding: 16px; border: none; background: transparent;">
+                    <div class="empty-state-icon" style="width: 44px; height: 44px; font-size: 1.2rem;">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <div style="font-size: 0.85rem; font-weight: 600; color: #e5e7eb;">Insufficient Historical Data</div>
+                    <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 2px;">0 comparable historical sales days found</div>
+                </div>
+            `;
+            return;
+        }
+
+        const outlook = forecast.demand_outlook || "NORMAL";
+        if (outlook === "HIGHER THAN NORMAL") {
+            badgeEl.className = "badge-high";
+            badgeEl.innerHTML = `<i class="fa-solid fa-arrow-trend-up"></i> HIGHER THAN NORMAL`;
+        } else if (outlook === "LOWER THAN NORMAL") {
+            badgeEl.className = "badge-low";
+            badgeEl.innerHTML = `<i class="fa-solid fa-arrow-trend-down"></i> LOWER THAN NORMAL`;
+        } else {
+            badgeEl.className = "badge-info";
+            badgeEl.innerHTML = `<i class="fa-solid fa-equals"></i> NORMAL`;
+        }
+
+        const minOrd = forecast.expected_orders_min;
+        const maxOrd = forecast.expected_orders_max;
+        ordersEl.innerText = (minOrd !== null && maxOrd !== null) ? `${minOrd} – ${maxOrd} orders` : "Insufficient Data";
+        ordersEl.style.color = "#fff";
+
+        const minRev = forecast.expected_revenue_min;
+        const maxRev = forecast.expected_revenue_max;
+        revEl.innerText = (minRev !== null && maxRev !== null) ? `₹${minRev.toLocaleString('en-IN')} – ₹${maxRev.toLocaleString('en-IN')}` : "Insufficient Data";
+        revEl.style.color = "#10b981";
+
+        const evLevel = forecast.evidence_level || "LIMITED EVIDENCE";
+        evBadge.innerText = evLevel;
+        evBadge.className = evLevel === "HIGH EVIDENCE" ? "badge-high" : "badge-med";
+
+        // Render ECharts Meter/Gauge for REAL_DATA / LIMITED_DATA
+        if (holidayCharts.gauge) echarts.dispose(holidayCharts.gauge);
+        gaugeContainer.innerHTML = "";
+        
+        const gaugeChart = echarts.init(gaugeContainer, 'dark');
+        holidayCharts.gauge = gaugeChart;
+        
+        const pct = forecast.percentage_change || 0.0;
+        let color = '#3b82f6';
+        if (pct >= 10) color = '#10b981';
+        if (pct <= -10) color = '#ef4444';
+
+        const option = {
+            backgroundColor: 'transparent',
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: -50,
+                max: 50,
+                pointer: { show: true, length: '60%', width: 4, itemStyle: { color: color } },
+                progress: { show: true, width: 8, itemStyle: { color: color } },
+                axisLine: { lineStyle: { width: 8, color: [[1, 'rgba(255,255,255,0.1)']] } },
+                axisTick: { show: false },
+                splitLine: { show: false },
+                axisLabel: { show: false },
+                detail: {
+                    valueAnimation: true,
+                    formatter: function (value) {
+                        return (value >= 0 ? '+' : '') + value.toFixed(1) + '%';
+                    },
+                    color: '#fff',
+                    fontSize: 14,
+                    fontWeight: 'bold',
+                    offsetCenter: [0, '20%']
+                },
+                data: [{ value: pct }]
+            }]
+        };
+        gaugeChart.setOption(option);
+    }
+
+    function renderDemandTrendChart(series, forecast) {
+        const container = document.getElementById("demandTrendChartContainer");
+        const countEl = document.getElementById("demand-series-count");
+        if (!container) return;
+
+        if (!series || series.length === 0) {
+            countEl.innerText = "0 comparable days";
+            container.innerHTML = `
+                <div class="empty-state-card">
+                    <div class="empty-state-icon"><i class="fa-solid fa-chart-line"></i></div>
+                    <div style="font-weight: 600; color: #fff; font-size: 0.95rem;">Insufficient Historical Observations</div>
+                    <div style="font-size: 0.8rem; margin-top: 4px;">Not enough historical observations to display a reliable demand trend.</div>
+                    <div style="font-size: 0.75rem; color: #d97706; margin-top: 8px;">Comparable days analyzed: 0</div>
+                </div>
+            `;
+            return;
+        }
+
+        countEl.innerText = `Comparable days analyzed: ${series.length}`;
+        container.innerHTML = "";
+
+        if (holidayCharts.demand) echarts.dispose(holidayCharts.demand);
+        const chart = echarts.init(container, 'dark');
+        holidayCharts.demand = chart;
+
+        const xDates = series.map(s => s.date);
+        const yOrders = series.map(s => s.orders);
+
+        const option = {
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'axis', formatter: '{b}<br/>Orders: <b>{c}</b>' },
+            grid: { top: 20, bottom: 30, left: 40, right: 20 },
+            xAxis: { type: 'category', data: xDates, axisLine: { lineStyle: { color: 'rgba(255,255,255,0.2)' } } },
+            yAxis: { type: 'value', splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+            series: [{
+                name: 'Orders',
+                type: 'bar',
+                data: yOrders,
+                itemStyle: { color: '#d97706', borderRadius: [4, 4, 0, 0] },
+                markLine: forecast.historical_baseline_orders ? {
+                    data: [{ type: 'average', name: 'Baseline', yAxis: forecast.historical_baseline_orders }],
+                    lineStyle: { color: '#6366f1', type: 'dashed' }
+                } : null
+            }]
+        };
+        chart.setOption(option);
+    }
+
+    function renderRevenueTrendChart(series, forecast) {
+        const container = document.getElementById("revenueTrendChartContainer");
+        const countEl = document.getElementById("revenue-series-count");
+        if (!container) return;
+
+        if (!series || series.length === 0) {
+            countEl.innerText = "0 comparable days";
+            container.innerHTML = `
+                <div class="empty-state-card">
+                    <div class="empty-state-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                    <div style="font-weight: 600; color: #fff; font-size: 0.95rem;">Insufficient Historical Observations</div>
+                    <div style="font-size: 0.8rem; margin-top: 4px;">Not enough historical revenue records to display a trend.</div>
+                    <div style="font-size: 0.75rem; color: #10b981; margin-top: 8px;">Comparable days analyzed: 0</div>
+                </div>
+            `;
+            return;
+        }
+
+        countEl.innerText = `Comparable days analyzed: ${series.length}`;
+        container.innerHTML = "";
+
+        if (holidayCharts.revenue) echarts.dispose(holidayCharts.revenue);
+        const chart = echarts.init(container, 'dark');
+        holidayCharts.revenue = chart;
+
+        const xDates = series.map(s => s.date);
+        const yRev = series.map(s => s.revenue);
+
+        const option = {
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'axis', formatter: '{b}<br/>Revenue: <b>₹{c}</b>' },
+            grid: { top: 20, bottom: 30, left: 50, right: 20 },
+            xAxis: { type: 'category', data: xDates, axisLine: { lineStyle: { color: 'rgba(255,255,255,0.2)' } } },
+            yAxis: { type: 'value', splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+            series: [{
+                name: 'Revenue',
+                type: 'line',
+                smooth: true,
+                data: yRev,
+                lineStyle: { color: '#10b981', width: 3 },
+                areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(16, 185, 129, 0.3)' }, { offset: 1, color: 'transparent' }]) }
+            }]
+        };
+        chart.setOption(option);
+    }
+
+    let cachedUpcomingTimeline = [];
+    let currentTimelineFilter = 'all';
+
+    function filterUpcomingTimeline(filterType, btn) {
+        currentTimelineFilter = filterType;
+        const btnGroup = document.getElementById("timelineFilterTabs");
+        if (btnGroup) {
+            btnGroup.querySelectorAll("button").forEach(b => {
+                b.className = "badge-gray";
+                b.style.borderColor = "rgba(255, 255, 255, 0.1)";
+            });
+            if (btn) {
+                btn.className = "badge-med";
+                btn.style.borderColor = "rgba(245, 158, 11, 0.4)";
+            }
+        }
+        renderUpcomingTimeline(cachedUpcomingTimeline);
+    }
+
+    function renderUpcomingTimeline(timeline) {
+        if (timeline && timeline.length) {
+            cachedUpcomingTimeline = timeline;
+        } else {
+            timeline = cachedUpcomingTimeline;
+        }
+
+        const container = document.getElementById("upcoming-events-timeline-container");
+        if (!container) return;
+        container.innerHTML = "";
+
+        if (!timeline || timeline.length === 0) {
+            container.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 24px; width: 100%;">No upcoming events found in calendar.</div>`;
+            return;
+        }
+
+        // Apply Category Filter
+        let filtered = timeline;
+        if (currentTimelineFilter === 'festivals') {
+            filtered = timeline.filter(e => (e.category && (e.category.includes('Festival') || e.category.includes('Celebration'))) || (e.event_name && (e.event_name.includes('Diwali') || e.event_name.includes('Holi') || e.event_name.includes('Eid') || e.event_name.includes('Ganesh') || e.event_name.includes('Christmas'))));
+        } else if (currentTimelineFilter === 'weekends') {
+            filtered = timeline.filter(e => e.is_weekend || (e.category && e.category.includes('Weekend')) || (e.event_name && e.event_name.includes('Weekend')));
+        } else if (currentTimelineFilter === 'govt') {
+            filtered = timeline.filter(e => (e.category && (e.category.includes('National') || e.category.includes('Government'))) || (e.type && e.type.includes('National')));
+        }
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 24px; width: 100%;">No events in this category over the next 45 days.</div>`;
+            return;
+        }
+
+        // Update Top Ticker with upcoming marquee
+        const ticker = document.getElementById("holiday-alert-ticker");
+        if (ticker && timeline.length) {
+            const marqueeItems = timeline.slice(0, 10).map(e => {
+                let ico = e.is_weekend ? "🏖️" : (e.category.includes('Festival') ? "🎉" : "🏛️");
+                let remStr = e.days_remaining === 0 ? "Today" : `in ${e.days_remaining}d`;
+                let dStr = e.date_formatted || e.date_str;
+                return `<span style="cursor:pointer; color:#e2e8f0; font-size:0.85rem;" onclick="document.getElementById('forecastQueryDate').value='${e.date_str}'; triggerHolidayForecast(); window.scrollTo({top:0,behavior:'smooth'});">${ico} <b>${e.event_name}</b> <span style="color:#38bdf8; font-weight:700;">[📅 ${dStr}]</span> <span style="color:#f59e0b; font-weight:600;">(${remStr})</span></span>`;
+            });
+            ticker.innerHTML = marqueeItems.join('<span style="color:rgba(255,255,255,0.2); margin:0 8px;"> • </span>');
+        }
+
+        filtered.forEach(evt => {
+            const card = document.createElement("div");
+            card.style.minWidth = "230px";
+            card.style.background = "rgba(255,255,255,0.03)";
+            card.style.border = "1px solid rgba(255,255,255,0.08)";
+            card.style.borderRadius = "14px";
+            card.style.padding = "16px";
+            card.style.flexShrink = "0";
+            card.style.cursor = "pointer";
+            card.style.transition = "all 0.2s ease";
+            card.title = "Click to run AI Forecast for this date";
+
+            card.onmouseover = () => {
+                card.style.borderColor = "rgba(217, 119, 6, 0.4)";
+                card.style.transform = "translateY(-2px)";
+                card.style.background = "rgba(217, 119, 6, 0.08)";
+            };
+            card.onmouseout = () => {
+                card.style.borderColor = "rgba(255,255,255,0.08)";
+                card.style.transform = "translateY(0)";
+                card.style.background = "rgba(255,255,255,0.03)";
+            };
+            card.onclick = () => {
+                document.getElementById("forecastQueryDate").value = evt.date_str;
+                triggerHolidayForecast();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            };
+
+            let icon = "fa-calendar-day";
+            let badgeClass = "badge-gray";
+            let surgeTag = "Standard Demand";
+            let surgeClass = "badge-gray";
+
+            if (evt.is_weekend) { 
+                icon = "fa-couch"; 
+                badgeClass = "badge-info"; 
+                surgeTag = "🏖️ Weekend Rush";
+                surgeClass = "badge-info";
+            }
+            if (evt.category && (evt.category.includes('Festival') || evt.category.includes('Celebration'))) { 
+                icon = "fa-star"; 
+                badgeClass = "badge-med"; 
+                surgeTag = "🔥 Major Surge (+45%)";
+                surgeClass = "badge-high";
+            }
+            if (evt.category && (evt.category.includes('National') || evt.category.includes('Government'))) { 
+                icon = "fa-flag"; 
+                badgeClass = "badge-low"; 
+                surgeTag = "📈 High Footfall (+50%)";
+                surgeClass = "badge-high";
+            }
+
+            const daysStr = evt.days_remaining === 0 ? "Today" : (evt.days_remaining === 1 ? "Tomorrow" : `In ${evt.days_remaining} days`);
+            const dateStrDisplay = evt.full_date_str || evt.date_formatted || evt.date_str;
+
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span class="${badgeClass}" style="padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 700;">${evt.category}</span>
+                    <i class="fa-solid ${icon}" style="color: #9ca3af; font-size: 0.9rem;"></i>
+                </div>
+                <div style="font-size: 1rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px;">
+                    ${evt.event_name}
+                </div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-regular fa-calendar-days" style="color: #60a5fa;"></i> ${dateStrDisplay}
+                </div>
+                <div style="font-size: 0.75rem; margin-bottom: 10px;">
+                    <span class="${surgeClass}" style="padding: 2px 8px; border-radius: 8px; font-weight: 700; font-size: 0.68rem;">${surgeTag}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #9ca3af; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                    <span style="color:#cbd5e1; font-weight:600;"><i class="fa-solid fa-clock"></i> Countdown</span>
+                    <span style="color: #f59e0b; font-weight: 700;">${daysStr}</span>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function renderMenuOpportunities(items) {
+        const tbody = document.getElementById("menu-opportunities-table-body");
+        const topContainer = document.getElementById("top-menu-opportunities-container");
+        if (tbody) tbody.innerHTML = "";
+        if (topContainer) topContainer.innerHTML = "";
+
+        if (!items || items.length === 0) {
+            if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:24px; color:#9ca3af;">No active menu items available.</td></tr>`;
+            if (topContainer) topContainer.innerHTML = `<div style="text-align:center; color:#9ca3af; padding:16px;">No evidence-backed menu opportunities available.</div>`;
+            return;
+        }
+
+        const strongItems = items.filter(i => i.status === 'HISTORICALLY_STRONG');
+        if (strongItems.length === 0 && topContainer) {
+            topContainer.innerHTML = `<div style="text-align:center; color:#9ca3af; padding:16px;">No evidence-backed menu opportunities available.</div>`;
+        } else if (topContainer) {
+            strongItems.slice(0, 3).forEach(item => {
+                const card = document.createElement("div");
+                card.style.background = "rgba(16, 185, 129, 0.05)";
+                card.style.border = "1px solid rgba(16, 185, 129, 0.2)";
+                card.style.borderRadius = "10px";
+                card.style.padding = "12px 14px";
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 700; color: #fff; font-size: 0.9rem;">${item.name}</span>
+                        <span class="badge-high" style="padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700;">+${item.historical_diff_pct}%</span>
+                    </div>
+                    <div style="font-size: 0.78rem; color: #9ca3af; margin-top: 4px;">Comparable avg: <b>${item.comparable_avg_qty} units</b> vs ${item.normal_avg_qty} normal</div>
+                `;
+                topContainer.appendChild(card);
+            });
+        }
+
+        if (tbody) {
+            items.forEach(item => {
+                const tr = document.createElement("tr");
+                tr.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+                
+                let statusBadge = '';
+                if (item.status === 'HISTORICALLY_STRONG') {
+                    statusBadge = `<span class="badge-high" style="padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700;">HISTORICALLY STRONG</span>`;
+                } else if (item.status === 'HISTORICALLY_WEAK') {
+                    statusBadge = `<span class="badge-low" style="padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700;">HISTORICALLY WEAK</span>`;
+                } else if (item.status === 'CONSISTENT_DEMAND') {
+                    statusBadge = `<span class="badge-info" style="padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700;">CONSISTENT</span>`;
+                } else {
+                    statusBadge = `<span class="badge-gray" style="padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700;">INSUFFICIENT DATA</span>`;
+                }
+
+                const diffStr = item.status === 'INSUFFICIENT_DATA' ? '—' : `${item.historical_diff_pct > 0 ? '+' : ''}${item.historical_diff_pct}%`;
+                
+                // Calculate progress bar ratio
+                const maxQty = Math.max(item.normal_avg_qty, item.comparable_avg_qty, 1.0);
+                const normPct = Math.min(100, Math.round((item.normal_avg_qty / maxQty) * 100));
+                const compPct = Math.min(100, Math.round((item.comparable_avg_qty / maxQty) * 100));
+
+                tr.innerHTML = `
+                    <td style="padding: 10px; font-weight: 600;">${item.name}</td>
+                    <td style="padding: 10px; color: #9ca3af;">${item.category} (${item.type})</td>
+                    <td style="padding: 10px; text-align: center;">${item.normal_avg_qty}</td>
+                    <td style="padding: 10px; text-align: center; font-weight: 700;">${item.comparable_avg_qty}</td>
+                    <td style="padding: 10px;">
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: ${compPct}%; background: ${item.historical_diff_pct >= 0 ? '#10b981' : '#ef4444'};"></div>
+                        </div>
+                    </td>
+                    <td style="padding: 10px; text-align: center; font-weight: 700; color: ${item.historical_diff_pct >= 0 ? '#10b981' : '#ef4444'};">${diffStr}</td>
+                    <td style="padding: 10px; text-align: center;">${statusBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    }
+
+    function renderActionableAlerts(alerts) {
+        const container = document.getElementById("actionable-alerts-container");
+        const ticker = document.getElementById("holiday-alert-ticker");
+        if (!container) return;
+        container.innerHTML = "";
+        if (ticker) ticker.innerHTML = "";
+
+        if (!alerts || alerts.length === 0) {
+            container.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 16px;">No active alerts for this date.</div>`;
+            if (ticker) ticker.innerHTML = `<span style="font-size: 0.85rem; color: #9ca3af;">No active alerts.</span>`;
+            return;
+        }
+
+        alerts.forEach(alt => {
+            let badgeClass = "badge-info";
+            if (alt.priority === 'CRITICAL') badgeClass = "badge-low";
+            else if (alt.priority === 'HIGH') badgeClass = "badge-high";
+            else if (alt.priority === 'MEDIUM') badgeClass = "badge-med";
+
+            const card = document.createElement("div");
+            card.style.background = "rgba(255,255,255,0.02)";
+            card.style.border = "1px solid rgba(255,255,255,0.06)";
+            card.style.borderRadius = "12px";
+            card.style.padding = "14px 18px";
+            card.style.display = "flex";
+            card.style.justifyContent = "space-between";
+            card.style.alignItems = "center";
+            card.style.gap = "16px";
+
+            card.innerHTML = `
+                <div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="${badgeClass}" style="padding: 2px 8px; border-radius: 12px; font-size: 0.68rem; font-weight: 700;">${alt.priority}</span>
+                        <h5 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff;">${alt.title}</h5>
+                    </div>
+                    <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: #9ca3af; line-height: 1.4;">${alt.message}</p>
+                </div>
+                <div style="font-size: 0.75rem; color: #6b7280; white-space: nowrap; text-align: right;">
+                    <div>${alt.source}</div>
+                    <div style="color: #9ca3af; font-size: 0.7rem; margin-top: 2px;">${alt.evidence}</div>
+                </div>
+            `;
+            container.appendChild(card);
+
+            if (ticker) {
+                ticker.innerHTML += `<span style="font-size: 0.85rem; color: #e5e7eb; margin-right: 24px;"><b>[${alt.priority}]</b> ${alt.title}: ${alt.message}</span>`;
+            }
+        });
+    }
+
+    function renderWeatherCard(weather) {
+        const contentEl = document.getElementById("weather-card-content");
+        const noteEl = document.getElementById("weather-source-footnote");
+        if (!contentEl) return;
+
+        if (!weather || !weather.available) {
+            contentEl.innerHTML = `
+                <div class="empty-state-card" style="padding: 20px 12px;">
+                    <div class="empty-state-icon" style="width: 44px; height: 44px; font-size: 1.2rem;"><i class="fa-solid fa-cloud-sun-rain"></i></div>
+                    <div style="font-weight: 600; color: #fff; font-size: 0.9rem;">Real-time weather unavailable</div>
+                    <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 4px;">Weather forecast is offline for date</div>
+                </div>
+            `;
+            if (noteEl) noteEl.innerText = "Weather Provider: Offline / Unavailable";
+            return;
+        }
+
+        contentEl.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 12px;">
+                <div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #fff;">${weather.temperature}°C</div>
+                    <div style="font-size: 0.85rem; color: #9ca3af; margin-top: 2px;">${weather.condition} (${weather.rainfall}mm rain)</div>
+                </div>
+                <i class="fa-solid fa-sun" style="font-size: 2.2rem; color: #f59e0b;"></i>
+            </div>
+        `;
+        if (noteEl) noteEl.innerText = `Source: ${weather.source || "Live OpenWeatherMap API"}`;
+    }
+
+    function renderEvidenceFlow(data) {
+        const forecast = data.forecast || {};
+        const evidence = data.evidence || {};
+        
+        document.getElementById("eflow-orders").innerText = data.data_lineage?.order_records_used ?? "0";
+        document.getElementById("eflow-compdays").innerText = forecast.comparable_days_count ?? "0";
+        document.getElementById("eflow-basedays").innerText = evidence.baseline_days_count ?? "0";
+        
+        const outlookEl = document.getElementById("eflow-outlook");
+        outlookEl.innerText = forecast.demand_outlook || "INSUFFICIENT DATA";
+        if (forecast.demand_outlook === 'HIGHER THAN NORMAL') outlookEl.style.color = '#10b981';
+        else if (forecast.demand_outlook === 'LOWER THAN NORMAL') outlookEl.style.color = '#ef4444';
+        else if (forecast.demand_outlook === 'NORMAL') outlookEl.style.color = '#3b82f6';
+        else outlookEl.style.color = '#9ca3af';
+
+        document.getElementById("eflow-summary").innerText = evidence.what_was_observed || evidence.explanation || "No historical evidence available.";
+    }
+
+    function renderDataLineage(lineage) {
+        if (!lineage) return;
+        document.getElementById("lineage-orders").innerText = lineage.order_records_used ?? "--";
+        document.getElementById("lineage-items").innerText = lineage.menu_items_used ?? "--";
+        document.getElementById("lineage-compdays").innerText = lineage.historical_comparable_days ?? "--";
+        document.getElementById("lineage-cal").innerText = lineage.calendar_source ?? "--";
+        document.getElementById("lineage-weather").innerText = lineage.weather_source ?? "--";
+        document.getElementById("lineage-timestamp").innerText = lineage.generated_at ? new Date(lineage.generated_at).toLocaleString() : "--";
+    }
+</script>

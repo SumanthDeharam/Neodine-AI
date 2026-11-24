@@ -2,10 +2,13 @@
 {% block content %}
 {% include 'modules/_mod_styles.html' %}
 <style>
-  .faq-item{border-bottom:1px solid #f1f5f9;padding:16px 0;}
-  .faq-q{font-weight:700;color:#1e293b;font-size:14px;display:flex;align-items:center;gap:8px;cursor:pointer;}
-  .faq-q i{color:#FF2E63;font-size:12px;}
-  .faq-a{font-size:13px;color:#64748b;line-height:1.6;margin-top:8px;padding-left:20px;}
+  .faq-item{border-bottom:1px solid #f1f5f9;padding:14px 0;}
+  .faq-q{font-weight:700;color:#1e293b;font-size:14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding:6px 0;}
+  .faq-q:hover{color:#FF2E63;}
+  .faq-q i{color:#FF2E63;font-size:12px;transition:transform 0.2s ease;}
+  .faq-item.open .faq-q i{transform:rotate(90deg);}
+  .faq-a{font-size:13px;color:#64748b;line-height:1.6;margin-top:8px;padding-left:10px;display:none;}
+  .faq-item.open .faq-a{display:block;}
 </style>
 <div class="mod-page">
   <div class="mod-topbar">
@@ -17,27 +20,133 @@
     <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
   </div>
   <div class="mod-body" style="padding-top:20px;">
-    <div class="dev-notice"><i class="fa-solid fa-headset"></i><span><strong>Need Help?</strong> Call our support team at <strong>7989052868</strong> — available daily 9AM–9PM.</span></div>
+    <div class="dev-notice">
+      <i class="fa-solid fa-headset" style="font-size:18px;color:#FF2E63;"></i>
+      <span><strong>Need Live Assistance?</strong> Call our dedicated merchant support team at <strong>7989052868</strong> (Daily 9:00 AM – 9:00 PM IST).</span>
+    </div>
+
     <div class="data-card">
-      <div class="data-card-hdr"><h3><i class="fa-solid fa-circle-question"></i> Frequently Asked Questions</h3></div>
+      <div class="data-card-hdr">
+        <h3><i class="fa-solid fa-circle-question"></i> Frequently Asked Questions</h3>
+      </div>
       <div style="padding:4px 20px 20px;">
-        {% set faqs = [('How do I add a new menu item?','Go to Menu &amp; Inventory → Menu → Click "Add Item" and fill in the details.'),('How do I apply a discount?','In the POS billing screen, click the discount field and enter the percentage before settling.'),('How do I print a KOT?','KOTs are printed automatically when an order is confirmed. Go to Operations → Bill/KOT Print to manage print settings.'),('Can I have multiple users?','Yes! Register new users from the login page. Admin can approve them from the Admin panel.'),('How is GST calculated?','GST (5%) is applied after applying any discounts. It is shown separately on every bill.')] %}
+        {% set faqs = [
+          ('How do I add or update a menu item?','Navigate to Menu & Inventory → Menu Items. Click "+ Add Item" to enter dish name, category, price, and food type (Veg/Non-Veg).'),
+          ('How do I apply discounts on bills?','In POS billing, enter a discount percentage in the Discount (%) box, or configure automatic promotional coupons under Menu & Inventory → Discount Rules.'),
+          ('How does Kitchen Order Ticket (KOT) printing work?','KOTs are automatically routed to the kitchen screen and printer upon order confirmation. Manage preferences in Settings → Operational Settings.'),
+          ('How do I set up my UPI Payment QR code on receipts?','Go to Settings → System Settings → UPI Payment QR. Enter your UPI ID (e.g. restaurant@okaxis) and password to generate instant QR codes on customer bills.'),
+          ('How do I configure CGST and SGST tax rates?','Go to Finance & Accounts → Tax Management. Toggle tax calculation on/off and set CGST and SGST percentages.')
+        ] %}
         {% for faq in faqs %}
         <div class="faq-item">
-          <div class="faq-q"><i class="fa-solid fa-chevron-right"></i>{{ faq[0] }}</div>
+          <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+            <span><i class="fa-solid fa-chevron-right" style="margin-right:8px;"></i>{{ faq[0] }}</span>
+          </div>
           <div class="faq-a">{{ faq[1] }}</div>
         </div>
         {% endfor %}
       </div>
     </div>
+
     <div class="data-card" style="margin-top:16px;">
-      <div class="data-card-hdr"><h3><i class="fa-solid fa-envelope"></i> Contact Support</h3></div>
-      <div class="mod-form-grid">
-        <div class="mod-form-group"><label>Your Issue</label><input type="text" placeholder="Briefly describe your issue"></div>
-        <div class="mod-form-group"><label>Priority</label><select><option>Normal</option><option>Urgent</option></select></div>
-      </div>
-      <button class="mod-save-btn"><i class="fa-solid fa-paper-plane"></i> Send to Support</button>
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-envelope"></i> Raise a Support Ticket</h3></div>
+      <form id="supportTicketForm" onsubmit="submitSupportTicket(event)">
+        <div class="mod-form-grid">
+          <div class="mod-form-group" style="grid-column: span 2;">
+            <label for="ticketIssue">Describe Your Question or Issue *</label>
+            <textarea id="ticketIssue" rows="3" placeholder="Please describe what you need assistance with..." style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;" required></textarea>
+          </div>
+          <div class="mod-form-group">
+            <label for="ticketPriority">Priority Level</label>
+            <select id="ticketPriority">
+              <option value="Normal">Normal — General inquiry</option>
+              <option value="High">High — Operations affected</option>
+              <option value="Urgent">Urgent — Billing/hardware blocked</option>
+            </select>
+          </div>
+        </div>
+        <div style="padding:16px 20px; border-top:1px solid #e2e8f0; display:flex; align-items:center; gap:12px;">
+          <button type="submit" class="mod-save-btn" id="btnSubmitTicket"><i class="fa-solid fa-paper-plane"></i> Submit Ticket</button>
+          <span id="ticketMsg" style="font-size:13px; font-weight:600;"></span>
+        </div>
+      </form>
     </div>
+
+    {% if tickets and tickets|length > 0 %}
+    <div class="data-card" style="margin-top:16px;">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-ticket"></i> Your Recent Support Tickets</h3></div>
+      <table class="mod-table">
+        <thead>
+          <tr>
+            <th>Ticket ID</th>
+            <th>Subject</th>
+            <th>Priority</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in tickets %}
+          <tr>
+            <td><span style="font-family:monospace;font-weight:700;background:#f1f5f9;padding:2px 6px;border-radius:4px;">#{{ t.ticket_uuid }}</span></td>
+            <td>{{ t.subject }}</td>
+            <td><span class="badge badge-{{ 'yellow' if t.priority == 'Urgent' else 'blue' }}">{{ t.priority }}</span></td>
+            <td><span class="badge badge-{{ 'green' if t.status == 'Resolved' else 'yellow' }}">{{ t.status }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
   </div>
 </div>
+
+<script>
+async function submitSupportTicket(e) {
+  if (e) e.preventDefault();
+  const issueInput = document.getElementById('ticketIssue');
+  const prioInput = document.getElementById('ticketPriority');
+  const msg = document.getElementById('ticketMsg');
+  const btn = document.getElementById('btnSubmitTicket');
+
+  if (!issueInput.value.trim()) return;
+
+  if (msg) {
+    msg.textContent = 'Submitting...';
+    msg.style.color = '#64748b';
+  }
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/support/ticket', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        issue: issueInput.value.trim(),
+        priority: prioInput.value
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (msg) {
+        msg.textContent = '✅ ' + data.message;
+        msg.style.color = '#16a34a';
+      }
+      issueInput.value = '';
+      setTimeout(() => { window.location.reload(); }, 2000);
+    } else {
+      if (msg) {
+        msg.textContent = '❌ ' + (data.error || 'Failed to submit ticket.');
+        msg.style.color = '#dc2626';
+      }
+    }
+  } catch (err) {
+    if (msg) {
+      msg.textContent = '❌ Network error submitting ticket.';
+      msg.style.color = '#dc2626';
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+</script>
 {% endblock %}

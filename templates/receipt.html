@@ -1,108 +1,271 @@
 {% extends 'base.html' %}
 {% block content %}
+{% set rlang = current_locale.receipt_language if (current_locale and current_locale.receipt_language) else 'English' %}
+{% set cs = current_locale.currency_symbol if (current_locale and current_locale.currency_symbol) else '₹' %}
+
+{% set labels = {
+    'English': {
+        'tax_invoice': 'Tax Invoice / Bill',
+        'customer': 'Customer',
+        'phone': 'Phone',
+        'txn_date': 'Txn Date',
+        'order_id': 'Order ID',
+        'subtotal': 'Subtotal',
+        'discount': 'Discount',
+        'cgst': 'CGST',
+        'sgst': 'SGST',
+        'total_gst': 'Total GST',
+        'net_total': 'Net Total',
+        'print_invoice': 'Print Invoice',
+        'return_pos': 'Return to POS',
+        'scan_to_pay': 'Scan to Pay',
+        'upi_sub': 'Any UPI app — GPay · PhonePe · Paytm · BHIM',
+        'pay_to': 'Pay to (UPI ID)'
+    },
+    'Hindi': {
+        'tax_invoice': 'कर चालान / बिल (Tax Invoice)',
+        'customer': 'ग्राहक (Customer)',
+        'phone': 'फ़ोन (Phone)',
+        'txn_date': 'लेन-देन तिथि (Date)',
+        'order_id': 'ऑर्डर आईडी (Order ID)',
+        'subtotal': 'उप-योग (Subtotal)',
+        'discount': 'छूट (Discount)',
+        'cgst': 'सीजीएसटी (CGST)',
+        'sgst': 'एसजीएसटी (SGST)',
+        'total_gst': 'कुल जीएसटी (Total GST)',
+        'net_total': 'कुल देय राशि (Net Total)',
+        'print_invoice': 'प्रिंट इनवॉइस',
+        'return_pos': 'पीओएस पर वापस',
+        'scan_to_pay': 'भुगतान के लिए स्कैन करें',
+        'upi_sub': 'कोई भी यूपीआई ऐप — GPay · PhonePe · Paytm · BHIM',
+        'pay_to': 'भुगतान पता (UPI ID)'
+    },
+    'Telugu': {
+        'tax_invoice': 'పన్ను ఇన్వాయిస్ / బిల్లు (Tax Invoice)',
+        'customer': 'కస్టమర్ (Customer)',
+        'phone': 'ఫోన్ (Phone)',
+        'txn_date': 'లావాదేవీ తేదీ (Date)',
+        'order_id': 'ఆర్డర్ ID (Order ID)',
+        'subtotal': 'సబ్‌టోటల్ (Subtotal)',
+        'discount': 'డిస్కౌంట్ (Discount)',
+        'cgst': 'CGST',
+        'sgst': 'SGST',
+        'total_gst': 'మొత్తం GST (Total GST)',
+        'net_total': 'నికర మొత్తం (Net Total)',
+        'print_invoice': 'ఇన్‌వాయిస్ ప్రింట్',
+        'return_pos': 'POS కి తిరిగి వెళ్ళు',
+        'scan_to_pay': 'చెల్లించడానికి స్కాన్ చేయండి',
+        'upi_sub': 'ఏదైనా UPI యాప్ — GPay · PhonePe · Paytm · BHIM',
+        'pay_to': 'చెల్లింపు చిరునామా (UPI ID)'
+    }
+} %}
+{% set cur_lbl = labels[rlang] if rlang in labels else labels['English'] %}
+
 <style>
-    .receipt-wrapper { display: flex; justify-content: center; padding: 40px 20px; }
+    body { background: #f8fafc; }
+    .receipt-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 30px 20px 80px;
+        font-family: 'Outfit', sans-serif;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        flex: 1;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+    }
     .receipt-container {
-        background: var(--glass-bg);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid var(--glass-border);
-        border-radius: 20px;
-        padding: 40px 40px 30px;
-        width: 100%; max-width: 480px;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05);
-        position: relative;
-        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 36px;
+        width: 100%;
+        max-width: 480px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        color: #1e293b;
+        margin-bottom: 40px;
     }
-    .receipt-container::before {
-        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
-        background: linear-gradient(90deg, var(--secondary), var(--primary));
+    
+    .receipt-header {
+        text-align: center;
+        margin-bottom: 24px;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 18px;
     }
-    .receipt-header { text-align: center; margin-bottom: 30px; }
     .receipt-header h1 {
-        color: #fff; margin: 0 0 10px; font-size: 26px; text-transform: uppercase;
-        letter-spacing: 2px;
+        color: #0f172a;
+        margin: 0 0 6px;
+        font-size: 24px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
-    .receipt-header h1 span {
-        background: linear-gradient(90deg, var(--primary), var(--secondary));
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    .receipt-address {
+        color: #475569;
+        font-size: 13px;
+        margin: 0 0 4px;
+        font-weight: 500;
+        line-height: 1.4;
     }
-    .receipt-header p { color: #94a3b8; font-size: 14px; margin: 0; }
+    .receipt-subinfo {
+        color: #64748b;
+        font-size: 12px;
+        margin-top: 4px;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .receipt-gstin {
+        color: #0f172a;
+        font-size: 12px;
+        font-weight: 700;
+        margin-top: 6px;
+        letter-spacing: 0.5px;
+    }
+    .receipt-type-tag {
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: #475569;
+        background: #f1f5f9;
+        padding: 3px 12px;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+    }
     
     .receipt-details {
         margin-bottom: 25px; padding-bottom: 20px;
-        border-bottom: 1px dashed rgba(255,255,255,0.15);
+        border-bottom: 1px dashed #cbd5e1;
     }
-    .detail-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; }
-    .detail-label { color: #64748b; font-weight: 500; }
-    .detail-val { color: #f1f5f9; font-weight: 600; text-align: right; word-break: break-all; margin-left:15px; }
+    .detail-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 15px; }
+    .detail-label { color: #64748b; font-weight: 600; }
+    .detail-val { color: #0f172a; font-weight: 700; text-align: right; word-break: break-all; margin-left:15px; }
     
-    .items-list { list-style: none; padding: 0; margin: 0 0 25px 0; border-bottom: 1px dashed rgba(255,255,255,0.15); padding-bottom: 15px;}
-    .item-row { display: flex; justify-content: space-between; margin-bottom: 14px; font-size: 16px; align-items: center; }
-    .item-name { color: #e2e8f0; font-weight: 500;}
-    .item-price { color: #fff; font-weight: 700; font-variant-numeric: tabular-nums;}
+    .items-list { list-style: none; padding: 0; margin: 0 0 25px 0; border-bottom: 1px dashed #cbd5e1; padding-bottom: 15px;}
+    .item-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; align-items: flex-start; }
+    .item-name { color: #1e293b; font-weight: 600; }
+    .item-price { color: #0f172a; font-weight: 800; font-variant-numeric: tabular-nums;}
     
     .totals-area { margin-bottom: 30px; }
-    .total-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; }
-    .total-label { color: #94a3b8; }
-    .total-val { color: #fff; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .total-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 15px; }
+    .total-label { color: #475569; font-weight: 600; }
+    .total-val { color: #0f172a; font-weight: 700; font-variant-numeric: tabular-nums; }
     
     .grand-total {
         display: flex; justify-content: space-between; align-items: center;
-        margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);
+        margin-top: 15px; padding-top: 15px; border-top: 2px solid #0f172a;
         font-size: 22px; font-weight: 800;
     }
-    .grand-total .total-label { color: #fff; text-transform: uppercase; letter-spacing: 1px; }
-    .grand-total .total-val { color: var(--primary); text-shadow: var(--text-glow); }
+    .grand-total .total-label { color: #0f172a; text-transform: uppercase; }
+    .grand-total .total-val { color: #0f172a; }
     
     .actions { display: flex; gap: 15px; margin-top: 10px; }
     .actions button {
-        flex: 1; padding: 14px; border-radius: 12px; font-family: inherit; font-size: 15px; font-weight: 700;
-        cursor: pointer; transition: 0.3s; border: none; text-transform: uppercase; letter-spacing: 0.5px;
+        flex: 1; padding: 14px; border-radius: 8px; font-family: inherit; font-size: 15px; font-weight: 700;
+        cursor: pointer; transition: 0.2s; border: none; text-transform: uppercase; letter-spacing: 0.5px;
     }
-    .btn-print { background: linear-gradient(135deg, var(--primary), #00bfff); color: #000; box-shadow: 0 4px 15px rgba(0, 255, 204, 0.2); }
-    .btn-print:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 255, 204, 0.4); }
-    .btn-back { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
-    .btn-back:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
+    .btn-print { background: #0f172a; color: #fff; }
+    .btn-print:hover { background: #1e293b; transform: translateY(-1px); }
+    .btn-back { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+    .btn-back:hover { background: #e2e8f0; color: #0f172a; transform: translateY(-1px); }
 
     @media print {
-        body { background: white; color: black; }
-        .header, .blob-1, .blob-2, .actions { display: none !important; }
-        .receipt-wrapper { padding: 0; align-items: flex-start; }
-        .receipt-container { box-shadow: none; border: 1px solid #ddd; background: white; border-radius: 0; padding: 20px; color: #000; }
-        .receipt-container::before { display: none; }
-        .receipt-header h1 { color: #000; }
-        .receipt-header h1 span { background: none; -webkit-text-fill-color: initial; color: #000; }
-        .detail-label, .total-label { color: #555; }
-        .detail-val, .item-name, .item-price, .total-val, .receipt-header p { color: #000; }
-        .detail-val, .total-val { color: #000 !important; text-shadow: none !important; }
-        .grand-total .total-label { color: #000; }
-        .grand-total .total-val { color: #000 !important; }
+        body { background: white !important; margin: 0 !important; padding: 0 !important; }
+        header, .top-banner, .main-header, .app-header, #subscriptionBanner, #upgradeNowBtn, .sidenav-overlay, .sidenav, .sidebar, .actions, .modal-overlay, #qa-auto-agent-panel, .pulse-live-badge, .back-pos-btn {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .app-body {
+            overflow: visible !important;
+            height: auto !important;
+            display: block !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .receipt-wrapper {
+            padding: 0 !important;
+            margin: 0 auto !important;
+            display: block !important;
+            overflow: visible !important;
+            width: 100% !important;
+            height: auto !important;
+        }
+        .receipt-container { 
+            box-shadow: none !important;
+            border: none !important;
+            background: white !important;
+            border-radius: 0 !important;
+            padding: 10px 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            color: #000 !important;
+            margin: 0 auto !important;
+        }
+        .receipt-header h1 { color: #000 !important; font-size: 20px !important; }
+        .receipt-address, .receipt-subinfo, .receipt-gstin, .receipt-type-tag { color: #000 !important; background: transparent !important; }
+        .receipt-type-tag { border-color: #000 !important; }
+        .detail-label, .total-label { color: #333 !important; }
+        .detail-val, .item-name, .item-price, .total-val, .receipt-header p { color: #000 !important; }
+        .grand-total .total-label, .grand-total .total-val { color: #000 !important; border-top: 2px solid #000 !important; }
+        .receipt-details, .items-list { border-bottom-color: #ccc !important; }
+        .upi-payment-section img { display: block !important; margin: 0 auto; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
 </style>
 
 <div class="receipt-wrapper">
     <div class="receipt-container">
         <div class="receipt-header">
-            <h1>NEO<span>DINE</span> AI</h1>
-            <p>Intelligent Sales Vector Confirmed</p>
+            {% if restaurant_detail and restaurant_detail.logo %}
+                <img src="{{ restaurant_detail.logo }}" alt="Logo" style="max-height: 55px; max-width: 160px; object-fit: contain; margin-bottom: 8px; display: inline-block;" />
+            {% endif %}
+            <h1>{{ restaurant_detail.restaurant_name if (restaurant_detail and restaurant_detail.restaurant_name) else 'My Restaurant' }}</h1>
+            
+            {% if restaurant_detail and restaurant_detail.address %}
+                <p class="receipt-address">{{ restaurant_detail.address }}</p>
+            {% endif %}
+
+            <div class="receipt-subinfo">
+                {% if restaurant_detail and restaurant_detail.phone %}
+                    <span><strong>Ph:</strong> {{ restaurant_detail.phone }}</span>
+                {% endif %}
+                {% if restaurant_detail and restaurant_detail.email %}
+                    <span><strong>Email:</strong> {{ restaurant_detail.email }}</span>
+                {% endif %}
+            </div>
+
+            {% if restaurant_detail and restaurant_detail.gst_number %}
+                <div class="receipt-gstin"><strong>GSTIN:</strong> {{ restaurant_detail.gst_number }}</div>
+            {% endif %}
+
+            <div>
+                <span class="receipt-type-tag">{{ cur_lbl.tax_invoice }}</span>
+            </div>
         </div>
         
         <div class="receipt-details">
             <div class="detail-row">
-                <span class="detail-label">Customer</span>
+                <span class="detail-label">{{ cur_lbl.customer }}</span>
                 <span class="detail-val">{{ receipt.name }}</span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Phone</span>
+                <span class="detail-label">{{ cur_lbl.phone }}</span>
                 <span class="detail-val">{{ receipt.phone }}</span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Txn Date</span>
+                <span class="detail-label">{{ cur_lbl.txn_date }}</span>
                 <span class="detail-val">{{ receipt.date }}</span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Order ID</span>
+                <span class="detail-label">{{ cur_lbl.order_id }}</span>
                 <span class="detail-val" style="font-family: monospace; letter-spacing: 1px;">#{{ receipt.order_id[:8] | upper }}</span>
             </div>
         </div>
@@ -111,37 +274,67 @@
             {% for item in receipt.food_items %}
                 <li class="item-row">
                     <span class="item-name">{{ item.qty }}x {{ item.name }}</span>
-                    <span class="item-price">₹{{ item.price }}</span>
+                    <span class="item-price">{{ cs }}{{ item.price }}</span>
                 </li>
             {% endfor %}
         </ul>
         
         <div class="totals-area">
             <div class="total-row">
-                <span class="total-label">Subtotal Breakdown</span>
-                <span class="total-val">₹{{ receipt.subtotal }}</span>
+                <span class="total-label">{{ cur_lbl.subtotal }}</span>
+                <span class="total-val">{{ cs }}{{ receipt.subtotal }}</span>
             </div>
             {% if receipt.discount_pct > 0 %}
             <div class="total-row">
-                <span class="total-label" style="color: #ff5555;">AI Discount Applied ({{ receipt.discount_pct }}%)</span>
-                <span class="total-val" style="color: #ff5555;">-₹{{ receipt.discount_amount }}</span>
+                <span class="total-label" style="color: #ef4444;">{{ cur_lbl.discount }} ({{ receipt.discount_pct }}%)</span>
+                <span class="total-val" style="color: #ef4444;">-{{ cs }}{{ receipt.discount_amount }}</span>
             </div>
             {% endif %}
+            {% if receipt.gst_amount > 0 %}
             <div class="total-row">
-                <span class="total-label">State GST (5%)</span>
-                <span class="total-val">₹{{ receipt.gst_amount }}</span>
+                <span class="total-label">{{ cur_lbl.cgst }} ({{ receipt.cgst_pct|default(2.5) }}%)</span>
+                <span class="total-val">{{ cs }}{{ '%.2f' | format(receipt.cgst_amount|default(receipt.gst_amount / 2)) }}</span>
             </div>
+            <div class="total-row">
+                <span class="total-label">{{ cur_lbl.sgst }} ({{ receipt.sgst_pct|default(2.5) }}%)</span>
+                <span class="total-val">{{ cs }}{{ '%.2f' | format(receipt.sgst_amount|default(receipt.gst_amount / 2)) }}</span>
+            </div>
+            <div class="total-row" style="font-weight:700;">
+                <span class="total-label" style="color:#0f172a;">{{ cur_lbl.total_gst }} ({{ receipt.gst_pct|default(5.0) }}%)</span>
+                <span class="total-val" style="color:#0f172a;">{{ cs }}{{ '%.2f' | format(receipt.gst_amount) }}</span>
+            </div>
+            {% endif %}
             
             <div class="grand-total">
-                <span class="total-label">Net Total</span>
-                <span class="total-val">₹{{ receipt.total }}</span>
+                <span class="total-label">{{ cur_lbl.net_total }}</span>
+                <span class="total-val">{{ cs }}{{ receipt.total }}</span>
             </div>
         </div>
         
         <div class="actions">
-            <button class="btn-print" onclick="window.print()">Print Invoice</button>
-            <button class="btn-back" onclick="window.location.href='{{ url_for('index') }}'">Return to Core</button>
+            <button class="btn-print" onclick="window.print()">{{ cur_lbl.print_invoice }}</button>
+            <button class="btn-back" onclick="window.location.href='{{ url_for('index') }}'">{{ cur_lbl.return_pos }}</button>
         </div>
+
+        {% if upi_qr or upi_vpa %}
+        <div style="margin-top:18px; padding-top:14px; border-top:1px dashed #cbd5e1; text-align:center;" class="upi-payment-section">
+            {% if upi_qr %}
+            <img src="{{ upi_qr }}" alt="UPI QR" style="width:160px; height:160px; image-rendering:pixelated; display:inline-block; border:1px solid #e2e8f0; border-radius:8px; padding:4px; background:#fff;" />
+            {% endif %}
+            <div style="font-size:14px; font-weight:800; color:#0f172a; margin-top:8px;">{{ cur_lbl.scan_to_pay }} {{ cs }}{{ receipt.total }}</div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px;">{{ cur_lbl.upi_sub }}</div>
+            {% if upi_vpa %}
+            <div style="margin-top:8px;">
+                <div style="font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">{{ cur_lbl.pay_to }}</div>
+                <div style="font-size:14px; font-weight:800; color:#0f172a; margin-top:2px; word-break:break-all;">{{ upi_vpa }}</div>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div style="margin-top:18px; padding-top:14px; border-top:1px dashed #cbd5e1; text-align:center; font-size:11px; color:#94a3b8;">
+            UPI QR not shown — set your UPI ID in <strong>Settings → UPI Payment QR</strong> to receive payments by scan.
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

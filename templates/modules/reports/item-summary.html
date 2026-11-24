@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Reports</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Item Summary</strong>
+    </div>
+    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+  </div>
+  <div class="mod-stats">
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-utensils"></i></div><div class="stat-body"><span class="stat-val">{{ total_menu_items|default(0) }}</span><span class="stat-lbl">Menu Items</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-fire"></i></div><div class="stat-body"><span class="stat-val" style="font-size:16px;">{{ best_seller|default('—') }}</span><span class="stat-lbl">Best Seller</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;"><i class="fa-solid fa-arrow-down"></i></div><div class="stat-body"><span class="stat-val" style="font-size:16px;">{{ least_sold|default('—') }}</span><span class="stat-lbl">Least Sold</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-chart-bar"></i></div><div class="stat-body"><span class="stat-val">{{ today_items_sold|default(0) }}</span><span class="stat-lbl">Items Sold Today</span></div></div>
+  </div>
+  <div class="mod-body">
+    <div class="data-card">
+      <div class="data-card-hdr">
+        <h3><i class="fa-solid fa-utensils"></i> Item Performance</h3>
+        <input type="text" id="itemSearch" placeholder="Filter item or category..." onkeyup="filterTable('itemSearch', 'itemTable')" style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:13px;outline:none;background:#fff;">
+      </div>
+      <table class="mod-table" id="itemTable">
+        <thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Qty Sold</th><th>Revenue</th><th>Ranking</th></tr></thead>
+        <tbody>
+          {% if items and items|length > 0 %}
+          {% for it in items %}
+          <tr>
+            <td><strong>{{ it.name }}</strong></td>
+            <td><span style="font-size:12px;color:#64748b;">{{ it.category }}</span></td>
+            <td>{{ it.price_formatted }}</td>
+            <td><strong>{{ it.qty_sold }}</strong> units</td>
+            <td><strong style="color:#059669;">{{ it.revenue_formatted }}</strong></td>
+            <td>
+              {% if it.rank <= 3 and it.qty_sold > 0 %}
+                <span class="badge badge-green">#{{ it.rank }} Top</span>
+              {% elif it.qty_sold > 0 %}
+                <span class="badge badge-blue">#{{ it.rank }}</span>
+              {% else %}
+                <span class="badge badge-yellow">No Sales</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          {% else %}
+          <tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8;">No items data available.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function filterTable(inputId, tableId) {
+  const query = (document.getElementById(inputId).value || '').toLowerCase().trim();
+  const rows = document.querySelectorAll('#' + tableId + ' tbody tr');
+  rows.forEach(r => {
+    r.style.display = (!query || r.innerText.toLowerCase().includes(query)) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

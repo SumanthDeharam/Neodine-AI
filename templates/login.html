@@ -1,74 +1,289 @@
 {% extends 'base.html' %}
 {% block content %}
 <style>
-    .auth-container {
-        display: flex; justify-content: center; align-items: center; min-height: 80vh;
-        padding: 20px;
+    /* ===== LOGIN PAGE - NEO DINE AI 2.0 PREMIUM LIGHT ===== */
+    .auth-bg {
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        position: relative;
+        overflow: hidden;
     }
-    .auth-box {
-        background: #fff; border-radius: 24px; width: 100%; max-width: 450px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.08); padding: 50px 40px; position: relative; overflow: hidden;
-    }
-    .auth-box::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: linear-gradient(90deg, var(--brand-primary), var(--brand-secondary)); }
-    
-    .auth-header { text-align: center; margin-bottom: 40px; }
-    .auth-icon { width: 70px; height: 70px; background: #f1f5f9; border-radius: 20px; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px; font-size: 28px; color: var(--brand-primary); }
-    .auth-title { font-size: 28px; font-weight: 800; color: #0f172a; margin: 0 0 10px; letter-spacing: -0.5px; }
-    .auth-sub { color: #64748b; font-size: 15px; }
 
-    .input-grp { margin-bottom: 25px; position: relative; }
+    /* Subtle decorative circles */
+    .auth-bg::before {
+        content: '';
+        position: absolute;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(111,175,75,0.18) 0%, transparent 70%);
+        top: -100px;
+        right: -100px;
+        pointer-events: none;
+    }
+    .auth-bg::after {
+        content: '';
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(124,92,255,0.10) 0%, transparent 70%);
+        bottom: -80px;
+        left: -80px;
+        pointer-events: none;
+    }
+
+    .auth-card {
+        background: #ffffff;
+        border-radius: 24px;
+        border: 1px solid #D8DFC7;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 12px 40px rgba(0,0,0,0.05);
+        padding: 52px 44px 44px;
+        width: 100%;
+        max-width: 440px;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        transition: box-shadow 0.3s ease;
+    }
+    .auth-card:hover {
+        box-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 16px 48px rgba(0,0,0,0.07);
+    }
+
+    /* Green top accent bar */
+    .auth-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #6FAF4B 0%, #9B7FFF 100%);
+        border-radius: 24px 24px 0 0;
+    }
+
+    /* Brand header */
+    .auth-brand {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 32px;
+    }
+    .auth-brand-icon {
+        width: 52px;
+        height: 52px;
+        background: linear-gradient(135deg, #7C5CFF 0%, #9B7FFF 100%);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 22px;
+        box-shadow: 0 4px 16px rgba(124,92,255,0.30);
+    }
+    .auth-brand-text {
+        line-height: 1.1;
+    }
+    .auth-brand-name {
+        font-size: 20px;
+        font-weight: 800;
+        color: #25302A;
+        letter-spacing: -0.5px;
+    }
+    .auth-brand-sub {
+        font-size: 11px;
+        color: #6B7280;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+
+    .auth-title {
+        font-size: 26px;
+        font-weight: 800;
+        color: #25302A;
+        text-align: center;
+        margin: 0 0 6px;
+        letter-spacing: -0.5px;
+    }
+    .auth-sub {
+        color: #6B7280;
+        font-size: 14px;
+        text-align: center;
+        margin: 0 0 32px;
+        font-weight: 400;
+        line-height: 1.5;
+    }
+
+    /* Form inputs */
+    .input-grp {
+        margin-bottom: 18px;
+        position: relative;
+    }
+    .input-grp label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 6px;
+    }
+    .input-grp .input-wrap {
+        position: relative;
+    }
     .input-grp input {
-        width: 100%; padding: 16px 20px 16px 50px; border: 2px solid #e2e8f0; border-radius: 14px;
-        font-family: inherit; font-size: 15px; color: #1e293b; font-weight: 600; box-sizing: border-box; transition: 0.3s;
+        width: 100%;
+        padding: 13px 18px 13px 46px;
+        border: 1.5px solid #D8DFC7;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 14px;
+        color: #25302A;
+        font-weight: 500;
+        background: #F5F8EC;
+        box-sizing: border-box;
+        transition: all 0.25s ease;
+        outline: none;
     }
-    .input-grp input:focus { outline: none; border-color: var(--brand-secondary); box-shadow: 0 0 0 4px rgba(8,217,214,0.15); }
-    .input-grp i { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px; transition: 0.3s; }
-    .input-grp input:focus + i { color: var(--brand-secondary); }
-
-    .btn-auth {
-        width: 100%; padding: 16px; border: none; border-radius: 14px;
-        background: linear-gradient(135deg, var(--brand-primary), #FF5E83); color: white;
-        font-size: 16px; font-weight: 800; font-family: inherit; cursor: pointer;
-        box-shadow: 0 10px 25px rgba(255, 46, 99, 0.3); transition: 0.3s; letter-spacing: 0.5px;
+    .input-grp input:focus {
+        border-color: #6FAF4B;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(111,175,75,0.15);
     }
-    .btn-auth:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(255, 46, 99, 0.4); }
+    .input-grp input::placeholder { color: #9CA3AF; }
+    .input-grp .input-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9CA3AF;
+        font-size: 16px;
+        transition: color 0.2s ease;
+    }
+    .input-grp input:focus ~ .input-icon { color: #6FAF4B; }
 
-    .auth-footer { text-align: center; margin-top: 30px; }
-    .auth-link { color: #475569; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.3s; }
-    .auth-link strong { color: var(--brand-primary); font-weight: 700; }
-    .auth-link:hover { color: #0f172a; }
+    /* Login button */
+    .btn-login {
+        width: 100%;
+        padding: 15px;
+        border: none;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #6FAF4B 0%, #82C05A 100%);
+        color: white;
+        font-size: 15px;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        box-shadow: 0 4px 16px rgba(111,175,75,0.35);
+        transition: all 0.25s ease;
+        letter-spacing: 0.3px;
+        margin-top: 8px;
+    }
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(111,175,75,0.45);
+        background: linear-gradient(135deg, #5a9238 0%, #6FAF4B 100%);
+    }
+    .btn-login:active { transform: translateY(0); }
 
-    /* Custom Alert */
+    /* Footer link */
+    .auth-footer {
+        text-align: center;
+        margin-top: 24px;
+    }
+    .auth-link {
+        color: #6B7280;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+    .auth-link strong {
+        color: #7C5CFF;
+        font-weight: 700;
+    }
+    .auth-link:hover { color: #25302A; }
+    .auth-link:hover strong { color: #6B4FE0; }
+
+    /* Error alert */
     .alert-box {
-        background: #fee2e2; border: 1px solid #f87171; color: #b91c1c; padding: 14px 20px;
-        border-radius: 12px; margin-top: 25px; font-size: 14px; font-weight: 600;
-        display: flex; align-items: center; gap: 10px;
+        background: rgba(239,68,68,0.07);
+        border: 1px solid rgba(239,68,68,0.25);
+        color: #DC2626;
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin-top: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-left: 3px solid #EF4444;
+    }
+
+    /* Divider */
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 20px 0;
+    }
+    .auth-divider::before, .auth-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #D8DFC7;
+    }
+    .auth-divider span {
+        font-size: 11px;
+        color: #9CA3AF;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
     }
 </style>
 
-<div class="auth-container">
-    <div class="auth-box">
-        <div class="auth-header">
-            <div class="auth-icon"><i class="fa-solid fa-fingerprint"></i></div>
-            <h2 class="auth-title">Welcome Back</h2>
-            <div class="auth-sub">Enter your credentials to access the terminal</div>
+<div class="auth-bg">
+    <div class="auth-card">
+        <!-- Brand Identity -->
+        <div class="auth-brand">
+            <div class="auth-brand-icon"><i class="fa-solid fa-square-poll-vertical"></i></div>
+            <div class="auth-brand-text">
+                <div class="auth-brand-name">NEO DINE AI</div>
+                <div class="auth-brand-sub">Premium POS Platform</div>
+            </div>
         </div>
+
+        <h2 class="auth-title">Welcome Back</h2>
+        <p class="auth-sub">Sign in to your restaurant terminal</p>
 
         <form method="POST">
             <div class="input-grp">
-                <input type="text" name="username" placeholder="Employee / Node ID" required autocomplete="off">
-                <i class="fa-solid fa-user"></i>
+                <label>Employee / Node ID</label>
+                <div class="input-wrap">
+                    <input type="text" name="username" placeholder="Enter your ID" required autocomplete="off">
+                    <i class="fa-solid fa-user input-icon"></i>
+                </div>
             </div>
             <div class="input-grp">
-                <input type="password" name="password" placeholder="Passkey" required>
-                <i class="fa-solid fa-lock"></i>
+                <label>Passkey</label>
+                <div class="input-wrap">
+                    <input type="password" name="password" placeholder="Enter your passkey" required>
+                    <i class="fa-solid fa-lock input-icon"></i>
+                </div>
             </div>
-            
-            <button type="submit" class="btn-auth">Secure Login</button>
+
+            <button type="submit" class="btn-login btn-auth">
+                <i class="fa-solid fa-arrow-right-to-bracket" style="margin-right:8px;"></i> Sign In Securely
+            </button>
         </form>
 
         <div class="auth-footer">
-            <a href="{{ url_for('register') }}" class="auth-link">Don't have an ID? <strong>Request Access</strong></a>
+            <a href="{{ url_for('register') }}" class="auth-link">
+                Don't have an account? <strong>Request Access</strong>
+            </a>
         </div>
 
         {% if error %}

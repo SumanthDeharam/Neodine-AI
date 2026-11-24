@@ -1,0 +1,575 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<style>
+  .edit-config-panel {
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    padding: 20px;
+    display: none;
+    animation: fadeIn 0.25s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .cfg-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .cfg-group label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .cfg-group input, .cfg-group select {
+    padding: 9px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    background: #ffffff;
+    color: #1e293b;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .cfg-group input:focus, .cfg-group select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+</style>
+
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Operations</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Bill / KOT Print Center</strong>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button type="button" class="mod-btn" style="background:#eeebff; color:#6C63FF; border:1px solid #dcd7ff; font-weight:700; display:inline-flex; align-items:center; gap:6px; cursor:pointer;" onclick="testPrintSample('bill')">
+        <i class="fa-solid fa-print"></i> Test Thermal Print
+      </button>
+      <button type="button" class="mod-btn" style="background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; font-weight:700; display:inline-flex; align-items:center; gap:6px; cursor:pointer;" onclick="testPrintSample('kot')">
+        <i class="fa-solid fa-receipt"></i> Test KOT Print
+      </button>
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    </div>
+  </div>
+
+  <!-- KPI Stats Row -->
+  <div class="mod-stats">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-print"></i></div>
+      <div class="stat-body"><span class="stat-val" style="color:#10b981;">Ready</span><span class="stat-lbl">Printer Status</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-file-invoice"></i></div>
+      <div class="stat-body"><span class="stat-val" id="statPrintedCount">{{ printed_today|default(0) }}</span><span class="stat-lbl">Bills Logged Today</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-receipt"></i></div>
+      <div class="stat-body"><span class="stat-val" id="statKotCount">{{ kots_printed|default(0) }}</span><span class="stat-lbl">KOTs Routed</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-gear"></i></div>
+      <div class="stat-body"><span class="stat-val" id="statPrintMode" style="font-size:16px;">{{ 'Auto' if auto_print_receipt else 'Manual' }}</span><span class="stat-lbl">Print Mode</span></div>
+    </div>
+  </div>
+
+  <div class="mod-body">
+    <div class="dev-notice" style="background:#f0fdf4; border-color:#bbf7d0; color:#166534;">
+      <i class="fa-solid fa-print" style="color:#10b981;"></i>
+      <span><strong>Thermal &amp; KOT Print Center Active</strong> — Configure thermal printer paper sizes, restaurant bill branding, and print or reprint customer receipts &amp; kitchen tickets.</span>
+    </div>
+
+    <!-- Thermal Print Configuration Card -->
+    <div class="data-card">
+      <div class="data-card-hdr" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3><i class="fa-solid fa-gear" style="color:#6366f1;"></i> Thermal Print Configuration</h3>
+        <button type="button" id="btnToggleEditConfig" class="mod-btn" style="background:#6366f1; color:#ffffff; font-weight:700; border:none; padding:6px 14px; border-radius:8px; cursor:pointer;" onclick="toggleConfigEditor()">
+          <i class="fa-solid fa-pen-to-square"></i> <span id="btnEditText">Edit Settings</span>
+        </button>
+      </div>
+
+      <!-- Current Display Tiles -->
+      <div class="info-grid">
+        <div class="info-tile">
+          <div class="t-lbl">Printer Type / Paper</div>
+          <div class="t-val" id="disp_paper_size">Thermal 80mm</div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">Bill Copies</div>
+          <div class="t-val" id="disp_bill_copies">1 Copy</div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">KOT Copies</div>
+          <div class="t-val" id="disp_kot_copies">1 Copy</div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">Auto Print Receipt</div>
+          <div class="t-val" id="disp_auto_receipt" style="color: {{ '#10b981' if auto_print_receipt else '#64748b' }};">
+            {{ 'Enabled' if auto_print_receipt else 'Disabled' }}
+          </div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">Auto Print KOT</div>
+          <div class="t-val" id="disp_auto_kot" style="color: {{ '#10b981' if auto_print_kot else '#64748b' }};">
+            {{ 'Enabled' if auto_print_kot else 'Disabled' }}
+          </div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">Header Restaurant Name</div>
+          <div class="t-val" id="disp_rest_name">{{ restaurant_name | default('Neo Dine AI') }}</div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">Footer Note</div>
+          <div class="t-val" id="disp_footer_note">Thank you! Visit Again</div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">UPI Payment QR</div>
+          <div class="t-val" id="disp_upi_qr" style="color: {{ '#10b981' if upi_qr_enabled|default(true) else '#64748b' }};">
+            {{ 'Enabled' if upi_qr_enabled|default(true) else 'Disabled' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- In-Place Configuration Editor Form -->
+      <div class="edit-config-panel" id="configEditPanel">
+        <div style="font-weight:800; color:#0f172a; margin-bottom:14px; font-size:15px; display:flex; align-items:center; gap:8px;">
+          <i class="fa-solid fa-sliders" style="color:#6366f1;"></i> Update Thermal Print Parameters
+        </div>
+        <form id="printConfigForm" onsubmit="savePrintConfiguration(event)">
+          <div class="config-grid">
+            <div class="cfg-group">
+              <label for="cfg_paper_size">Printer Paper Size</label>
+              <select id="cfg_paper_size">
+                <option value="Thermal 80mm">Thermal 80mm (Standard POS Receipt)</option>
+                <option value="Thermal 58mm">Thermal 58mm (Compact Portable)</option>
+                <option value="A4 Standard">A4 Standard Sheet</option>
+              </select>
+            </div>
+
+            <div class="cfg-group">
+              <label for="cfg_bill_copies">Bill Copies</label>
+              <select id="cfg_bill_copies">
+                <option value="1 Copy">1 Copy</option>
+                <option value="2 Copies">2 Copies</option>
+                <option value="3 Copies">3 Copies</option>
+              </select>
+            </div>
+
+            <div class="cfg-group">
+              <label for="cfg_kot_copies">KOT Copies</label>
+              <select id="cfg_kot_copies">
+                <option value="1 Copy">1 Copy</option>
+                <option value="2 Copies">2 Copies</option>
+                <option value="3 Copies">3 Copies</option>
+              </select>
+            </div>
+
+            <div class="cfg-group">
+              <label for="cfg_auto_receipt">Auto-Print Bill</label>
+              <select id="cfg_auto_receipt">
+                <option value="true" {{ 'selected' if auto_print_receipt else '' }}>Enabled (Auto-print on checkout)</option>
+                <option value="false" {{ 'selected' if not auto_print_receipt else '' }}>Disabled (Manual click)</option>
+              </select>
+            </div>
+
+            <div class="cfg-group">
+              <label for="cfg_auto_kot">Auto-Print KOT</label>
+              <select id="cfg_auto_kot">
+                <option value="true" {{ 'selected' if auto_print_kot else '' }}>Enabled (Auto-print to kitchen)</option>
+                <option value="false" {{ 'selected' if not auto_print_kot else '' }}>Disabled (Manual click)</option>
+              </select>
+            </div>
+
+            <div class="cfg-group">
+              <label for="cfg_upi_qr">UPI Payment QR</label>
+              <select id="cfg_upi_qr">
+                <option value="true" {{ 'selected' if upi_qr_enabled|default(true) else '' }}>Enabled</option>
+                <option value="false" {{ 'selected' if not upi_qr_enabled|default(true) else '' }}>Disabled</option>
+              </select>
+            </div>
+
+            <div class="cfg-group">
+              <label for="cfg_rest_name">Restaurant Name Header</label>
+              <input type="text" id="cfg_rest_name" value="{{ restaurant_name | default('Neo Dine AI') }}" placeholder="e.g. Neo Dine Restaurant">
+            </div>
+
+            <div class="cfg-group">
+              <label for="cfg_footer_note">Receipt Footer Note</label>
+              <input type="text" id="cfg_footer_note" value="Thank you! Visit Again" placeholder="e.g. Thank you! Visit Again">
+            </div>
+          </div>
+
+          <div id="cfgSaveMsg" style="font-size:13px; font-weight:700; margin-top:14px; display:none;"></div>
+
+          <div style="display:flex; gap:10px; margin-top:16px;">
+            <button type="submit" id="btnSaveConfig" class="mod-btn mod-btn-primary" style="padding:9px 20px; border-radius:8px; font-weight:800;">
+              <i class="fa-solid fa-floppy-disk"></i> Save Configuration
+            </button>
+            <button type="button" class="mod-btn" style="padding:9px 16px; border-radius:8px;" onclick="toggleConfigEditor(false)">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Recent Prints History & Reprint Center -->
+    <div class="data-card" style="margin-top:20px;">
+      <div class="data-card-hdr" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <h3><i class="fa-solid fa-clock-rotate-left" style="color:#0284c7;"></i> Recent Orders &amp; Print History</h3>
+        <input type="text" id="printSearchInput" placeholder="Search bill #, customer, table..." style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:13px;outline:none;" onkeyup="filterPrintTable()">
+      </div>
+
+      <table class="mod-table" id="recentPrintTable">
+        <thead>
+          <tr>
+            <th>Order / Bill #</th>
+            <th>Table / Channel</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Date</th>
+            <th>Total Amount</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if recent_orders %}
+          {% for o in recent_orders %}
+          <tr class="print-row" data-search="kot-{{ o.id }} {{ o.customer_name | default('') | lower }} table-{{ o.table_num }}">
+            <td><strong>#KOT-{{ o.id }}</strong></td>
+            <td><span class="badge badge-blue">{% if o.table_num %}Table {{ o.table_num }}{% else %}{{ o.order_type | default('Dine-In') }}{% endif %}</span></td>
+            <td>{{ o.customer_name or 'Walk-in' }}</td>
+            <td style="max-width:260px; font-size:12px; color:#475569;">{{ o.order_items or 'Standard Order' }}</td>
+            <td style="font-size:12px; color:#64748b;">{{ o.date.strftime('%d %b %H:%M') if o.date else '—' }}</td>
+            <td><strong>₹{{ '%.2f' | format(o.total_price or 0) }}</strong></td>
+            <td style="text-align:right;">
+              <div style="display:flex; justify-content:flex-end; gap:6px;">
+                <a href="/receipt/{{ o.id }}" target="_blank" class="mod-btn" style="background:#10b981; color:#fff; border:none; padding:4px 10px; font-size:11px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; border-radius:6px;">
+                  <i class="fa-solid fa-print"></i> Print Bill
+                </a>
+                <button type="button" class="mod-btn btn-kot-action" style="background:#0284c7; color:#fff; border:none; padding:4px 10px; font-size:11px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; border-radius:6px;"
+                        data-kot-id="{{ o.id }}"
+                        data-table="{% if o.table_num %}Table {{ o.table_num }}{% else %}{{ o.order_type | default('Dine-In') }}{% endif %}"
+                        data-items="{{ o.order_items or 'Standard Items' }}"
+                        data-date="{{ o.date.strftime('%d/%m/%Y %I:%M %p') if o.date else '' }}"
+                        onclick="triggerKotTicket(this)">
+                  <i class="fa-solid fa-receipt"></i> KOT Ticket
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          {% else %}
+          <tr>
+            <td colspan="7" style="text-align:center; padding:32px;">
+              <i class="fa-solid fa-print" style="font-size:32px; color:#cbd5e1; margin-bottom:8px;"></i>
+              <p style="margin:0; font-weight:600; color:#64748b;">No recent orders logged yet.</p>
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+      <div id="noPrintMatch" class="empty-state" style="display:none; padding:20px; text-align:center;">
+        <i class="fa-solid fa-magnifying-glass" style="font-size:24px; color:#cbd5e1;"></i>
+        <p style="margin-top:6px; color:#64748b; font-weight:600;">No print records match your search.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleConfigEditor(forceState) {
+    const panel = document.getElementById('configEditPanel');
+    const btnText = document.getElementById('btnEditText');
+    if (!panel) return;
+
+    const isVisible = (panel.style.display === 'block');
+    const shouldShow = (typeof forceState === 'boolean') ? forceState : !isVisible;
+
+    if (shouldShow) {
+      panel.style.display = 'block';
+      if (btnText) btnText.textContent = 'Hide Settings';
+      loadFormValues();
+    } else {
+      panel.style.display = 'none';
+      if (btnText) btnText.textContent = 'Edit Settings';
+    }
+  }
+
+  function loadFormValues() {
+    const savedPaper = localStorage.getItem('print_paper_size') || 'Thermal 80mm';
+    const savedBillCopies = localStorage.getItem('print_bill_copies') || '1 Copy';
+    const savedKotCopies = localStorage.getItem('print_kot_copies') || '1 Copy';
+    const savedFooter = localStorage.getItem('print_footer_note') || 'Thank you! Visit Again';
+    const savedUpiQr = localStorage.getItem('print_upi_qr');
+
+    if (document.getElementById('cfg_paper_size')) document.getElementById('cfg_paper_size').value = savedPaper;
+    if (document.getElementById('cfg_bill_copies')) document.getElementById('cfg_bill_copies').value = savedBillCopies;
+    if (document.getElementById('cfg_kot_copies')) document.getElementById('cfg_kot_copies').value = savedKotCopies;
+    if (document.getElementById('cfg_footer_note')) document.getElementById('cfg_footer_note').value = savedFooter;
+    if (savedUpiQr !== null && document.getElementById('cfg_upi_qr')) {
+      document.getElementById('cfg_upi_qr').value = savedUpiQr;
+    }
+  }
+
+  async function savePrintConfiguration(e) {
+    if (e) e.preventDefault();
+    const btn = document.getElementById('btnSaveConfig');
+    const msg = document.getElementById('cfgSaveMsg');
+
+    const paper = document.getElementById('cfg_paper_size').value;
+    const billCopies = document.getElementById('cfg_bill_copies').value;
+    const kotCopies = document.getElementById('cfg_kot_copies').value;
+    const autoReceipt = document.getElementById('cfg_auto_receipt').value === 'true';
+    const autoKot = document.getElementById('cfg_auto_kot').value === 'true';
+    const upiQrEnabled = document.getElementById('cfg_upi_qr')?.value === 'true';
+    const restName = document.getElementById('cfg_rest_name').value.trim();
+    const footerNote = document.getElementById('cfg_footer_note').value.trim();
+
+    localStorage.setItem('print_paper_size', paper);
+    localStorage.setItem('print_bill_copies', billCopies);
+    localStorage.setItem('print_kot_copies', kotCopies);
+    localStorage.setItem('print_footer_note', footerNote);
+    localStorage.setItem('print_upi_qr', upiQrEnabled ? 'true' : 'false');
+
+    if (btn) btn.disabled = true;
+    if (msg) {
+      msg.style.display = 'block';
+      msg.style.color = '#64748b';
+      msg.textContent = 'Saving configuration...';
+    }
+
+    try {
+      const res = await fetch('/api/print_settings/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auto_print_receipt: autoReceipt,
+          auto_print_kot: autoKot,
+          upi_qr_enabled: upiQrEnabled,
+          restaurant_name: restName
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (msg) {
+          msg.style.color = '#16a34a';
+          msg.textContent = '✅ ' + (data.message || 'Print settings saved successfully!');
+        }
+        setTimeout(() => { location.reload(); }, 600);
+      } else {
+        if (msg) {
+          msg.style.color = '#dc2626';
+          msg.textContent = '❌ ' + (data.error || 'Failed to save print settings.');
+        }
+      }
+    } catch (err) {
+      if (msg) {
+        msg.style.color = '#16a34a';
+        msg.textContent = '✅ Saved locally!';
+      }
+      setTimeout(() => { location.reload(); }, 600);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  function filterPrintTable() {
+    const query = (document.getElementById('printSearchInput')?.value || '').trim().toLowerCase();
+    const rows = document.querySelectorAll('#recentPrintTable tbody tr.print-row');
+    const noMatch = document.getElementById('noPrintMatch');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const text = (row.getAttribute('data-search') || row.innerText).toLowerCase();
+      if (text.includes(query)) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    if (noMatch) {
+      noMatch.style.display = (query.length > 0 && visibleCount === 0) ? 'block' : 'none';
+    }
+  }
+
+  function triggerKotTicket(btn) {
+    const id = btn.getAttribute('data-kot-id');
+    const tableStr = btn.getAttribute('data-table') || 'Dine-In';
+    const itemsStr = btn.getAttribute('data-items') || 'Standard Order';
+    const dateStr = btn.getAttribute('data-date') || new Date().toLocaleString();
+    
+    printKotTicket(id, tableStr, itemsStr, dateStr);
+  }
+
+  function printKotTicket(id, tableStr, itemsStr, dateStr) {
+    const win = window.open('', '_blank', 'width=380,height=550');
+    if (!win) {
+      alert('Please allow popups in your browser to print KOT tickets.');
+      return;
+    }
+
+    const itemsFormatted = (itemsStr || 'Standard Order')
+      .split(',')
+      .map(i => `<div style="padding:4px 0; border-bottom:1px dashed #ddd; font-weight:600;">• ${i.trim()}</div>`)
+      .join('');
+
+    win.document.open();
+    win.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>KOT #${id}</title>
+        <style>
+          @page { margin: 0; size: 80mm auto; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Courier New", monospace; padding: 16px; margin: 0; text-align: center; color: #000; }
+          h2 { margin: 4px 0; font-size: 18px; }
+          .kot-meta { margin: 8px 0; font-size: 13px; line-height: 1.4; text-align: left; }
+          .items-box { text-align: left; margin: 12px 0; font-size: 14px; }
+          hr { border: none; border-top: 1px dashed #000; margin: 10px 0; }
+        </style>
+      </head>
+      <body>
+        <h2>*** KITCHEN ORDER TICKET ***</h2>
+        <div class="kot-meta">
+          <div><strong>KOT No:</strong> #${id}</div>
+          <div><strong>Table / Channel:</strong> ${tableStr}</div>
+          <div><strong>Time:</strong> ${dateStr || new Date().toLocaleTimeString()}</div>
+        </div>
+        <hr>
+        <div class="items-box">${itemsFormatted}</div>
+        <hr>
+        <div style="font-size:11px; font-weight:bold;">Sent to Kitchen via Neo Dine POS</div>
+        <script>
+          window.onload = function() {
+            setTimeout(function() { window.print(); }, 250);
+          };
+        <\/script>
+      </body>
+      </html>
+    `);
+    win.document.close();
+  }
+
+  function testPrintSample(type) {
+    const restName = document.getElementById('disp_rest_name')?.textContent?.trim() || 'Neo Dine Restaurant';
+    const footer = localStorage.getItem('print_footer_note') || 'Thank you! Visit Again';
+    const win = window.open('', '_blank', 'width=380,height=600');
+    if (!win) {
+      alert('Please allow popups to enable thermal printing.');
+      return;
+    }
+
+    win.document.open();
+    if (type === 'kot') {
+      win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Sample KOT Ticket</title>
+          <style>
+            @page { margin: 0; size: 80mm auto; }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Courier New", monospace; padding: 16px; margin: 0; text-align: center; color: #000; }
+            h2 { margin: 4px 0; font-size: 18px; }
+            table { width: 100%; text-align: left; margin-top: 10px; border-collapse: collapse; }
+            th, td { padding: 4px 0; border-bottom: 1px dashed #ccc; font-size: 13px; }
+            hr { border: none; border-top: 1px dashed #000; margin: 10px 0; }
+          </style>
+        </head>
+        <body>
+          <h2>*** KOT TICKET ***</h2>
+          <div style="text-align:left; font-size:13px;">
+            <div><strong>Table:</strong> Table 4 (Dine-In)</div>
+            <div><strong>Date:</strong> ${new Date().toLocaleString()}</div>
+          </div>
+          <hr>
+          <table>
+            <tr><th style="width:40px;">Qty</th><th>Item Name</th></tr>
+            <tr><td>2x</td><td>Butter Chicken</td></tr>
+            <tr><td>4x</td><td>Garlic Naan</td></tr>
+            <tr><td>1x</td><td>Jeera Rice</td></tr>
+          </table>
+          <hr>
+          <div style="font-size:11px;">KOT #TEST-99 &bull; Kitchen Routing Verified</div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() { window.print(); }, 250);
+            };
+          <\/script>
+        </body>
+        </html>
+      `);
+    } else {
+      win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Sample Thermal Bill</title>
+          <style>
+            @page { margin: 0; size: 80mm auto; }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Courier New", monospace; padding: 16px; margin: 0; text-align: center; color: #000; }
+            h2 { margin: 4px 0; font-size: 18px; text-transform: uppercase; }
+            table { width: 100%; text-align: left; margin-top: 8px; border-collapse: collapse; }
+            th, td { padding: 4px 0; border-bottom: 1px dashed #ccc; font-size: 12px; }
+            .totals { text-align: right; margin-top: 8px; font-size: 13px; line-height: 1.5; }
+            hr { border: none; border-top: 1px dashed #000; margin: 8px 0; }
+          </style>
+        </head>
+        <body>
+          <h2>${restName}</h2>
+          <div style="font-size:12px; color:#333;">Tax Invoice / Customer Receipt</div>
+          <div style="font-size:11px; margin-top:4px;">Date: ${new Date().toLocaleString()}</div>
+          <hr>
+          <table>
+            <tr><th>Item</th><th style="text-align:center;">Qty</th><th style="text-align:right;">Amount</th></tr>
+            <tr><td>Butter Chicken</td><td style="text-align:center;">2</td><td style="text-align:right;">₹560.00</td></tr>
+            <tr><td>Garlic Naan</td><td style="text-align:center;">4</td><td style="text-align:right;">₹240.00</td></tr>
+            <tr><td>Jeera Rice</td><td style="text-align:center;">1</td><td style="text-align:right;">₹180.00</td></tr>
+          </table>
+          <hr>
+          <div class="totals">
+            <div>Subtotal: ₹980.00</div>
+            <div>GST (5%): ₹49.00</div>
+            <div style="font-size:16px; font-weight:bold; margin-top:4px;">TOTAL: ₹1,029.00</div>
+          </div>
+          <hr>
+          <div style="font-size:12px; font-weight:bold; margin-top:6px;">${footer}</div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() { window.print(); }, 250);
+            };
+          <\/script>
+        </body>
+        </html>
+      `);
+    }
+    win.document.close();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const savedPaper = localStorage.getItem('print_paper_size') || 'Thermal 80mm';
+    const savedBillCopies = localStorage.getItem('print_bill_copies') || '1 Copy';
+    const savedKotCopies = localStorage.getItem('print_kot_copies') || '1 Copy';
+    const savedFooter = localStorage.getItem('print_footer_note') || 'Thank you! Visit Again';
+
+    if (document.getElementById('disp_paper_size')) document.getElementById('disp_paper_size').textContent = savedPaper;
+    if (document.getElementById('disp_bill_copies')) document.getElementById('disp_bill_copies').textContent = savedBillCopies;
+    if (document.getElementById('disp_kot_copies')) document.getElementById('disp_kot_copies').textContent = savedKotCopies;
+    if (document.getElementById('disp_footer_note')) document.getElementById('disp_footer_note').textContent = savedFooter;
+  });
+</script>
+{% endblock %}

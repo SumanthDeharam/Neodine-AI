@@ -3,111 +3,787 @@
 {% block pos_header_right %}{% endblock %}
 {% block content %}
 <style>
-    .admin-container { padding: 40px; display: flex; flex-direction: column; gap: 40px; overflow-y: auto; height: 100%; box-sizing: border-box; }
-    
-    .sec-title { display: flex; align-items: center; gap: 15px; font-size: 22px; font-weight: 800; color: #0f172a; margin: 0 0 20px; }
-    .sec-title i { font-size: 24px; }
-    
-    .panel-card { background: #fff; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
+    /* ===== ADMIN PAGE - PREMIUM LIGHT SaaS THEME ===== */
+    .admin-container {
+        padding: 36px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        overflow-y: auto;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        box-sizing: border-box;
+        background: var(--bg-main);
+        font-family: 'Inter', sans-serif;
+    }
+
+    .admin-container > * { flex-shrink: 0; }
+
+    .sec-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text-main);
+        letter-spacing: -0.4px;
+        margin: 0;
+    }
+    .sec-title i { font-size: 19px; }
+
+    .panel-card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .panel-card.collapsed .panel-body {
+        display: none !important;
+    }
+
+    .panel-card.collapsed {
+        padding-bottom: 18px;
+        background: #fbfcfd;
+    }
+
+    .panel-header-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .panel-card:not(.collapsed) .panel-header-bar {
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-light, #f1f5f9);
+        margin-bottom: 18px;
+    }
+
+    /* Control Option Bar */
+    .view-options-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 18px;
+        padding: 16px 20px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+    }
+
+    .option-checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .custom-check-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-main);
+        cursor: pointer;
+        user-select: none;
+        padding: 8px 14px;
+        background: var(--bg-secondary, #f8fafc);
+        border: 1.5px solid var(--border-color, #e2e8f0);
+        border-radius: 12px;
+        transition: all 0.2s ease;
+    }
+
+    .custom-check-label:hover {
+        border-color: #1E90FF;
+        background: rgba(30, 144, 255, 0.04);
+    }
+
+    .custom-check-label input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        accent-color: #1E90FF;
+        cursor: pointer;
+    }
+
+    /* Search inputs */
+    .search-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        min-width: 260px;
+        max-width: 380px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 8px 14px 8px 34px;
+        background: var(--bg-secondary, #f8fafc);
+        border: 1.5px solid var(--border-color, #e2e8f0);
+        border-radius: 10px;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        color: var(--text-main);
+        outline: none;
+        transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+        background: #ffffff;
+        border-color: #1E90FF;
+        box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.12);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        color: var(--text-muted, #94a3b8);
+        font-size: 13px;
+        pointer-events: none;
+    }
+
+    .search-count {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: rgba(30, 144, 255, 0.1);
+        color: #1E90FF;
+        margin-left: 8px;
+    }
 
     /* Tables */
-    .admin-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-    .admin-table th { color: #64748b; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 0 20px 10px; border-bottom: 2px solid #f1f5f9; text-align: left; }
-    .admin-table td { background: #f8fafc; padding: 20px; font-size: 15px; color: #334155; font-weight: 500; }
-    .admin-table td:first-child { border-radius: 12px 0 0 12px; font-weight: 700; color: #0f172a; }
-    .admin-table td:last-child { border-radius: 0 12px 12px 0; text-align: right; }
-    .admin-table tr { transition: 0.3s; }
-    .admin-table tr:focus-within td, .admin-table tr:hover td { background: #f1f5f9; }
+    .admin-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; }
+    .admin-table th {
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 0 20px 10px;
+        border-bottom: 1.5px solid var(--border-light);
+        text-align: left;
+    }
+    .admin-table td {
+        background: var(--bg-secondary);
+        padding: 14px 20px;
+        font-size: 14px;
+        color: var(--text-muted);
+        font-weight: 500;
+        border-top: 1px solid transparent;
+        border-bottom: 1px solid transparent;
+    }
+    .admin-table td:first-child { border-radius: 12px 0 0 12px; font-weight: 700; color: var(--text-main); border-left: 1px solid transparent; }
+    .admin-table td:last-child { border-radius: 0 12px 12px 0; text-align: right; border-right: 1px solid transparent; }
+    .admin-table tr { transition: all 0.25s ease; }
+    .admin-table tr:hover td {
+        background: #ffffff;
+        border-color: var(--border-color);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
 
-    .pass-mask { font-family: monospace; background: #e2e8f0; padding: 6px 12px; border-radius: 8px; color: #475569; letter-spacing: 2px; }
+    .pass-mask {
+        font-family: monospace;
+        background: var(--bg-main);
+        padding: 6px 12px;
+        border-radius: 8px;
+        color: var(--text-main);
+        letter-spacing: 2px;
+        border: 1px solid var(--border-color);
+        font-weight: 600;
+    }
 
-    .btn { padding: 10px 20px; border: none; border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 0.5px; }
-    .btn-approve { background: #dcfce7; color: #16a34a; }
-    .btn-approve:hover { background: #16a34a; color: #fff; box-shadow: 0 6px 15px rgba(22,163,74,0.3); }
-    .btn-revoke { background: #fee2e2; color: #dc2626; }
-    .btn-revoke:hover { background: #dc2626; color: #fff; box-shadow: 0 6px 15px rgba(220,38,38,0.3); }
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .btn-approve {
+        background: rgba(34,197,94,0.10);
+        color: #16A34A;
+        border: 1px solid rgba(34,197,94,0.25);
+    }
+    .btn-approve:hover {
+        background: #22C55E;
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(34,197,94,0.25);
+        transform: translateY(-2px);
+    }
+    .btn-revoke {
+        background: rgba(239,68,68,0.10);
+        color: #DC2626;
+        border: 1px solid rgba(239,68,68,0.25);
+    }
+    .btn-revoke:hover {
+        background: #EF4444;
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(239,68,68,0.25);
+        transform: translateY(-2px);
+    }
 
-    /* Prediction Grid */
-    .ai-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
-    .ai-card { background: #fff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.03); transition: 0.3s; }
-    .ai-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.06); border-color: var(--brand-secondary); }
-    .ai-hdr { background: linear-gradient(135deg, #1E293B, #0F172A); padding: 24px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
-    .ai-node-name { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; margin: 0; }
-    .ai-tag { background: rgba(8, 217, 214, 0.2); color: var(--brand-secondary); font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; }
-    
-    .ai-bd { padding: 0; }
-    .ing-table { width: 100%; border-collapse: collapse; }
-    .ing-table th { background: #f8fafc; color: #64748b; font-size: 12px; padding: 12px 24px; text-transform: uppercase; font-weight: 700; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    .ing-table td { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; font-weight: 600; }
-    .ing-table td:last-child { text-align: right; color: var(--brand-primary); font-size: 18px; font-weight: 800; }
-    
+    .empty-state {
+        text-align: center;
+        padding: 30px;
+        color: var(--text-muted);
+        font-weight: 600;
+        background: var(--bg-secondary);
+        border-radius: 16px;
+        border: 1px dashed var(--border-color);
+    }
+    .empty-state i {
+        font-size: 32px;
+        color: var(--text-light);
+        margin-bottom: 10px;
+    }
 </style>
 
 <div class="admin-container">
 
-    <!-- Pending -->
-    <div class="panel-card">
-        <h2 class="sec-title"><i class="fa-solid fa-user-clock" style="color: #f59e0b;"></i> Pending Clearances</h2>
-        {% if pending_users %}
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>Enterprise ID</th>
-                    <th>Intercepted Passkey</th>
-                    <th style="text-align: right;">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in pending_users %}
-                <tr>
-                    <td>{{ u.username }}</td>
-                    <td><span class="pass-mask">{{ u.raw_password }}</span></td>
-                    <td>
-                        <form action="/admin/approve/{{ u.id }}" method="POST" style="margin:0;">
-                            <button type="submit" class="btn btn-approve">Authorize Node</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <div style="text-align:center; padding: 30px; color:#94a3b8; font-weight:600;"><i class="fa-solid fa-check-double" style="font-size:32px; color:#cbd5e1; margin-bottom:10px;"></i><br>No pending requests.</div>
-        {% endif %}
+    <!-- Admin Header Tab Navigation -->
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--border-color); padding-bottom: 16px; margin-bottom: 4px; flex-wrap: wrap; gap: 16px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size: 26px;">🛡️</span>
+            <h1 style="margin:0; font-family:'Outfit',sans-serif; font-size:24px; font-weight:800; color:var(--text-main); letter-spacing:-0.5px;">Admin Control Centre</h1>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn" style="background:#ffffff; border:1px solid var(--brand-primary); color:var(--brand-primary); text-decoration:none; display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-network-wired"></i> Nodes Clearances
+            </a>
+            <a href="/admin/support" class="btn" style="background:#ffffff; border:1px solid var(--border-color); color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:8px;">
+                <i class="fa-regular fa-comments"></i> Support Center
+            </a>
+            <a href="{{ url_for('admin_developer_tools') }}" class="btn" style="background:#ffffff; border:1px solid var(--border-color); color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-screwdriver-wrench"></i> Developer Tools
+            </a>
+        </div>
     </div>
 
-    <!-- Approved -->
-    <div class="panel-card">
-        <h2 class="sec-title"><i class="fa-solid fa-network-wired" style="color: #10b981;"></i> Active Nodes</h2>
-        {% if approved_users %}
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>Enterprise ID</th>
-                    <th>Secure Passkey</th>
-                    <th style="text-align: right;">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in approved_users %}
-                <tr>
-                    <td>{{ u.username }}</td>
-                    <td><span class="pass-mask">{{ u.raw_password }}</span></td>
-                    <td>
-                        <form action="/admin/revoke/{{ u.id }}" method="POST" style="margin:0;">
-                            <button type="submit" class="btn btn-revoke">Terminate</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <div style="text-align:center; padding: 30px; color:#94a3b8; font-weight:600;"><i class="fa-solid fa-ghost" style="font-size:32px; color:#cbd5e1; margin-bottom:10px;"></i><br>No active nodes.</div>
-        {% endif %}
+    <!-- Active View Control Options (Checkboxes to Open/Close Data Views) -->
+    <div class="view-options-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <span style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted);">
+                <i class="fa-solid fa-sliders" style="margin-right:6px; color:#1E90FF;"></i> View Options Toggle (Check to Open Data)
+            </span>
+            <div>
+                <button type="button" onclick="setAllSections(true)" style="background:none; border:none; color:#1E90FF; font-size:12px; font-weight:700; cursor:pointer; margin-right:12px;">Select All</button>
+                <button type="button" onclick="setAllSections(false)" style="background:none; border:none; color:var(--text-muted); font-size:12px; font-weight:700; cursor:pointer;">Deselect All</button>
+            </div>
+        </div>
+        <div class="option-checkbox-group">
+            <label class="custom-check-label">
+                <input type="checkbox" id="chk-pending" checked onchange="toggleSection('card-pending', this.checked)">
+                <i class="fa-solid fa-user-clock" style="color: #D97706;"></i> Pending Clearances
+            </label>
+            <label class="custom-check-label">
+                <input type="checkbox" id="chk-approved" checked onchange="toggleSection('card-approved', this.checked)">
+                <i class="fa-solid fa-network-wired" style="color: #6FAF4B;"></i> Active Nodes
+            </label>
+            <label class="custom-check-label">
+                <input type="checkbox" id="chk-staff" checked onchange="toggleSection('card-staff', this.checked)">
+                <i class="fa-solid fa-user-plus" style="color: #1E90FF;"></i> Create Waiter / Kitchen Staff
+            </label>
+            <label class="custom-check-label">
+                <input type="checkbox" id="chk-overview" checked onchange="toggleSection('card-overview', this.checked)">
+                <i class="fa-solid fa-utensils" style="color: #10b981;"></i> Restaurants Live Overview — Menus &amp; Tables
+            </label>
+        </div>
     </div>
 
+    <!-- 1. Pending Clearances -->
+    <div class="panel-card" id="card-pending">
+        <div class="panel-header-bar">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <input type="checkbox" id="hdr-chk-pending" checked onchange="syncHeaderToggle('chk-pending', this.checked)" style="width:18px; height:18px; accent-color:#D97706; cursor:pointer;">
+                <h2 class="sec-title"><i class="fa-solid fa-user-clock" style="color: #D97706;"></i> Pending Clearances</h2>
+            </div>
+            <!-- Search for Pending Clearances -->
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="search-pending" class="search-input" placeholder="Search pending (ID, passkey...)" onkeyup="filterPending()">
+                <span id="count-pending" class="search-count" style="display:none;"></span>
+            </div>
+        </div>
 
+        <div class="panel-body">
+            {% if pending_users %}
+            <table class="admin-table" id="tbl-pending">
+                <thead>
+                    <tr>
+                        <th>Enterprise ID</th>
+                        <th>Intercepted Passkey</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in pending_users %}
+                    <tr class="searchable-row" data-search="{{ u.username | lower }} {{ u.raw_password | lower }}">
+                        <td>{{ u.username }}</td>
+                        <td><span class="pass-mask">{{ u.raw_password }}</span></td>
+                        <td>
+                            <form action="/admin/approve/{{ u.id }}" method="POST" style="margin:0;">
+                                <button type="submit" class="btn btn-approve">Authorize Node</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div id="no-match-pending" class="empty-state" style="display:none;">
+                <i class="fa-solid fa-magnifying-glass"></i><br>No matching pending clearances.
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fa-solid fa-check-double"></i><br>No pending requests.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 2. Active Nodes -->
+    <div class="panel-card" id="card-approved">
+        <div class="panel-header-bar">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <input type="checkbox" id="hdr-chk-approved" checked onchange="syncHeaderToggle('chk-approved', this.checked)" style="width:18px; height:18px; accent-color:#6FAF4B; cursor:pointer;">
+                <h2 class="sec-title"><i class="fa-solid fa-network-wired" style="color: #6FAF4B;"></i> Active Nodes</h2>
+            </div>
+            <!-- Search for Active Nodes -->
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="search-approved" class="search-input" placeholder="Search active nodes (ID, passkey...)" onkeyup="filterApproved()">
+                <span id="count-approved" class="search-count" style="display:none;"></span>
+            </div>
+        </div>
+
+        <div class="panel-body">
+            {% if approved_users %}
+            <table class="admin-table" id="tbl-approved">
+                <thead>
+                    <tr>
+                        <th>Enterprise ID</th>
+                        <th>Secure Passkey</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in approved_users %}
+                    <tr class="searchable-row" data-search="{{ u.username | lower }} {{ u.raw_password | lower }}">
+                        <td>{{ u.username }}</td>
+                        <td><span class="pass-mask">{{ u.raw_password }}</span></td>
+                        <td>
+                            <form action="/admin/revoke/{{ u.id }}" method="POST" style="margin:0;">
+                                <button type="submit" class="btn btn-revoke">Terminate</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div id="no-match-approved" class="empty-state" style="display:none;">
+                <i class="fa-solid fa-magnifying-glass"></i><br>No matching active nodes.
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fa-solid fa-ghost"></i><br>No active nodes.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 3. Create Waiter / Kitchen Staff -->
+    <div class="panel-card" id="card-staff">
+        <div class="panel-header-bar">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <input type="checkbox" id="hdr-chk-staff" checked onchange="syncHeaderToggle('chk-staff', this.checked)" style="width:18px; height:18px; accent-color:#1E90FF; cursor:pointer;">
+                <h2 class="sec-title"><i class="fa-solid fa-user-plus" style="color: #1E90FF;"></i> Create Waiter / Kitchen Staff</h2>
+            </div>
+            <!-- Search for Staff Accounts -->
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="search-staff" class="search-input" placeholder="Search staff (username, role, restaurant...)" onkeyup="filterStaff()">
+                <span id="count-staff" class="search-count" style="display:none;"></span>
+            </div>
+        </div>
+
+        <div class="panel-body">
+            <p style="font-size:12px; color:var(--text-muted); margin:0 0 14px;">
+                Create a <strong>Waiter</strong> or <strong>Kitchen</strong> account that is securely linked to a restaurant
+                (Active Node). The staff member logs into the shared app and is auto-routed to the correct portal. They can
+                only ever see that restaurant's own menu and orders — data stays isolated.
+            </p>
+            <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
+                <div style="display:flex; flex-direction:column; gap:6px; min-width:220px;">
+                    <label style="font-size:12px; font-weight:700; color:var(--text-muted);">Restaurant</label>
+                    <select id="staffOwner" class="admin-input" style="padding:10px 12px; border:1px solid var(--border-color); border-radius:10px; font-family:'Outfit',sans-serif; font-size:13px;">
+                        <option value="">— Select a restaurant —</option>
+                        {% for u in restaurant_owners %}
+                        <option value="{{ u.id }}">{{ u.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px; min-width:170px;">
+                    <label style="font-size:12px; font-weight:700; color:var(--text-muted);">Role</label>
+                    <select id="staffRole" class="admin-input" style="padding:10px 12px; border:1px solid var(--border-color); border-radius:10px; font-family:'Outfit',sans-serif; font-size:13px;">
+                        <option value="waiter">Waiter</option>
+                        <option value="kitchen">Kitchen</option>
+                    </select>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px; min-width:170px;">
+                    <label style="font-size:12px; font-weight:700; color:var(--text-muted);">Username</label>
+                    <input type="text" id="staffUsername" class="admin-input" placeholder="e.g. waiter1" style="padding:10px 12px; border:1px solid var(--border-color); border-radius:10px; font-family:'Outfit',sans-serif; font-size:13px;">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px; min-width:170px;">
+                    <label style="font-size:12px; font-weight:700; color:var(--text-muted);">Password</label>
+                    <input type="text" id="staffPassword" class="admin-input" placeholder="e.g. pass123" style="padding:10px 12px; border:1px solid var(--border-color); border-radius:10px; font-family:'Outfit',sans-serif; font-size:13px;">
+                </div>
+                <button type="button" id="btnCreateStaff" class="btn btn-approve">+ Create Staff</button>
+            </div>
+            <div id="staffMsg" style="margin-top:12px; font-size:13px; font-weight:600;"></div>
+
+            <h3 class="sec-title" style="margin-top:22px; font-size:15px;"><i class="fa-solid fa-list" style="color: #1E90FF;"></i> Existing Staff Accounts</h3>
+            <table class="admin-table" id="tbl-staff" style="margin-top:10px;">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Linked Restaurant</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in staff_accounts %}
+                    <tr class="searchable-row" data-search="{{ u.username | lower }} {{ u.role | lower }} {{ u.owner_username | default('') | lower }}">
+                        <td>{{ u.username }}</td>
+                        <td><span style="font-size:12px; font-weight:700; text-transform:uppercase; padding:3px 8px; border-radius:6px; {{ 'background:#eff6ff; color:#1d4ed8;' if u.role == 'waiter' else 'background:#fef3c7; color:#b45309;' }}">{{ u.role }}</span></td>
+                        <td>{{ u.owner_username or '—' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3" style="color:var(--text-muted);">No staff accounts created yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div id="no-match-staff" class="empty-state" style="display:none;">
+                <i class="fa-solid fa-magnifying-glass"></i><br>No matching staff accounts.
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Restaurants Live Overview — Menus & Tables -->
+    <div class="panel-card" id="card-overview">
+        <div class="panel-header-bar">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <input type="checkbox" id="hdr-chk-overview" checked onchange="syncHeaderToggle('chk-overview', this.checked)" style="width:18px; height:18px; accent-color:#10b981; cursor:pointer;">
+                <h2 class="sec-title"><i class="fa-solid fa-utensils" style="color: #10b981;"></i> Restaurants Live Overview — Menus &amp; Tables</h2>
+            </div>
+            <!-- Search for Overview (Restaurants, Items, Tables) -->
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="search-overview" class="search-input" placeholder="Search restaurant, menu item, category..." onkeyup="filterOverview()">
+                <span id="count-overview" class="search-count" style="display:none;"></span>
+            </div>
+        </div>
+
+        <div class="panel-body">
+            <p style="font-size:13px; color:var(--text-muted); margin-top:-4px; margin-bottom:14px;">Live from the database — reflects every menu/table change made by each restaurant instantly.</p>
+            {% if restaurant_overview %}
+                <div id="overview-container">
+                {% for r in restaurant_overview %}
+                <div class="restaurant-block" data-restaurant="{{ r.owner.username | lower }}" style="border:1px solid var(--border-color); border-radius:14px; padding:16px 18px; margin-top:14px; background:var(--bg-card);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <strong style="font-size:15px; color:var(--text-main);"><i class="fa-solid fa-store" style="color:#6FAF4B;"></i> {{ r.owner.username }}</strong>
+                        <span style="font-size:12px; color:var(--text-muted);">{{ r.menu_items | length }} menu items · {{ r.tables | length }} tables ({{ r.occupied }} occupied)</span>
+                    </div>
+                    {% if r.menu_items %}
+                    <table class="admin-table" style="margin-top:10px;">
+                        <thead><tr><th style="text-align:left;">Item</th><th style="text-align:left;">Category</th><th style="text-align:left;">Price</th><th style="text-align:left;">Type</th><th style="text-align:left;">Availability</th></tr></thead>
+                        <tbody>
+                            {% for m in r.menu_items %}
+                            <tr class="menu-item-row" data-search="{{ r.owner.username | lower }} {{ m.name | lower }} {{ m.category | default('') | lower }} {{ m.type | default('') | lower }}">
+                                <td>{{ m.name }}</td>
+                                <td>{{ m.category or '—' }}</td>
+                                <td>₹{{ '%.2f' | format(m.price or 0) }}</td>
+                                <td>{{ m.type or 'Veg' }}</td>
+                                <td style="color: {{ '#166534' if (m.status == 'Active' and not m.is_hidden) else '#9f1239' }}; font-weight:700;">
+                                    {{ 'Available' if (m.status == 'Active' and not m.is_hidden) else 'Disabled' }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">No menu items added yet.</p>
+                    {% endif %}
+                    {% if r.tables %}
+                    <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:6px;">
+                        {% for t in r.tables %}
+                        <span class="table-badge" data-search="{{ r.owner.username | lower }} table {{ t.table_num }} {{ t.status | lower }}" style="font-size:11px; font-weight:700; padding:4px 10px; border-radius:8px; {{ 'background:#fff1f2; color:#9f1239;' if t.status == 'DINING' else 'background:#f0fdf4; color:#166534;' }}">T{{ t.table_num }}{% if t.status == 'DINING' %} · Dining{% endif %}</span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">No tables created yet.</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                </div>
+                <div id="no-match-overview" class="empty-state" style="display:none; margin-top:14px;">
+                    <i class="fa-solid fa-magnifying-glass"></i><br>No matching restaurants, menu items, or tables.
+                </div>
+            {% else %}
+                <p style="font-size:13px; color:var(--text-muted);">No approved restaurants yet.</p>
+            {% endif %}
+        </div>
+    </div>
 
 </div>
+
+<script>
+    // Section Expand/Collapse Toggle Logic
+    function toggleSection(cardId, isChecked) {
+        const card = document.getElementById(cardId);
+        if (!card) return;
+        if (isChecked) {
+            card.classList.remove('collapsed');
+        } else {
+            card.classList.add('collapsed');
+        }
+        
+        // Sync top control checkbox and header checkbox
+        const key = cardId.replace('card-', '');
+        const topChk = document.getElementById('chk-' + key);
+        const hdrChk = document.getElementById('hdr-chk-' + key);
+        if (topChk) topChk.checked = isChecked;
+        if (hdrChk) hdrChk.checked = isChecked;
+
+        // Save preference to localStorage
+        localStorage.setItem('admin_sec_' + key, isChecked ? '1' : '0');
+    }
+
+    function syncHeaderToggle(topChkId, isChecked) {
+        const topChk = document.getElementById(topChkId);
+        if (topChk) {
+            topChk.checked = isChecked;
+            topChk.dispatchEvent(new Event('change'));
+        }
+    }
+
+    function setAllSections(checked) {
+        ['chk-pending', 'chk-approved', 'chk-staff', 'chk-overview'].forEach(id => {
+            const chk = document.getElementById(id);
+            if (chk) {
+                chk.checked = checked;
+                chk.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+
+    // Restore saved section states on load
+    document.addEventListener('DOMContentLoaded', function () {
+        ['pending', 'approved', 'staff', 'overview'].forEach(key => {
+            const saved = localStorage.getItem('admin_sec_' + key);
+            if (saved !== null) {
+                const isChecked = saved === '1';
+                toggleSection('card-' + key, isChecked);
+            }
+        });
+    });
+
+    // Real-time Search Logic for Section 1: Pending Clearances
+    function filterPending() {
+        const query = document.getElementById('search-pending').value.trim().toLowerCase();
+        const rows = document.querySelectorAll('#tbl-pending tbody tr.searchable-row');
+        const countSpan = document.getElementById('count-pending');
+        const noMatch = document.getElementById('no-match-pending');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const text = row.getAttribute('data-search') || row.innerText.toLowerCase();
+            if (text.includes(query)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        if (query.length > 0) {
+            countSpan.style.display = 'inline-block';
+            countSpan.textContent = visibleCount + ' found';
+            if (noMatch) noMatch.style.display = visibleCount === 0 ? 'block' : 'none';
+        } else {
+            countSpan.style.display = 'none';
+            if (noMatch) noMatch.style.display = 'none';
+        }
+    }
+
+    // Real-time Search Logic for Section 2: Active Nodes
+    function filterApproved() {
+        const query = document.getElementById('search-approved').value.trim().toLowerCase();
+        const rows = document.querySelectorAll('#tbl-approved tbody tr.searchable-row');
+        const countSpan = document.getElementById('count-approved');
+        const noMatch = document.getElementById('no-match-approved');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const text = row.getAttribute('data-search') || row.innerText.toLowerCase();
+            if (text.includes(query)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        if (query.length > 0) {
+            countSpan.style.display = 'inline-block';
+            countSpan.textContent = visibleCount + ' found';
+            if (noMatch) noMatch.style.display = visibleCount === 0 ? 'block' : 'none';
+        } else {
+            countSpan.style.display = 'none';
+            if (noMatch) noMatch.style.display = 'none';
+        }
+    }
+
+    // Real-time Search Logic for Section 3: Staff Accounts
+    function filterStaff() {
+        const query = document.getElementById('search-staff').value.trim().toLowerCase();
+        const rows = document.querySelectorAll('#tbl-staff tbody tr.searchable-row');
+        const countSpan = document.getElementById('count-staff');
+        const noMatch = document.getElementById('no-match-staff');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const text = row.getAttribute('data-search') || row.innerText.toLowerCase();
+            if (text.includes(query)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        if (query.length > 0) {
+            countSpan.style.display = 'inline-block';
+            countSpan.textContent = visibleCount + ' found';
+            if (noMatch) noMatch.style.display = visibleCount === 0 ? 'block' : 'none';
+        } else {
+            countSpan.style.display = 'none';
+            if (noMatch) noMatch.style.display = 'none';
+        }
+    }
+
+    // Real-time Search Logic for Section 4: Live Overview
+    function filterOverview() {
+        const query = document.getElementById('search-overview').value.trim().toLowerCase();
+        const blocks = document.querySelectorAll('#overview-container .restaurant-block');
+        const countSpan = document.getElementById('count-overview');
+        const noMatch = document.getElementById('no-match-overview');
+        let visibleBlocks = 0;
+
+        blocks.forEach(block => {
+            const restaurantName = block.getAttribute('data-restaurant') || '';
+            const menuRows = block.querySelectorAll('.menu-item-row');
+            const tableBadges = block.querySelectorAll('.table-badge');
+            
+            if (query.length === 0) {
+                block.style.display = '';
+                menuRows.forEach(r => r.style.display = '');
+                tableBadges.forEach(b => b.style.display = '');
+                visibleBlocks++;
+                return;
+            }
+
+            let matchInRestaurant = restaurantName.includes(query);
+            let matchInMenu = false;
+            let matchInTables = false;
+
+            menuRows.forEach(r => {
+                const searchData = r.getAttribute('data-search') || r.innerText.toLowerCase();
+                if (searchData.includes(query) || matchInRestaurant) {
+                    r.style.display = '';
+                    matchInMenu = true;
+                } else {
+                    r.style.display = 'none';
+                }
+            });
+
+            tableBadges.forEach(b => {
+                const searchData = b.getAttribute('data-search') || b.innerText.toLowerCase();
+                if (searchData.includes(query) || matchInRestaurant) {
+                    b.style.display = '';
+                    matchInTables = true;
+                } else {
+                    b.style.display = 'none';
+                }
+            });
+
+            if (matchInRestaurant || matchInMenu || matchInTables) {
+                block.style.display = '';
+                visibleBlocks++;
+            } else {
+                block.style.display = 'none';
+            }
+        });
+
+        if (query.length > 0) {
+            countSpan.style.display = 'inline-block';
+            countSpan.textContent = visibleBlocks + ' restaurants';
+            if (noMatch) noMatch.style.display = visibleBlocks === 0 ? 'block' : 'none';
+        } else {
+            countSpan.style.display = 'none';
+            if (noMatch) noMatch.style.display = 'none';
+        }
+    }
+
+    // Create Staff AJAX Handler
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('btnCreateStaff');
+        if (!btn) return;
+        btn.addEventListener('click', async function () {
+            const ownerId = document.getElementById('staffOwner').value;
+            const role = document.getElementById('staffRole').value;
+            const username = document.getElementById('staffUsername').value.trim();
+            const password = document.getElementById('staffPassword').value.trim();
+            const msg = document.getElementById('staffMsg');
+            if (!ownerId || !username || !password) {
+                msg.textContent = 'Please fill restaurant, username and password.';
+                msg.style.color = '#dc2626';
+                return;
+            }
+            msg.textContent = 'Creating…';
+            msg.style.color = '#1E90FF';
+            try {
+                const res = await fetch('/admin/create-staff', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ owner_id: ownerId, role: role, username: username, password: password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    msg.textContent = '✅ Created ' + role + ' account "' + username + '" for restaurant ID ' + data.restaurant_id + '. They can now log in.';
+                    msg.style.color = '#16a34a';
+                    document.getElementById('staffUsername').value = '';
+                    document.getElementById('staffPassword').value = '';
+                    setTimeout(function () { location.reload(); }, 1200);
+                } else {
+                    msg.textContent = '❌ ' + (data.error || 'Failed to create staff.');
+                    msg.style.color = '#dc2626';
+                }
+            } catch (e) {
+                msg.textContent = '❌ Network error.';
+                msg.style.color = '#dc2626';
+            }
+        });
+    });
+</script>
 {% endblock %}

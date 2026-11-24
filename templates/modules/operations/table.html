@@ -3,16 +3,34 @@
 {% include 'modules/_mod_styles.html' %}
 <style>
   .table-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:16px;padding:20px;}
-  .table-tile{border-radius:14px;padding:24px 16px;text-align:center;cursor:pointer;border:2px solid transparent;transition:0.2s;position:relative;}
+  .table-tile{border-radius:14px;padding:20px 14px;text-align:center;position:relative;border:2px solid transparent;transition:0.2s;}
   .table-tile.empty{background:#f0fdf4;border-color:#bbf7d0;}
   .table-tile.occupied{background:#fff1f2;border-color:#fecdd3;}
-  .table-tile.reserved{background:#fefce8;border-color:#fde68a;}
   .table-num{font-size:26px;font-weight:800;color:#1e293b;}
   .table-lbl{font-size:11px;font-weight:700;text-transform:uppercase;margin-top:6px;letter-spacing:0.5px;}
   .table-tile.empty .table-lbl{color:#166534;}
   .table-tile.occupied .table-lbl{color:#9f1239;}
-  .table-tile.reserved .table-lbl{color:#92400e;}
   .table-tile:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.08);}
+  .tile-actions{position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:1;transition:0.2s;}
+  .table-tile:hover .tile-actions{opacity:1;}
+  .tile-btn{width:28px;height:28px;border:none;border-radius:8px;cursor:pointer;font-size:12px;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.18);}
+  .tile-btn.edit{background:#6366f1;} .tile-btn.del{background:#ef4444;}
+  .tile-btn:hover{filter:brightness(0.9);}
+  .add-tile{background:#eef2ff;border:2px dashed #a5b4fc;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;min-height:110px;}
+  .add-tile:hover{background:#e0e7ff;}
+  .add-tile i{font-size:22px;color:#6366f1;}
+  .add-tile span{font-size:12px;font-weight:700;color:#4f46e5;margin-top:6px;}
+  .tbl-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:99999;align-items:center;justify-content:center;opacity:1;}
+  .tbl-overlay.open{display:flex;}
+  .tbl-box{background:#fff;border-radius:16px;padding:28px;width:340px;box-shadow:0 20px 50px rgba(0,0,0,0.25);transform:none;opacity:1;}
+  .tbl-box h3{margin:0 0 6px;font-size:18px;color:#1e293b;}
+  .tbl-box p{margin:0 0 16px;font-size:13px;color:#64748b;}
+  .tbl-box input{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;font-size:14px;margin-bottom:14px;}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+  .modal-actions button{padding:9px 18px;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;}
+  .btn-cancel{background:#f1f5f9;color:#475569;}
+  .btn-save{background:#FF2E63;color:#fff;}
+  #tblModalErr{color:#dc2626;font-size:12px;font-weight:600;min-height:16px;margin-bottom:8px;}
 </style>
 <div class="mod-page">
   <div class="mod-topbar">
@@ -24,23 +42,143 @@
     <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
   </div>
   <div class="mod-stats">
-    <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-chair"></i></div><div class="stat-body"><span class="stat-val">12</span><span class="stat-lbl">Total Tables</span></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-users"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">Occupied</span></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-calendar-check"></i></div><div class="stat-body"><span class="stat-val">0</span><span class="stat-lbl">Reserved</span></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-percent"></i></div><div class="stat-body"><span class="stat-val">0%</span><span class="stat-lbl">Occupancy</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-chair"></i></div><div class="stat-body"><span class="stat-val">{{ total_tables }}</span><span class="stat-lbl">Total Tables</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-users"></i></div><div class="stat-body"><span class="stat-val">{{ occupied_tables }}</span><span class="stat-lbl">Occupied</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-calendar-check"></i></div><div class="stat-body"><span class="stat-val">{{ total_tables - occupied_tables }}</span><span class="stat-lbl">Available</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-percent"></i></div><div class="stat-body"><span class="stat-val">{{ ((occupied_tables / total_tables * 100) | round | int) if total_tables else 0 }}%</span><span class="stat-lbl">Occupancy</span></div></div>
   </div>
   <div class="mod-body">
     <div class="data-card">
       <div class="data-card-hdr"><h3><i class="fa-solid fa-chair"></i> Table Layout</h3></div>
-      <div class="table-grid">
-        {% for i in range(1, 13) %}
-        <div class="table-tile empty">
-          <div class="table-num">T{{ i }}</div>
-          <div class="table-lbl">Available</div>
+      <div class="table-grid" id="tableGrid">
+        {% for t in tables %}
+        <div class="table-tile {{ 'occupied' if t.status == 'DINING' else 'empty' }}" data-id="{{ t.id }}" data-num="{{ t.table_num }}" data-status="{{ t.status }}" style="cursor:pointer;" title="Click to edit table number">
+          <div class="tile-actions">
+            <button class="tile-btn edit" title="Edit table number"><i class="fa-solid fa-pen"></i></button>
+            {% if t.status != 'DINING' %}
+            <button class="tile-btn del" title="Delete table"><i class="fa-solid fa-trash"></i></button>
+            {% endif %}
+          </div>
+          <div class="table-num">T{{ t.table_num }}</div>
+          <div class="table-lbl">{{ 'Occupied' if t.status == 'DINING' else 'Available' }}</div>
         </div>
         {% endfor %}
+        <div class="table-tile add-tile">
+          <i class="fa-solid fa-plus"></i>
+          <span>Add Table</span>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<div class="tbl-overlay" id="tblModal">
+  <div class="tbl-box">
+    <h3 id="tblModalTitle">Add Table</h3>
+    <p id="tblModalSub">Enter a table number for this restaurant.</p>
+    <input type="number" id="tblModalInput" min="1" max="999" placeholder="Table number (e.g. 13)">
+    <div id="tblModalErr"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" id="tblModalSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- Event-delegated handlers (robust against script load order & caching) ---
+  document.addEventListener('click', function(e){
+    var el = e.target;
+    var editBtn = el.closest ? el.closest('.tile-btn.edit') : null;
+    var delBtn = el.closest ? el.closest('.tile-btn.del') : null;
+    var addTile = el.closest ? el.closest('.add-tile') : null;
+    var tile = el.closest ? el.closest('.table-tile[data-id]') : null;
+
+    if (editBtn) { e.preventDefault(); e.stopPropagation(); openEditModal(editBtn); return; }
+    if (delBtn) { e.preventDefault(); e.stopPropagation(); deleteTable(e, delBtn); return; }
+    if (addTile) { e.preventDefault(); e.stopPropagation(); openAddModal(); return; }
+    if (tile) { openEditModal(tile.querySelector('.tile-btn.edit')); }
+  });
+
+  window.addEventListener('error', function(ev){
+    var el = document.getElementById('tblModalErr');
+    if (el) el.textContent = 'Script error: ' + ev.message;
+  });
+
+  var modal = document.getElementById('tblModal');
+  var input = document.getElementById('tblModalInput');
+  var errEl = document.getElementById('tblModalErr');
+  var title = document.getElementById('tblModalTitle');
+  var saveBtn = document.getElementById('tblModalSave');
+  var editTarget = null; // null = add mode, otherwise the table id being edited
+
+  function showModal(){
+    modal.classList.add('open');
+    var cs = getComputedStyle(modal);
+    if (cs.display === 'none' || parseFloat(cs.opacity) < 0.9 || cs.visibility === 'hidden') {
+      // Something is hiding the modal — force it inline so it can never be invisible
+      modal.style.display = 'flex';
+      modal.style.opacity = '1';
+      modal.style.visibility = 'visible';
+    }
+    setTimeout(function(){ input.focus(); input.select(); }, 50);
+  }
+  function openAddModal(){
+    editTarget = null;
+    title.textContent = 'Add Table';
+    input.value = '';
+    errEl.textContent = '';
+    showModal();
+  }
+  function openEditModal(btnOrTile){
+    var tile = btnOrTile.classList.contains('table-tile') ? btnOrTile : btnOrTile.closest('.table-tile');
+    editTarget = parseInt(tile.dataset.id);
+    title.textContent = 'Edit Table T' + tile.dataset.num;
+    input.value = tile.dataset.num;
+    errEl.textContent = '';
+    showModal();
+  }
+  function closeModal(){
+    modal.classList.remove('open');
+    modal.style.display = '';
+    modal.style.opacity = '';
+    modal.style.visibility = '';
+  }
+
+  saveBtn.addEventListener('click', async function(){
+    errEl.textContent = '';
+    var num = parseInt(input.value);
+    if (!num || num < 1) { errEl.textContent = 'Please enter a valid table number.'; return; }
+    var url = editTarget ? '/api/tables/edit/' + editTarget : '/api/tables/add';
+    try {
+      var res = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ table_num: num })
+      });
+      var data = await res.json();
+      if (data.success) { window.location.reload(); }
+      else { errEl.textContent = data.error || 'Something went wrong.'; }
+    } catch (e2) {
+      errEl.textContent = 'Network error. Please try again.';
+    }
+  });
+  input.addEventListener('keydown', function(e){ if (e.key === 'Enter') saveBtn.click(); });
+
+  async function deleteTable(ev, btn){
+    if (ev && ev.stopPropagation) ev.stopPropagation();
+    var tile = btn.closest('.table-tile');
+    if (!confirm('Delete table T' + tile.dataset.num + '?')) return;
+    try {
+      var res = await fetch('/api/tables/delete/' + tile.dataset.id, { method: 'POST' });
+      var data = await res.json();
+      if (data.success) { window.location.reload(); }
+      else { alert(data.error || 'Could not delete table.'); }
+    } catch (e2) {
+      alert('Network error. Please try again.');
+    }
+  }
+
+  modal.addEventListener('click', function(e){ if (e.target === modal) closeModal(); });
+</script>
 {% endblock %}

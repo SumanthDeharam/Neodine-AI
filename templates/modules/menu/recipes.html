@@ -1,6 +1,181 @@
 {% extends 'base.html' %}
 {% block content %}
 {% include 'modules/_mod_styles.html' %}
+
+<script>
+    window.openRecipeModal = function() {
+        const mod = document.getElementById('addRecipeModal');
+        if (!mod) return;
+        if (mod.parentElement !== document.body) {
+            document.body.appendChild(mod);
+        }
+        const titleEl = document.getElementById('modal_title');
+        if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-plus"></i> Map Recipe Ingredient';
+        
+        const recIdEl = document.getElementById('r_recipe_id');
+        if (recIdEl) recIdEl.value = '';
+        
+        const qtyEl = document.getElementById('r_qty');
+        if (qtyEl) qtyEl.value = '';
+        
+        const nameEl = document.getElementById('r_new_name');
+        if (nameEl) nameEl.value = '';
+        
+        const stockEl = document.getElementById('r_starting_stock');
+        if (stockEl) stockEl.value = '0.0';
+        
+        const newFields = document.getElementById('new_ing_fields');
+        if (newFields) newFields.style.display = 'none';
+        
+        const menuSelect = document.getElementById('r_menu_id');
+        if (menuSelect && menuSelect.options.length > 0 && !menuSelect.value) {
+            menuSelect.selectedIndex = 0;
+        }
+        const invSelect = document.getElementById('r_inv_id');
+        if (invSelect && invSelect.options.length > 0) {
+            invSelect.selectedIndex = 0;
+        }
+        
+        mod.classList.add('active');
+        mod.style.display = 'flex';
+        mod.style.opacity = '1';
+        mod.style.visibility = 'visible';
+    };
+
+    window.closeRecipeModal = function() {
+        const mod = document.getElementById('addRecipeModal');
+        if (mod) {
+            mod.classList.remove('active');
+            mod.style.display = 'none';
+            mod.style.opacity = '0';
+            mod.style.visibility = 'hidden';
+        }
+    };
+
+    window.toggleRecipeModal = function() {
+        const mod = document.getElementById('addRecipeModal');
+        if (!mod) return;
+        if (mod.style.display === 'flex') {
+            window.closeRecipeModal();
+        } else {
+            window.openRecipeModal();
+        }
+    };
+
+    window.handleIngredientSelectChange = function(select) {
+        const newFields = document.getElementById('new_ing_fields');
+        if (newFields) {
+            newFields.style.display = (select.value === 'NEW_ING') ? 'flex' : 'none';
+        }
+    };
+
+    window.editRecipe = function(recipeId, menuItemId, ingredientId, qty, unit) {
+        window.openRecipeModal();
+        const titleEl = document.getElementById('modal_title');
+        if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Recipe Rule';
+        
+        const recIdEl = document.getElementById('r_recipe_id');
+        if (recIdEl) recIdEl.value = recipeId;
+        
+        const menuSelect = document.getElementById('r_menu_id');
+        if (menuSelect) menuSelect.value = menuItemId;
+        
+        const invSelect = document.getElementById('r_inv_id');
+        if (invSelect) invSelect.value = ingredientId;
+        
+        const qtyEl = document.getElementById('r_qty');
+        if (qtyEl) qtyEl.value = qty;
+        
+        const unitSelect = document.getElementById('r_unit');
+        if (unitSelect && unit) unitSelect.value = unit;
+    };
+
+    window.saveRecipe = function() {
+        const recipe_id = document.getElementById('r_recipe_id').value;
+        const m_id = document.getElementById('r_menu_id').value;
+        const inv_select = document.getElementById('r_inv_id').value;
+        const qty = document.getElementById('r_qty').value;
+        const new_name = document.getElementById('r_new_name').value;
+        const unit = document.getElementById('r_unit').value;
+        const starting_stock = document.getElementById('r_starting_stock').value || '0.0';
+
+        if (!m_id) return alert("Please select an active Menu Item");
+        if (!qty || parseFloat(qty) <= 0) return alert("Please enter a valid Quantity Required (> 0)");
+        
+        let payload = {
+            recipe_id: recipe_id || null,
+            menu_item_id: m_id,
+            quantity_required: qty,
+            unit: unit
+        };
+
+        if (inv_select === 'NEW_ING') {
+            if (!new_name || !new_name.trim()) return alert("Please enter the new ingredient name");
+            payload.new_ingredient_name = new_name.trim();
+            payload.starting_stock = starting_stock;
+        } else if (inv_select) {
+            payload.ingredient_id = inv_select;
+        } else {
+            return alert("Please select an ingredient or add a new one");
+        }
+
+        fetch('/api/recipe/save', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.closeRecipeModal();
+                location.reload();
+            } else {
+                alert('Failed to save recipe: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(err => {
+            console.error("Save Recipe Error:", err);
+            alert("Network or server error while saving recipe rule.");
+        });
+    };
+
+    window.deleteRecipe = function(id) {
+        if (confirm("Are you sure you want to remove this ingredient from the recipe?")) {
+            fetch('/api/recipe/delete', { 
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id: id })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to delete recipe: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                console.error("Delete Recipe Error:", err);
+                alert("Error while deleting recipe rule.");
+            });
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedItemId = urlParams.get('selected_item') || urlParams.get('menu_item_id');
+        if (selectedItemId) {
+            window.openRecipeModal();
+            const menuSelect = document.getElementById('r_menu_id');
+            if (menuSelect) {
+                menuSelect.value = selectedItemId;
+                menuSelect.style.borderColor = '#10b981';
+                menuSelect.style.backgroundColor = 'rgba(16,185,129,0.08)';
+            }
+        }
+    });
+</script>
+
 <div class="mod-page">
   <div class="mod-topbar">
     <div class="mod-breadcrumb">
@@ -9,103 +184,117 @@
       <strong>Recipes Editor</strong>
     </div>
     <div style="display:flex;gap:10px;">
-      <button class="mod-btn mod-btn-primary" onclick="toggleRecipeModal()"><i class="fa-solid fa-plus"></i> Add Ingredient to Recipe</button>
-      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+      <button id="btn-add-recipe-modal" type="button" class="mod-btn mod-btn-primary" onclick="window.openRecipeModal()"><i class="fa-solid fa-plus"></i> Add Ingredient to Recipe</button>
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS / Dashboard</a>
     </div>
   </div>
 
   <div class="mod-body">
     <div class="data-card">
-      <div class="data-card-hdr"><h3><i class="fa-solid fa-book-open-reader"></i> Current Menu Recipes</h3>
+      <div class="data-card-hdr">
+        <h3><i class="fa-solid fa-book-open-reader"></i> Current Menu Recipes</h3>
       </div>
       <table class="mod-table">
-        <thead><tr><th>Menu Item</th><th>Ingredient Linked</th><th>Quantity Required</th><th>Actions</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Menu Item</th>
+            <th>Ingredient Linked</th>
+            <th>Quantity Required</th>
+            <th>Unit</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
         <tbody>
           {% if recipes %}
           {% for rec in recipes %}
           <tr>
-            <td><strong>{{ rec.menu_item.name }}</strong></td>
-            <td><span class="badge badge-blue">{{ rec.ingredient.ingredient_name }}</span></td>
-            <td><strong>{{ rec.quantity_required }} {{ rec.ingredient.unit_type }}</strong></td>
+            <td><strong>{{ rec.menu_item.name if rec.menu_item else 'Unknown Item' }}</strong></td>
+            <td><span class="badge badge-blue">{{ rec.ingredient.ingredient_name if rec.ingredient else 'Unlinked Ingredient' }}</span></td>
+            <td><strong>{{ rec.quantity_required }}</strong></td>
+            <td><span class="badge badge-gray">{{ rec.ingredient.unit if rec.ingredient and rec.ingredient.unit else (rec.ingredient.unit_type if rec.ingredient else 'g') }}</span></td>
             <td>
-                <button class="mod-btn" style="padding: 4px 8px; font-size: 11px;" onclick="deleteRecipe({{ rec.id }})"><i class="fa-solid fa-trash" style="color:var(--brand-primary)"></i> Remove</button>
+                <div style="display:flex; gap:6px;">
+                  <button type="button" class="mod-btn" style="padding: 4px 8px; font-size: 11px;" onclick="window.editRecipe({{ rec.id }}, {{ rec.menu_item_id }}, {{ rec.ingredient_id }}, {{ rec.quantity_required }}, '{{ rec.ingredient.unit if rec.ingredient and rec.ingredient.unit else (rec.ingredient.unit_type if rec.ingredient else 'g') }}')"><i class="fa-solid fa-pen-to-square" style="color:#2563eb;"></i> Edit</button>
+                  <button type="button" class="mod-btn" style="padding: 4px 8px; font-size: 11px;" onclick="window.deleteRecipe({{ rec.id }})"><i class="fa-solid fa-trash" style="color:var(--brand-primary);"></i> Remove</button>
+                </div>
             </td>
           </tr>
           {% endfor %}
           {% else %}
-          <tr><td colspan="4" style="text-align:center; padding: 20px;">No Recipes Found. Link ingredients to menu items to automatically track inventory.</td></tr>
+          <tr>
+            <td colspan="5" style="text-align:center; padding: 32px 20px;">
+              <div style="color:#64748b; font-size:0.95rem; margin-bottom:12px;">No Recipes Found. Link ingredients to menu items to automatically track inventory.</div>
+              <button type="button" class="mod-btn mod-btn-primary" onclick="window.openRecipeModal()"><i class="fa-solid fa-plus"></i> Create First Recipe Rule</button>
+            </td>
+          </tr>
           {% endif %}
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- Add Recipe Modal -->
+  <!-- Add / Edit Recipe Modal -->
   <div class="modal-overlay" id="addRecipeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-      <div class="modal-box" style="background:#fff; border-radius:12px; padding:24px; min-width:350px;">
-          <h3><i class="fa-solid fa-plus"></i> Map Ingredient</h3>
-          <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
-              <select id="r_menu_id" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
-                  <option value="" disabled selected>Select Menu Item...</option>
-                  {% for mi in menu_items %}
-                  <option value="{{ mi.id }}">{{ mi.name }}</option>
-                  {% endfor %}
-              </select>
-              <select id="r_inv_id" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
-                  <option value="" disabled selected>Select Ingredient (from Inventory)...</option>
-                  {% for inv in inventory_items %}
-                  <option value="{{ inv.id }}">{{ inv.ingredient_name }} ({{ inv.unit_type }})</option>
-                  {% endfor %}
-              </select>
-              <input type="number" step="0.01" id="r_qty" placeholder="Quantity Required" style="padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
-              <div style="display:flex; gap:10px; margin-top:10px;">
-                  <button class="mod-btn mod-btn-primary" style="flex:1;" onclick="saveRecipe()">Save Recipe Rule</button>
-                  <button class="mod-btn" style="flex:1;" onclick="document.getElementById('addRecipeModal').style.display='none'">Cancel</button>
+      <div class="modal-box" style="background:#fff; border-radius:12px; padding:24px; min-width:400px; max-width:480px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+          <h3 id="modal_title" style="font-size:1.1rem; font-weight:700; color:#1e293b; margin:0;"><i class="fa-solid fa-plus"></i> Map Recipe Ingredient</h3>
+          <input type="hidden" id="r_recipe_id" value="">
+
+          <div style="display:flex; flex-direction:column; gap:14px; margin-top:16px;">
+              <div>
+                  <label style="font-size:0.82rem; font-weight:600; color:#334155; margin-bottom:4px; display:block;">Active Menu Item:</label>
+                  <select id="r_menu_id" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.9rem;">
+                      <option value="" disabled selected>Select Active Menu Item...</option>
+                      {% for mi in menu_items %}
+                      <option value="{{ mi.id }}">{{ mi.name }} (₹{{ mi.price }})</option>
+                      {% endfor %}
+                  </select>
+              </div>
+
+              <div>
+                  <label style="font-size:0.82rem; font-weight:600; color:#334155; margin-bottom:4px; display:block;">Ingredient:</label>
+                  <select id="r_inv_id" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.9rem;" onchange="window.handleIngredientSelectChange(this)">
+                      <option value="" disabled selected>Select Ingredient (from Inventory)...</option>
+                      {% for inv in inventory_items %}
+                      <option value="{{ inv.id }}">{{ inv.ingredient_name }} ({{ inv.unit or inv.unit_type }})</option>
+                      {% endfor %}
+                      <option value="NEW_ING" style="font-weight:700; color:#2563eb;">+ Add New Ingredient...</option>
+                  </select>
+              </div>
+
+              <div id="new_ing_fields" style="display:none; flex-direction:column; gap:10px; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+                  <div>
+                      <label style="font-size:0.8rem; font-weight:600; color:#475569; margin-bottom:4px; display:block;">New Ingredient Name:</label>
+                      <input type="text" id="r_new_name" placeholder="e.g. Dragon Fruit" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.88rem;">
+                  </div>
+                  <div>
+                      <label style="font-size:0.8rem; font-weight:600; color:#475569; margin-bottom:4px; display:block;">Starting Stock Quantity:</label>
+                      <input type="number" step="0.01" id="r_starting_stock" value="0.0" placeholder="0.0" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.88rem;">
+                  </div>
+              </div>
+
+              <div style="display:flex; gap:10px;">
+                  <div style="flex:2;">
+                      <label style="font-size:0.82rem; font-weight:600; color:#334155; margin-bottom:4px; display:block;">Quantity Required:</label>
+                      <input type="number" step="0.01" id="r_qty" placeholder="e.g. 150" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.9rem;">
+                  </div>
+                  <div style="flex:1;">
+                      <label style="font-size:0.82rem; font-weight:600; color:#334155; margin-bottom:4px; display:block;">Unit:</label>
+                      <select id="r_unit" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.9rem;">
+                          <option value="g">g (grams)</option>
+                          <option value="ml">ml (milliliters)</option>
+                          <option value="pc">pc (pieces)</option>
+                          <option value="kg">kg (kilograms)</option>
+                          <option value="l">l (liters)</option>
+                      </select>
+                  </div>
+              </div>
+
+              <div style="display:flex; gap:10px; margin-top:12px;">
+                  <button type="button" class="mod-btn mod-btn-primary" style="flex:1;" onclick="window.saveRecipe()">Save Recipe Rule</button>
+                  <button type="button" class="mod-btn" style="flex:1;" onclick="window.closeRecipeModal()">Cancel</button>
               </div>
           </div>
       </div>
   </div>
-
-  <script>
-      function toggleRecipeModal() {
-          const mod = document.getElementById('addRecipeModal');
-          mod.style.display = mod.style.display === 'flex' ? 'none' : 'flex';
-      }
-
-      function saveRecipe() {
-          const m_id = document.getElementById('r_menu_id').value;
-          const i_id = document.getElementById('r_inv_id').value;
-          const qty = document.getElementById('r_qty').value;
-
-          if(!m_id || !i_id || !qty) return alert("Please fill all fields");
-
-          fetch('/api/recipe/save', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                  menu_item_id: m_id,
-                  ingredient_id: i_id,
-                  quantity_required: qty
-              })
-          }).then(res => res.json()).then(data => {
-              if(data.success) {
-                  alert("Recipe Saved Successfully");
-                  location.reload();
-              } else alert('Failed to save recipe');
-          });
-      }
-
-      function deleteRecipe(id) {
-          if(confirm("Are you sure you want to decouple this ingredient from the recipe?")) {
-              fetch('/api/recipe/delete', { 
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify({ id: id })
-              })
-              .then(res => res.json())
-              .then(data => { if(data.success) location.reload(); });
-          }
-      }
-  </script>
 </div>
 {% endblock %}

@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% block pos_header_left %}{% endblock %}
+{% block pos_header_right %}{% endblock %}
+{% block content %}
+<style>
+    /* ===== ADMIN PAGE - PREMIUM LIGHT SaaS THEME ===== */
+    .admin-container {
+        padding: 36px;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+        overflow-y: auto;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        box-sizing: border-box;
+        background: var(--bg-main);
+        font-family: 'Inter', sans-serif;
+    }
+
+    .admin-container > * { flex-shrink: 0; }
+
+    .sec-title {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text-main);
+        letter-spacing: -0.5px;
+        margin: 0 0 20px;
+    }
+    .sec-title i { font-size: 22px; }
+
+    .panel-card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Tables */
+    .admin-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; }
+    .admin-table th {
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 0 20px 10px;
+        border-bottom: 1.5px solid var(--border-light);
+        text-align: left;
+    }
+    .admin-table td {
+        background: var(--bg-secondary);
+        padding: 16px 20px;
+        font-size: 14px;
+        color: var(--text-muted);
+        font-weight: 500;
+        border-top: 1px solid transparent;
+        border-bottom: 1px solid transparent;
+        vertical-align: middle;
+    }
+    .admin-table td:first-child { border-radius: 12px 0 0 12px; font-weight: 700; color: var(--text-main); border-left: 1px solid transparent; }
+    .admin-table td:last-child { border-radius: 0 12px 12px 0; text-align: right; border-right: 1px solid transparent; }
+    .admin-table tr { transition: all 0.25s ease; }
+    .admin-table tr:hover td {
+        background: #ffffff;
+        border-color: var(--border-color);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-starter {
+        background: rgba(124,92,255,0.08);
+        color: #7C5CFF;
+        border: 1px solid rgba(124,92,255,0.25);
+    }
+    .btn-starter:hover {
+        background: #7C5CFF;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+    
+    .btn-growth {
+        background: rgba(111,175,75,0.08);
+        color: #6FAF4B;
+        border: 1px solid rgba(111,175,75,0.25);
+    }
+    .btn-growth:hover {
+        background: #6FAF4B;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .btn-enterprise {
+        background: rgba(217,119,6,0.08);
+        color: #D97706;
+        border: 1px solid rgba(217,119,6,0.25);
+    }
+    .btn-enterprise:hover {
+        background: #D97706;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .btn-reset {
+        background: rgba(107,114,128,0.08);
+        color: #4B5563;
+        border: 1px solid rgba(107,114,128,0.25);
+    }
+    .btn-reset:hover {
+        background: #4B5563;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .btn-toggle {
+        font-size: 14px;
+        padding: 12px 24px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-muted);
+        font-weight: 600;
+        background: var(--bg-secondary);
+        border-radius: 16px;
+        border: 1px dashed var(--border-color);
+    }
+    
+    .badge {
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .badge-starter { background: #E8F5FF; color: #1E88E5; border: 1px solid #BBDEFB; }
+    .badge-growth { background: #E8F5DC; color: #5a9238; border: 1px solid #C5E1A5; }
+    .badge-enterprise { background: #FFF3E0; color: #EF6C00; border: 1px solid #FFE0B2; }
+    .badge-none { background: #F3F4F6; color: #6B7280; border: 1px solid #E5E7EB; }
+
+</style>
+
+<div class="admin-container">
+
+    <!-- Admin Header Tab Navigation -->
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--border-color); padding-bottom: 16px; margin-bottom: 8px; flex-wrap: wrap; gap: 16px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size: 26px;">🛡️</span>
+            <h1 style="margin:0; font-family:'Outfit',sans-serif; font-size:24px; font-weight:800; color:var(--text-main); letter-spacing:-0.5px;">Admin Control Centre</h1>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn" style="background:#ffffff; border:1px solid var(--border-color); color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-network-wired"></i> Nodes Clearances
+            </a>
+            <a href="{{ url_for('admin_developer_tools') }}" class="btn" style="background:#ffffff; border:1px solid var(--brand-primary); color:var(--brand-primary); text-decoration:none; display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-screwdriver-wrench"></i> Developer Tools
+            </a>
+        </div>
+    </div>
+
+    <!-- Global Test Mode Configuration Card -->
+    <div class="panel-card" style="border-left: 6px solid var(--brand-primary);">
+        <h2 class="sec-title"><i class="fa-solid fa-flask" style="color: var(--brand-primary);"></i> Developer Test Mode Configuration</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+            <div style="max-width: 600px;">
+                <strong style="display:block; margin-bottom:6px; font-size:16px; color:var(--text-main);">Skip Payment Gateway Globally</strong>
+                <span style="font-size:13px; color:var(--text-muted); line-height: 1.5;">
+                    When enabled, standard Stripe checkout is bypassed globally. Pricing plans on the client-facing subscription page swap to developer testing rates (₹1/₹2/₹3) and activate instantly on click.
+                </span>
+            </div>
+            <div>
+                <form action="{{ url_for('admin_toggle_test_mode') }}" method="POST" style="margin:0;">
+                    {% if test_mode_enabled %}
+                        <button type="submit" class="btn btn-toggle" style="background:#EF4444; color:#ffffff; box-shadow: 0 4px 12px rgba(239,68,68,0.2);">
+                            <i class="fa-solid fa-toggle-on"></i> Disable Test Mode
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-toggle" style="background:#22C55E; color:#ffffff; box-shadow: 0 4px 12px rgba(34,197,94,0.2);">
+                            <i class="fa-solid fa-toggle-off"></i> Enable Test Mode
+                        </button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approved Restaurant Nodes & Subscription Manager -->
+    <div class="panel-card">
+        <h2 class="sec-title"><i class="fa-solid fa-solid fa-sliders" style="color: #6FAF4B;"></i> Node Subscription Override Control</h2>
+        {% if users %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Restaurant ID</th>
+                    <th>Active Plan</th>
+                    <th>Payment Status</th>
+                    <th style="text-align: right;">Subscription Control overrides</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in users %}
+                <tr>
+                    <td>{{ item.user.username }}</td>
+                    <td>
+                        {% if item.plan_slug == 'starter' %}
+                            <span class="badge badge-starter">Starter</span>
+                        {% elif item.plan_slug == 'growth' %}
+                            <span class="badge badge-growth">Growth</span>
+                        {% elif item.plan_slug == 'enterprise' %}
+                            <span class="badge badge-enterprise">Enterprise</span>
+                        {% else %}
+                            <span class="badge badge-none">{{ item.sub.status or 'Trial' }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="font-family: monospace; font-size: 12px; font-weight: 700; color: var(--text-muted);">
+                            {{ item.sub.payment_status or 'N/A' }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap;">
+                            <form action="{{ url_for('admin_activate_plan', user_id=item.user.id, plan_slug='starter') }}" method="POST" style="margin:0;">
+                                <button type="submit" class="btn btn-starter">Starter</button>
+                            </form>
+                            <form action="{{ url_for('admin_activate_plan', user_id=item.user.id, plan_slug='growth') }}" method="POST" style="margin:0;">
+                                <button type="submit" class="btn btn-growth">Growth</button>
+                            </form>
+                            <form action="{{ url_for('admin_activate_plan', user_id=item.user.id, plan_slug='enterprise') }}" method="POST" style="margin:0;">
+                                <button type="submit" class="btn btn-enterprise">Enterprise</button>
+                            </form>
+                            <form action="{{ url_for('admin_reset_subscription', user_id=item.user.id) }}" method="POST" style="margin:0;">
+                                <button type="submit" class="btn btn-reset"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-house-circle-exclamation"></i><br>No active restaurant nodes registered yet.
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

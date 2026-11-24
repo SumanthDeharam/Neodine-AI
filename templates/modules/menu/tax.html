@@ -10,25 +10,180 @@
     </div>
     <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
   </div>
+
   <div class="mod-stats">
-    <div class="stat-card"><div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-percent"></i></div><div class="stat-body"><span class="stat-val">5%</span><span class="stat-lbl">GST Rate</span></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-circle-check"></i></div><div class="stat-body"><span class="stat-val">Active</span><span class="stat-lbl">GST Status</span></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-layer-group"></i></div><div class="stat-body"><span class="stat-val">1</span><span class="stat-lbl">Tax Slabs</span></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-indian-rupee-sign"></i></div><div class="stat-body"><span class="stat-val">₹0</span><span class="stat-lbl">GST Collected Today</span></div></div>
-  </div>
-  <div class="mod-body">
-    <div class="data-card">
-      <div class="data-card-hdr"><h3><i class="fa-solid fa-percent"></i> Tax Settings</h3></div>
-      <div class="mod-form-grid">
-        <div class="mod-form-group"><label>GST Percentage</label><input type="number" value="5" min="0" max="28" step="0.5"></div>
-        <div class="mod-form-group"><label>GST Number (GSTIN)</label><input type="text" placeholder="e.g. 29ABCDE1234F1Z5"></div>
-        <div class="mod-form-group"><label>Tax Inclusive Pricing</label><select><option>No (Tax added on top)</option><option>Yes (Tax included in price)</option></select></div>
-        <div class="mod-form-group"><label>Service Charge</label><input type="number" value="0" min="0" max="20" step="0.5" placeholder="0%"></div>
-        <div class="mod-form-group"><label>CGST Split</label><input type="number" value="2.5" readonly style="background:#f0fdf4;"></div>
-        <div class="mod-form-group"><label>SGST Split</label><input type="number" value="2.5" readonly style="background:#f0fdf4;"></div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-percent"></i></div>
+      <div class="stat-body">
+        <span class="stat-val" id="statCombinedRate">{{ tax_config.combined_gst_pct|default(5.0) }}%</span>
+        <span class="stat-lbl">Combined GST Rate</span>
       </div>
-      <button class="mod-save-btn"><i class="fa-solid fa-floppy-disk"></i> Save Tax Settings</button>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="stat-body">
+        <span class="stat-val" style="color: {{ '#10b981' if tax_config.tax_enabled else '#ef4444' }};">
+          {{ 'Active' if tax_config.tax_enabled else 'Disabled' }}
+        </span>
+        <span class="stat-lbl">GST Status</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-calculator"></i></div>
+      <div class="stat-body">
+        <span class="stat-val" id="statSplitDisplay">{{ tax_config.cgst_pct|default(2.5) }}% + {{ tax_config.sgst_pct|default(2.5) }}%</span>
+        <span class="stat-lbl">CGST + SGST Split</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+      <div class="stat-body">
+        <span class="stat-val">₹{{ '%.2f' | format(gst_collected_today|default(0)) }}</span>
+        <span class="stat-lbl">GST Collected Today</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mod-body">
+    <div class="dev-notice" style="background:#f0fdf4; border-color:#bbf7d0; color:#166534;">
+      <i class="fa-solid fa-calculator" style="color:#10b981;"></i>
+      <span><strong>Dynamic Billing Tax Engine Active</strong> — Configure CGST and SGST rates. The combined tax percentage is automatically calculated and applied during POS billing and receipt generation.</span>
+    </div>
+
+    <div class="data-card" style="padding:28px;">
+      <div class="data-card-hdr" style="margin-bottom:20px; border-bottom:1px solid #e2e8f0; padding-bottom:12px;">
+        <h3><i class="fa-solid fa-percent" style="color:#6366f1;"></i> GST &amp; Tax Configuration</h3>
+      </div>
+
+      <div class="mod-form-grid" style="max-width:720px;">
+        <div class="mod-form-group">
+          <label style="font-weight:700;">CGST Rate (%) *</label>
+          <input type="number" id="tax_cgst" value="{{ tax_config.cgst_pct|default(2.5) }}" min="0" max="28" step="0.1" placeholder="2.5" oninput="updateCombinedDisplay()">
+        </div>
+
+        <div class="mod-form-group">
+          <label style="font-weight:700;">SGST Rate (%) *</label>
+          <input type="number" id="tax_sgst" value="{{ tax_config.sgst_pct|default(2.5) }}" min="0" max="28" step="0.1" placeholder="2.5" oninput="updateCombinedDisplay()">
+        </div>
+
+        <div class="mod-form-group" style="grid-column: span 2;">
+          <div id="combinedBanner" style="background:linear-gradient(135deg, #eeebff 0%, #e0e7ff 100%); border:1px solid #c7d2fe; border-radius:12px; padding:14px 18px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:11px; font-weight:800; color:#4338ca; text-transform:uppercase; letter-spacing:0.5px;">Combined POS Billing Tax</div>
+              <div id="combinedBannerText" style="font-size:20px; font-weight:900; color:#3730a3; margin-top:2px;">
+                5.0% Total Tax (2.5% CGST + 2.5% SGST)
+              </div>
+            </div>
+            <i class="fa-solid fa-receipt" style="font-size:28px; color:#4f46e5; opacity:0.6;"></i>
+          </div>
+        </div>
+
+        <div class="mod-form-group">
+          <label style="font-weight:700;">GST Number (GSTIN)</label>
+          <input type="text" id="tax_gstin" value="{{ tax_config.gst_number|default('29ABCDE1234F1Z5') }}" placeholder="e.g. 29ABCDE1234F1Z5">
+        </div>
+
+        <div class="mod-form-group">
+          <label style="font-weight:700;">Service Charge (%)</label>
+          <input type="number" id="tax_service" value="{{ tax_config.service_charge_pct|default(0.0) }}" min="0" max="20" step="0.5" placeholder="0%">
+        </div>
+
+        <div class="mod-form-group">
+          <label style="font-weight:700;">Tax Calculation Mode</label>
+          <select id="tax_inclusive">
+            <option value="false" {{ 'selected' if not tax_config.tax_inclusive else '' }}>Exclusive (Tax added on top of bill subtotal)</option>
+            <option value="true" {{ 'selected' if tax_config.tax_inclusive else '' }}>Inclusive (Tax included in menu item price)</option>
+          </select>
+        </div>
+
+        <div class="mod-form-group">
+          <label style="font-weight:700;">Tax Status</label>
+          <select id="tax_enabled">
+            <option value="true" {{ 'selected' if tax_config.tax_enabled else '' }}>Enabled (Apply Tax to Billing)</option>
+            <option value="false" {{ 'selected' if not tax_config.tax_enabled else '' }}>Disabled (No Tax Added)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:24px; max-width:720px;">
+        <button type="button" class="mod-save-btn" id="btnSaveTax" onclick="saveTaxSettings()" style="width:100%; padding:14px; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer;">
+          <i class="fa-solid fa-floppy-disk"></i> Save Tax Settings
+        </button>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+  function updateCombinedDisplay() {
+    const cgst = parseFloat(document.getElementById('tax_cgst')?.value || 0);
+    const sgst = parseFloat(document.getElementById('tax_sgst')?.value || 0);
+    const combined = (cgst + sgst).toFixed(1);
+
+    const bannerText = document.getElementById('combinedBannerText');
+    const statRate = document.getElementById('statCombinedRate');
+    const statSplit = document.getElementById('statSplitDisplay');
+
+    if (bannerText) {
+      bannerText.textContent = `${combined}% Total Tax (${cgst}% CGST + ${sgst}% SGST)`;
+    }
+    if (statRate) {
+      statRate.textContent = `${combined}%`;
+    }
+    if (statSplit) {
+      statSplit.textContent = `${cgst}% + ${sgst}%`;
+    }
+  }
+
+  async function saveTaxSettings() {
+    const cgst = parseFloat(document.getElementById('tax_cgst').value || 0);
+    const sgst = parseFloat(document.getElementById('tax_sgst').value || 0);
+    const serviceCharge = parseFloat(document.getElementById('tax_service').value || 0);
+    const gstin = document.getElementById('tax_gstin').value.trim();
+    const inclusive = document.getElementById('tax_inclusive').value === 'true';
+    const enabled = document.getElementById('tax_enabled').value === 'true';
+
+    const btn = document.getElementById('btnSaveTax');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving Settings...';
+    }
+
+    try {
+      const res = await fetch('/api/tax/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cgst_pct: cgst,
+          sgst_pct: sgst,
+          service_charge_pct: serviceCharge,
+          gst_number: gstin,
+          tax_inclusive: inclusive,
+          tax_enabled: enabled
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ ' + (data.message || 'Tax settings saved successfully!'));
+        location.reload();
+      } else {
+        alert('❌ ' + (data.error || 'Failed to save tax settings.'));
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Tax Settings';
+        }
+      }
+    } catch (e) {
+      alert('❌ Network error saving tax configuration.');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Tax Settings';
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    updateCombinedDisplay();
+  });
+</script>
 {% endblock %}

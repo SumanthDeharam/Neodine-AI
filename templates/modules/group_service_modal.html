@@ -1,0 +1,413 @@
+<!-- Group Service Modal -->
+<style>
+    .gs-modal-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 23, 42, 0.6);
+        z-index: 3000; display: none;
+        align-items: center; justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+    .gs-modal {
+        background: #fff; width: 95%; max-width: 1200px;
+        height: 90vh; border-radius: 20px;
+        display: flex; flex-direction: column; overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    .gs-header {
+        background: var(--brand-primary); color: #fff;
+        padding: 20px 30px; display: flex;
+        justify-content: space-between; align-items: center;
+    }
+    .gs-header h2 { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+    .gs-close-btn {
+        background: rgba(255,255,255,0.2); border: none; color: #fff;
+        width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: 0.2s;
+    }
+    .gs-close-btn:hover { background: rgba(255,255,255,0.3); }
+    
+    .gs-body {
+        display: flex; flex: 1; overflow: hidden; background: #f8fafc;
+    }
+    .gs-sidebar {
+        width: 320px; background: #fff; border-right: 1px solid #e2e8f0;
+        display: flex; flex-direction: column;
+    }
+    .gs-active-state { display: flex; flex: 1; flex-direction: column; }
+    
+    .gs-sidebar-header {
+        padding: 20px; border-bottom: 1px solid #e2e8f0;
+        font-weight: 700; color: #1e293b;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .gs-customers-list {
+        flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .gs-customer-card {
+        padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;
+        cursor: pointer; transition: 0.2s; background: #fff;
+    }
+    .gs-customer-card.active {
+        border-color: var(--brand-primary); background: #fff5f7;
+    }
+    .gs-customer-card .gs-name { font-weight: 700; color: #0f172a; margin-bottom: 5px; }
+    .gs-customer-card .gs-bal { font-size: 14px; color: #64748b; }
+    .gs-customer-card .gs-badge-paid {
+        display: inline-block; padding: 3px 8px; background: #dcfce7;
+        color: #166534; font-size: 11px; border-radius: 6px; font-weight: 700;
+        margin-top: 5px;
+    }
+    
+    .gs-main {
+        flex: 1; display: flex; flex-direction: column; background: #f8fafc;
+    }
+    .gs-main-header {
+        padding: 20px 30px; background: #fff; border-bottom: 1px solid #e2e8f0;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .gs-main-content {
+        flex: 1; padding: 30px; overflow-y: auto;
+    }
+    .gs-orders-table {
+        width: 100%; border-collapse: collapse; background: #fff;
+        border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .gs-orders-table th {
+        background: #f1f5f9; padding: 15px; text-align: left;
+        font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;
+    }
+    .gs-orders-table td {
+        padding: 15px; border-bottom: 1px solid #e2e8f0; font-size: 14px; color: #1e293b;
+    }
+    .gs-orders-table tr:last-child td { border-bottom: none; }
+    
+    .gs-footer {
+        padding: 20px 30px; background: #fff; border-top: 1px solid #e2e8f0;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .gs-total { font-size: 24px; font-weight: 800; color: #0f172a; }
+    .gs-btn {
+        padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;
+        border: none; display: flex; align-items: center; gap: 8px; font-size: 14px;
+    }
+    .gs-btn-primary { background: var(--brand-primary); color: #fff; }
+    .gs-btn-outline { background: #fff; border: 1px solid #e2e8f0; color: #475569; }
+    .gs-btn-success { background: #10b981; color: #fff; }
+
+    /* New Group Setup */
+    .gs-setup {
+        flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: #fff;
+    }
+    .gs-setup-box {
+        width: 400px; padding: 40px; text-align: center;
+    }
+    .gs-input {
+        width: 100%; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px;
+        margin-bottom: 15px; font-size: 14px; font-family: inherit;
+    }
+</style>
+
+<div class="gs-modal-overlay" id="groupServiceModal">
+    <div class="gs-modal">
+        <div class="gs-header">
+            <h2><i class="fa-solid fa-users-viewfinder"></i> Group Service Billing</h2>
+            <button class="gs-close-btn" onclick="closeGroupServiceModal()"><i class="fa-solid fa-times"></i></button>
+        </div>
+        
+        <div class="gs-body">
+            <!-- Setup Screen (shown if no active group id) -->
+            <div class="gs-setup" id="gsSetupScreen">
+                <div class="gs-setup-box">
+                    <div style="font-size: 48px; color: var(--brand-primary); margin-bottom: 20px;">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <h3 style="margin-bottom: 10px; font-size: 22px;">Start a Group Session</h3>
+                    <p style="color: #64748b; margin-bottom: 30px; font-size: 14px;">Splitting the bill? Create a group session to manage individual orders and payments for this table.</p>
+                    
+                    <input type="text" id="gsSessionName" class="gs-input" placeholder="E.g. Table 4 / Birthday Party" value="Table ">
+                    <input type="number" id="gsCustomerCount" class="gs-input" placeholder="Number of Customers" min="2" max="20" value="2">
+                    
+                    <button class="gs-btn gs-btn-primary" style="width: 100%; justify-content: center; padding: 14px;" onclick="createGroupSession()">
+                        <i class="fa-solid fa-play"></i> Start Group Billing
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Dashboard -->
+            <div class="gs-active-state" id="gsDashboardScreen" style="display: none; flex-direction: row; width: 100%;">
+                <div class="gs-sidebar">
+                    <div class="gs-sidebar-header">
+                        Party Members
+                        <button class="gs-btn gs-btn-outline" style="padding: 5px 10px; font-size: 12px; border-color: transparent;" onclick="resetGroupSession()">
+                            <i class="fa-solid fa-right-from-bracket"></i> Exit
+                        </button>
+                    </div>
+                    <div class="gs-customers-list" id="gsCustomerList">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+                
+                <div class="gs-main">
+                    <div class="gs-main-header">
+                        <div style="font-weight: 700; font-size: 18px;" id="gsActiveCustomerName">Select a Customer</div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="gs-btn gs-btn-outline" onclick="openAddItemModal()">
+                                <i class="fa-solid fa-plus"></i> Add Item
+                            </button>
+                            <button class="gs-btn gs-btn-outline" onclick="mergeBills()">
+                                <i class="fa-solid fa-code-merge"></i> Merge
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="gs-main-content">
+                        <table class="gs-orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Total</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gsOrderTbody">
+                                <tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 40px;">No items for this customer.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="gs-footer">
+                        <div>
+                            <div style="color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase;">Amount Due</div>
+                            <div class="gs-total" id="gsActiveCustomerDue">₹0.00</div>
+                        </div>
+                        <button class="gs-btn gs-btn-success" style="padding: 12px 30px; font-size: 16px;" onclick="payActiveCustomer()">
+                            <i class="fa-solid fa-cash-register"></i> Settle Bill
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activeGroupId = null;
+    let activeGroupData = null;
+    let selectedCustomerId = null;
+
+    function openGroupServiceModal() {
+        document.getElementById('groupServiceModal').style.display = 'flex';
+        if (activeGroupId) {
+            refreshGroupData();
+        } else {
+            document.getElementById('gsSetupScreen').style.display = 'flex';
+            document.getElementById('gsDashboardScreen').style.display = 'none';
+        }
+    }
+
+    function closeGroupServiceModal() {
+        document.getElementById('groupServiceModal').style.display = 'none';
+    }
+
+    function createGroupSession() {
+        const name = document.getElementById('gsSessionName').value || 'Group Party';
+        const num = parseInt(document.getElementById('gsCustomerCount').value) || 2;
+        
+        let customers = [];
+        for(let i=1; i<=num; i++) {
+            customers.push(`Customer ${i}`);
+        }
+        
+        fetch('/group-service/create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ session_name: name, customers: customers })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                activeGroupId = data.group_id;
+                document.getElementById('gsSetupScreen').style.display = 'none';
+                document.getElementById('gsDashboardScreen').style.display = 'flex';
+                refreshGroupData();
+            } else {
+                alert("Error: " + data.error);
+            }
+        });
+    }
+
+    function resetGroupSession() {
+        activeGroupId = null;
+        activeGroupData = null;
+        selectedCustomerId = null;
+        document.getElementById('gsSetupScreen').style.display = 'flex';
+        document.getElementById('gsDashboardScreen').style.display = 'none';
+    }
+
+    function refreshGroupData() {
+        if (!activeGroupId) return;
+        fetch(`/group-service/${activeGroupId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                activeGroupData = data.group;
+                renderCustomers();
+                if (selectedCustomerId) {
+                    selectCustomer(selectedCustomerId);
+                } else if (activeGroupData.customers.length > 0) {
+                    selectCustomer(activeGroupData.customers[0].id);
+                }
+            }
+        });
+    }
+
+    function renderCustomers() {
+        const list = document.getElementById('gsCustomerList');
+        list.innerHTML = '';
+        activeGroupData.customers.forEach(c => {
+            const isPaid = c.status === 'PAID';
+            const isActive = c.id === selectedCustomerId ? 'active' : '';
+            const html = `
+                <div class="gs-customer-card ${isActive}" onclick="selectCustomer(${c.id})">
+                    <div class="gs-name">${c.name}</div>
+                    <div class="gs-bal">Balance: ₹${c.balance.toFixed(2)}</div>
+                    ${isPaid ? '<span class="gs-badge-paid"><i class="fa-solid fa-check"></i> Paid</span>' : ''}
+                </div>
+            `;
+            list.insertAdjacentHTML('beforeend', html);
+        });
+    }
+
+    function selectCustomer(id) {
+        selectedCustomerId = id;
+        renderCustomers(); // Re-render to update active styling
+        const customer = activeGroupData.customers.find(c => c.id === id);
+        if (!customer) return;
+        
+        document.getElementById('gsActiveCustomerName').innerText = customer.name;
+        document.getElementById('gsActiveCustomerDue').innerText = '₹' + customer.balance.toFixed(2);
+        
+        const tbody = document.getElementById('gsOrderTbody');
+        tbody.innerHTML = '';
+        if (customer.orders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 40px;">No items for this customer.</td></tr>`;
+        } else {
+            customer.orders.forEach(o => {
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td style="font-weight: 600;">${o.item}</td>
+                        <td>₹${o.price.toFixed(2)}</td>
+                        <td>${o.qty}</td>
+                        <td style="font-weight: 600;">₹${o.amount.toFixed(2)}</td>
+                        <td>
+                            <button class="gs-btn gs-btn-outline" style="padding: 4px 8px; font-size: 11px;" onclick="splitItem(${o.id})">
+                                Move
+                            </button>
+                        </td>
+                    </tr>
+                `);
+            });
+        }
+    }
+
+    function openAddItemModal() {
+        if (!selectedCustomerId) return alert("Select a customer first.");
+        const item = prompt("Enter item name to add:");
+        if (!item) return;
+        const price = prompt(`Enter price for ${item}:`);
+        if (!price) return;
+        
+        fetch('/group-service/add-item', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                customer_id: selectedCustomerId,
+                item_name: item,
+                price: parseFloat(price),
+                quantity: 1
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) refreshGroupData();
+            else alert("Error: " + data.error);
+        });
+    }
+
+    function payActiveCustomer() {
+        if (!selectedCustomerId) return;
+        const customer = activeGroupData.customers.find(c => c.id === selectedCustomerId);
+        if (customer.balance <= 0) return alert("Customer is already fully paid.");
+        
+        if (confirm(`Settle ${customer.name}'s balance of ₹${customer.balance.toFixed(2)}?`)) {
+            fetch('/group-service/payment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    customer_id: selectedCustomerId,
+                    amount: customer.balance,
+                    method: 'CARD'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) refreshGroupData();
+                else alert("Payment Failed: " + data.error);
+            });
+        }
+    }
+
+    function splitItem(orderId) {
+        // Move item to another customer
+        const otherCustomers = activeGroupData.customers.filter(c => c.id !== selectedCustomerId);
+        if(otherCustomers.length === 0) return alert("No other customers to move item to.");
+        
+        let msg = "Move item to which customer ID?\n";
+        otherCustomers.forEach(c => msg += `${c.id} - ${c.name}\n`);
+        const targetId = prompt(msg);
+        if(!targetId) return;
+
+        fetch('/group-service/split-bill', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                order_id: orderId,
+                target_customer_id: parseInt(targetId)
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) refreshGroupData();
+            else alert("Move Failed: " + data.error);
+        });
+    }
+
+    function mergeBills() {
+        if (!selectedCustomerId) return;
+        const otherCustomers = activeGroupData.customers.filter(c => c.id !== selectedCustomerId);
+        if(otherCustomers.length === 0) return alert("No other customers to merge.");
+        
+        let msg = "Merge another customer's bill into this one. Enter customer ID:\n";
+        otherCustomers.forEach(c => msg += `${c.id} - ${c.name}\n`);
+        const sourceId = prompt(msg);
+        if(!sourceId) return;
+
+        fetch('/group-service/merge-bill', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                source_customer_id: parseInt(sourceId),
+                target_customer_id: selectedCustomerId
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) refreshGroupData();
+            else alert("Merge Failed: " + data.error);
+        });
+    }
+</script>

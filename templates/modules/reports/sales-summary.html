@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Reports</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Sales Summary</strong>
+    </div>
+    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+  </div>
+  <div class="mod-stats">
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-indian-rupee-sign"></i></div><div class="stat-body"><span class="stat-val">₹{{ "%.2f"|format(total_sales|default(0.0)) }}</span><span class="stat-lbl">Total Sales</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-receipt"></i></div><div class="stat-body"><span class="stat-val">{{ total_orders|default(0) }}</span><span class="stat-lbl">Total Orders</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-calculator"></i></div><div class="stat-body"><span class="stat-val">₹{{ "%.2f"|format(avg_order_value|default(0.0)) }}</span><span class="stat-lbl">Avg. Order Value</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-chart-line"></i></div><div class="stat-body"><span class="stat-val">₹{{ "%.2f"|format(est_profit|default(0.0)) }}</span><span class="stat-lbl">Est. Profit (30%)</span></div></div>
+  </div>
+  <div class="mod-body">
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-chart-line"></i> Sales Overview</h3></div>
+      <div class="info-grid">
+        <div class="info-tile"><div class="t-lbl">Today's Sales</div><div class="t-val" style="color:#059669;">₹{{ "%.2f"|format(today_sales|default(0.0)) }}</div></div>
+        <div class="info-tile"><div class="t-lbl">GST Collected</div><div class="t-val">₹{{ "%.2f"|format(gst_collected|default(0.0)) }}</div></div>
+        <div class="info-tile"><div class="t-lbl">Discounts Given</div><div class="t-val">₹{{ "%.2f"|format(discounts_given|default(0.0)) }}</div></div>
+        <div class="info-tile"><div class="t-lbl">Net Revenue</div><div class="t-val" style="color:#2563eb;">₹{{ "%.2f"|format(net_revenue|default(0.0)) }}</div></div>
+      </div>
+    </div>
+
+    {% if recent_orders and recent_orders|length > 0 %}
+    <div class="data-card" style="margin-top:20px;">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-receipt"></i> Recent Transactions</h3></div>
+      <table class="mod-table">
+        <thead><tr><th>Order ID</th><th>Customer</th><th>Mode</th><th>Amount</th><th>GST</th><th>Date</th></tr></thead>
+        <tbody>
+          {% for o in recent_orders %}
+          <tr>
+            <td><span style="font-family:monospace;font-size:12px;background:#f1f5f9;padding:2px 6px;border-radius:4px;">#{{ o.order_uuid[:8] if o.order_uuid else o.id }}</span></td>
+            <td><strong>{{ o.customer_name or 'Guest' }}</strong></td>
+            <td><span class="badge badge-blue">{{ o.order_type or 'Dine-In' }}</span></td>
+            <td><strong style="color:#059669;">₹{{ "%.2f"|format(o.total_price or 0.0) }}</strong></td>
+            <td>₹{{ "%.2f"|format(o.gst_amount or 0.0) }}</td>
+            <td style="color:#64748b;font-size:12px;">{{ o.date.strftime('%d %b %Y, %I:%M %p') if o.date else '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Reports</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Category Summary</strong>
+    </div>
+    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+  </div>
+  <div class="mod-stats">
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-layer-group"></i></div><div class="stat-body"><span class="stat-val">{{ total_categories|default(0) }}</span><span class="stat-lbl">Categories</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-trophy"></i></div><div class="stat-body"><span class="stat-val" style="font-size:16px;">{{ top_category|default('—') }}</span><span class="stat-lbl">Top Category</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-utensils"></i></div><div class="stat-body"><span class="stat-val">{{ total_menu_items|default(0) }}</span><span class="stat-lbl">Total Items</span></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-indian-rupee-sign"></i></div><div class="stat-body"><span class="stat-val">₹{{ "%.2f"|format(total_revenue|default(0.0)) }}</span><span class="stat-lbl">Total Revenue</span></div></div>
+  </div>
+  <div class="mod-body">
+    <div class="data-card">
+      <div class="data-card-hdr">
+        <h3><i class="fa-solid fa-layer-group"></i> Revenue by Category</h3>
+        <input type="text" id="catSearch" placeholder="Filter category..." onkeyup="filterTable('catSearch', 'catTable')" style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:13px;outline:none;background:#fff;">
+      </div>
+      <table class="mod-table" id="catTable">
+        <thead><tr><th>Category</th><th>Menu Items</th><th>Items Ordered</th><th>Revenue</th><th>% Share</th></tr></thead>
+        <tbody>
+          {% if categories and categories|length > 0 %}
+          {% for c in categories %}
+          <tr>
+            <td><strong>{{ c.name }}</strong></td>
+            <td>{{ c.items_count }} items</td>
+            <td><strong>{{ c.orders_count }}</strong> ordered</td>
+            <td><strong style="color:#059669;">{{ c.revenue_formatted }}</strong></td>
+            <td><span class="badge badge-blue">{{ c.share_pct }}%</span></td>
+          </tr>
+          {% endfor %}
+          {% else %}
+          <tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">No category sales data available. Place orders to view breakdown.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function filterTable(inputId, tableId) {
+  const query = (document.getElementById(inputId).value || '').toLowerCase().trim();
+  const rows = document.querySelectorAll('#' + tableId + ' tbody tr');
+  rows.forEach(r => {
+    r.style.display = (!query || r.innerText.toLowerCase().includes(query)) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

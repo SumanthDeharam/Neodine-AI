@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Dashboard</title>
+    <!-- Inter font — SaaS-native, premium feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #080C1C;
+            --card-bg: #121B33;
+            --text-color: #ffffff;
+            --text-muted: #B8C0D4;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --primary: #7C5CFF;
+            --primary-light: rgba(124, 92, 255, 0.15);
+            --accent: #32D7FF;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --font-family: 'Inter', sans-serif;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+            --glow-blue: 0 0 30px rgba(124, 92, 255, 0.25);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            margin: 0; padding: 0;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ── ANIMATED MESH BLOBS ── */
+        .bg-blobs {
+            position: fixed; inset: 0;
+            pointer-events: none; z-index: 0;
+            overflow: hidden;
+        }
+        .bg-blobs span {
+            position: absolute; border-radius: 50%;
+            filter: blur(100px); opacity: 0.15;
+            animation: blob-drift 20s ease-in-out infinite alternate;
+        }
+        .bg-blobs span:nth-child(1){width:650px;height:650px;background:radial-gradient(circle, #7C5CFF, transparent);top:-200px;left:-120px;animation-duration:22s;}
+        .bg-blobs span:nth-child(2){width:520px;height:520px;background:radial-gradient(circle, #32D7FF, transparent);top:35%;right:-100px;animation-duration:26s;animation-delay:-7s;}
+        .bg-blobs span:nth-child(3){width:420px;height:420px;background:radial-gradient(circle, #121B33, transparent);bottom:-120px;left:32%;animation-duration:24s;animation-delay:-12s;}
+        @keyframes blob-drift {
+            0%   { transform: translate(0,0) scale(1); }
+            50%  { transform: translate(45px,-35px) scale(1.09); }
+            100% { transform: translate(-25px,25px) scale(0.94); }
+        }
+
+        .dashboard-container {
+            position: relative; z-index: 1;
+            padding: 1.5rem 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex; flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: var(--glass-border);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+        }
+        .header-titles h1 { margin:0; font-size:1.45rem; font-weight:700; color:#fff; }
+        .header-titles p  { margin:0.25rem 0 0; font-size:0.875rem; color:var(--text-muted); }
+        .brand-gradient {
+            background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .pulse-dot {
+            display: inline-block; width:8px; height:8px; border-radius:50%;
+            background: var(--success); margin-right:6px;
+            box-shadow: 0 0 0 0 rgba(16,185,129,0.6);
+            animation: pulse-ring 1.8s ease-out infinite; vertical-align:middle;
+        }
+        @keyframes pulse-ring {
+            0%  { box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
+            70% { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+            100%{ box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+        }
+        .date-badge {
+            font-size:0.75rem; color:var(--text-muted);
+            background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.06);
+            padding:0.3rem 0.75rem; border-radius:999px; font-weight:500;
+        }
+        .date-filters {
+            display:flex; gap:0.4rem;
+            background:rgba(0,0,0,0.25); padding:0.25rem; border-radius:var(--radius-md);
+        }
+        .filter-btn {
+            background:transparent; border:none;
+            padding:0.45rem 1rem; font-family:inherit; font-size:0.85rem;
+            font-weight:600; color:var(--text-muted); cursor:pointer;
+            border-radius:calc(var(--radius-md) - 2px); transition:all 0.25s;
+        }
+        .filter-btn.active, .filter-btn:hover {
+            background:linear-gradient(135deg,#8b5cf6,#06b6d4);
+            box-shadow:0 0 18px rgba(139,92,246,0.5); color:#fff;
+        }
+        .nav-back {
+            text-decoration:none; color:var(--primary); font-weight:600;
+            display:flex; align-items:center; gap:0.5rem; font-size:0.9rem; transition:0.2s;
+        }
+        .nav-back:hover { text-shadow:0 0 10px var(--primary); }
+
+        /* ── KPI ROW ── */
+        .kpi-row {
+            display:grid; grid-template-columns:repeat(6,1fr); gap:1.25rem;
+        }
+        .kpi-card {
+            background:var(--card-bg);
+            backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+            border:1px solid rgba(255,255,255,0.07);
+            padding:1.4rem 1.25rem 1.1rem;
+            border-radius:var(--radius-lg);
+            box-shadow:var(--shadow-lg);
+            display:flex; flex-direction:column;
+            position:relative; overflow:hidden;
+            transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+        }
+        .kpi-card::before {
+            content:''; position:absolute;
+            top:0;left:0;right:0;height:3px;
+            background:linear-gradient(90deg,#8b5cf6,#06b6d4);
+            border-radius:3px 3px 0 0;
+        }
+        .kpi-card:nth-child(2)::before{background:linear-gradient(90deg,#10b981,#059669);}
+        .kpi-card:nth-child(3)::before{background:linear-gradient(90deg,#f59e0b,#d97706);}
+        .kpi-card:nth-child(4)::before{background:linear-gradient(90deg,#ef4444,#b91c1c);}
+        .kpi-card:nth-child(5)::before{background:linear-gradient(90deg,#a78bfa,#7c3aed);}
+        .kpi-card:nth-child(6)::before{background:linear-gradient(90deg,#ec4899,#be185d);}
+        .kpi-card:hover {
+            transform:translateY(-5px);
+            box-shadow:var(--shadow-lg), 0 0 30px rgba(139,92,246,0.18);
+            border-color:rgba(139,92,246,0.3);
+        }
+        .kpi-title {
+            font-size:0.74rem; color:var(--text-muted); font-weight:600;
+            margin-bottom:0.55rem; text-transform:uppercase; letter-spacing:0.08em;
+        }
+        .kpi-value {
+            font-size:2rem; font-weight:800; color:var(--text-color);
+            margin:0; line-height:1.1; letter-spacing:-0.02em;
+        }
+        .kpi-subtitle { margin-top:0.5rem; font-size:0.75rem; font-weight:500; }
+        .text-success{color:var(--success);} .text-danger{color:var(--danger);} .text-muted{color:var(--text-muted);}
+        .kpi-icon {
+            position:absolute; right:1.1rem; top:1.2rem;
+            width:2.75rem; height:2.75rem;
+            background:var(--primary-light); border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            color:var(--primary);
+            box-shadow:0 0 0 6px rgba(139,92,246,0.07);
+        }
+        .kpi-card:nth-child(2) .kpi-icon{background:rgba(16,185,129,0.15);color:var(--success);box-shadow:0 0 0 6px rgba(16,185,129,0.07);}
+        .kpi-card:nth-child(3) .kpi-icon{background:rgba(245,158,11,0.15);color:var(--warning);box-shadow:0 0 0 6px rgba(245,158,11,0.07);}
+        .kpi-card:nth-child(4) .kpi-icon{background:rgba(239,68,68,0.15);color:var(--danger);box-shadow:0 0 0 6px rgba(239,68,68,0.07);}
+        .kpi-card:nth-child(5) .kpi-icon{background:rgba(167,139,250,0.15);color:#a855f7;box-shadow:0 0 0 6px rgba(167,139,250,0.07);}
+        .kpi-card:nth-child(6) .kpi-icon{background:rgba(236,72,153,0.15);color:#ec4899;box-shadow:0 0 0 6px rgba(236,72,153,0.07);}
+        .kpi-progress {
+            margin-top:0.9rem; height:3px;
+            background:rgba(255,255,255,0.07); border-radius:999px; overflow:hidden;
+        }
+        .kpi-progress-fill {
+            height:100%; border-radius:999px;
+            background:linear-gradient(90deg,#8b5cf6,#06b6d4);
+            width:0%; transition:width 1.4s cubic-bezier(0.4,0,0.2,1);
+        }
+        .kpi-card:nth-child(2) .kpi-progress-fill{background:linear-gradient(90deg,#10b981,#059669);}
+        .kpi-card:nth-child(3) .kpi-progress-fill{background:linear-gradient(90deg,#f59e0b,#d97706);}
+        .kpi-card:nth-child(4) .kpi-progress-fill{background:linear-gradient(90deg,#ef4444,#b91c1c);}
+        .kpi-card:nth-child(5) .kpi-progress-fill{background:linear-gradient(90deg,#a78bfa,#7c3aed);}
+        .kpi-card:nth-child(6) .kpi-progress-fill{background:linear-gradient(90deg,#ec4899,#be185d);}
+
+        /* ── CHARTS GRID ── */
+        .charts-grid {
+            display:grid; grid-template-columns:repeat(12,1fr);
+            grid-auto-rows:minmax(320px,auto); gap:1.5rem;
+        }
+        .chart-card {
+            background:var(--card-bg);
+            backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+            border:1px solid rgba(255,255,255,0.07);
+            border-radius:var(--radius-lg);
+            box-shadow:var(--shadow-lg);
+            padding:1.35rem 1.25rem 1.1rem;
+            display:flex; flex-direction:column;
+            transition:all 0.35s; position:relative; overflow:hidden;
+        }
+        .card-accent-bar {
+            position:absolute; top:0;left:0;right:0; height:3px;
+            background:linear-gradient(90deg,#60a5fa,#a78bfa);
+            border-radius:3px 3px 0 0;
+        }
+        .chart-card.hover-glow {
+            box-shadow:var(--shadow-lg), 0 0 35px rgba(96,165,250,0.14);
+            border-color:rgba(96,165,250,0.22);
+        }
+        .chart-title {
+            font-size:1rem; font-weight:700; color:var(--text-color);
+            margin:0 0 1rem; display:flex; align-items:center; gap:0.6rem;
+        }
+        .chart-title-bar {
+            width:4px; height:16px; border-radius:2px;
+            background:linear-gradient(180deg,#60a5fa,#a78bfa); flex-shrink:0;
+        }
+        .chart-container { flex-grow:1; position:relative; min-height:0; }
+        .col-span-8{grid-column:span 8;} .col-span-4{grid-column:span 4;}
+        .col-span-6{grid-column:span 6;} .col-span-3{grid-column:span 3;}
+        .col-span-12{grid-column:span 12;}
+
+        /* ── WIDGET PANELS ── */
+        .panel-list {
+            list-style:none; margin:0; padding:0;
+            display:flex; flex-direction:column; gap:0.55rem;
+            overflow-y:auto; max-height:240px;
+        }
+        .panel-item {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:0.65rem 0.9rem;
+            background:rgba(0,0,0,0.25); border-radius:var(--radius-md);
+            font-size:0.875rem;
+            border-left:3px solid transparent;
+            transition:background 0.2s;
+        }
+        .panel-item:hover{background:rgba(255,255,255,0.04);}
+        .panel-item.item-critical{border-left-color:var(--danger);}
+        .panel-item.item-low{border-left-color:var(--warning);}
+        .badge{
+            padding:0.22rem 0.55rem; border-radius:999px;
+            font-size:0.72rem; font-weight:700; letter-spacing:0.03em;
+        }
+        .badge-danger {background:rgba(248,113,113,0.12);color:var(--danger);border:1px solid rgba(248,113,113,0.3);}
+        .badge-warning{background:rgba(251,191,36,0.12);color:var(--warning);border:1px solid rgba(251,191,36,0.3);}
+        .badge-success{background:rgba(52,211,153,0.12);color:var(--success);border:1px solid rgba(52,211,153,0.3);}
+        .badge-info   {background:rgba(96,165,250,0.12);color:#60a5fa;border:1px solid rgba(96,165,250,0.3);}
+
+        /* ── AI / WEATHER PANEL ── */
+        .ai-card { border-left:3px solid var(--accent) !important; }
+        .weather-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(124, 92, 255, 0.15) 0%, rgba(50, 215, 255, 0.15) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: white;
+            margin-bottom: 1rem;
+        }
+        .weather-temp {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .weather-cond {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .kpi-row { grid-template-columns: repeat(3, 1fr); }
+            .col-span-8, .col-span-4, .col-span-6, .col-span-3 { grid-column: span 12; }
+        }
+        @media (max-width: 768px) {
+            .kpi-row { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+            .dashboard-container { padding: 1rem; }
+        }
+        
+    
+        /* == LOADING ARC SPINNER == */
+        .loading-arc {
+            width: 52px; height: 52px; border-radius: 50%;
+            border: 3px solid rgba(124, 92, 255, 0.15);
+            border-top-color: #7C5CFF;
+            animation: arc-spin 0.9s linear infinite;
+        }
+        @keyframes arc-spin { to { transform: rotate(360deg); } }
+
+        /* == HEATMAP PLACEHOLDER == */
+        .heatmap-placeholder {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 1rem; min-height: 160px; color: var(--text-muted);
+            position: relative; overflow: hidden;
+        }
+        .heatmap-scan {
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+            animation: scan-line 2.5s ease-in-out infinite;
+        }
+        @keyframes scan-line { 0% { top: 0; opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+        /* == EMPTY STATE CTA == */
+        .empty-cta {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            color: #fff; text-decoration: none; font-weight: 600; font-size: 0.9rem;
+            padding: 0.6rem 1.4rem; border-radius: 999px;
+            box-shadow: 0 4px 20px rgba(139,92,246,0.35); transition: all 0.25s;
+        }
+        .empty-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(139,92,246,0.45); }
+
+        /* == HEATMAP CTA == */
+        .heatmap-cta {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            color: #60a5fa; text-decoration: none; font-weight: 600; font-size: 0.875rem; transition: 0.2s;
+        }
+        .heatmap-cta:hover { color: #93c5fd; }
+
+        /* == AI SECTION LABEL == */
+        .ai-section-label {
+            font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 0.5rem;
+        }
+
+        /* == WEATHER TEMP BADGE == */
+        .weather-temp-badge { display: flex; flex-direction: column; align-items: flex-end; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Animated mesh background -->
+    <div class="bg-blobs"><span></span><span></span><span></span></div>
+
+    <div class="dashboard-container">
+        
+        <!-- HEADER -->
+        <header class="header">
+            <div style="display:flex;gap:1.5rem;align-items:center;">
+                <a href="/" class="nav-back">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Back to POS
+                </a>
+                <div class="header-titles">
+                    <h1><span class="brand-gradient">Neo Dine</span> Executive</h1>
+                    <p><span class="pulse-dot"></span>Live analytics dashboard</p>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:1rem;">
+                <span class="date-badge" id="live-date"></span>
+                <div class="date-filters">
+                    <button class="filter-btn active">Today</button>
+                    <button class="filter-btn">Week</button>
+                    <button class="filter-btn">Month</button>
+                    <button class="filter-btn">Year</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- LOADING OVERLAY -->
+        <div id="dashboard-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:1.25rem;">
+            <div class="loading-arc"></div>
+            <p style="font-size:1rem;color:var(--text-muted);font-weight:600;margin:0;letter-spacing:0.04em;">Initialising analytics engine...</p>
+        </div>
+
+        <!-- EMPTY STATE BANNER -->
+        <div id="dashboard-empty" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:1rem;text-align:center;">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            <h2 style="margin:0;font-size:1.5rem;font-weight:800;color:var(--text-color);">No analytics data yet</h2>
+            <p style="margin:0;color:var(--text-muted);max-width:380px;line-height:1.6;">Start billing customers on the POS to see live sales charts, KPIs, and AI-driven trends here.</p>
+            <a href="/" class="empty-cta">Go to POS &rarr;</a>
+        </div>
+
+        <!-- KPI CARDS ROW -->
+        <div class="kpi-row" id="kpi-section" style="display:none;">
+            <!-- Subscription Status Widget -->
+            <div class="kpi-card subscription-widget-card" style="position: relative; overflow: hidden;">
+                <div class="kpi-icon" style="color: var(--brand-secondary); background: rgba(14, 165, 233, 0.1); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem;">
+                    <i class="fa-solid fa-crown"></i>
+                </div>
+                {% if current_user.status == 'Admin' %}
+                    <div class="kpi-title">Current Plan</div>
+                    <div class="kpi-value" style="font-size: 1.15rem; color: #10b981; font-weight: 800; margin-top: 0.25rem;">SUPER ADMIN</div>
+                    <div class="kpi-subtitle" style="font-size: 11px; margin-top: 0.5rem; color: var(--text-muted);">
+                        Status: <strong style="color: #10b981;">UNLIMITED ACCESS</strong>
+                    </div>
+                    <div style="font-size: 10px; margin-top: 0.25rem; color: var(--text-muted);">Expiry: Never</div>
+                {% else %}
+                    <div class="kpi-title">Current Plan</div>
+                    <div class="kpi-value" style="font-size: 1.15rem; color: var(--brand-primary); font-weight: 800; margin-top: 0.25rem; text-transform: uppercase;">
+                        {% if user_subscription and user_subscription.status == 'TRIAL' %}
+                            FREE TRIAL
+                        {% elif user_subscription and user_subscription.plan %}
+                            {{ user_subscription.plan.name }}
+                        {% else %}
+                            NONE
+                        {% endif %}
+                    </div>
+                    <div class="kpi-subtitle" style="font-size: 11px; margin-top: 0.5rem; color: var(--text-muted);">
+                        Status: <strong style="text-transform: uppercase;
+                            {% if user_subscription and user_subscription.status == 'ACTIVE' %}color: #10b981;
+                            {% elif user_subscription and user_subscription.status == 'TRIAL' %}color: #0284c7;
+                            {% else %}color: var(--brand-accent);
+                            {% endif %}">{{ user_subscription.status if user_subscription else 'INACTIVE' }}</strong>
+                    </div>
+                    <div style="font-size: 10px; margin-top: 0.25rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+                        <span>
+                            {% if user_subscription and user_subscription.status == 'TRIAL' %}
+                                Days Left: <strong>{{ trial_days_left }}</strong>
+                            {% elif user_subscription and user_subscription.subscription_end %}
+                                Days Left: <strong>{{ subscription_days_left }}</strong>
+                            {% else %}
+                                Days Left: 0
+                            {% endif %}
+                        </span>
+                        {% if user_subscription and user_subscription.status == 'TRIAL' %}
+                            <a href="/subscription" style="background: var(--brand-primary); color: white; padding: 2px 6px; border-radius: 4px; text-decoration: none; font-weight: 700; font-size: 9px;">Upgrade</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                </div>
+                <div class="kpi-title">Total Sales (₹)</div>
+                <div class="kpi-value" id="kpi-sales" data-target="0" style="font-size:1rem;color:#9ca3af;">Loading...</div>
+                <div class="kpi-subtitle"><span class="text-muted" id="kpi-sales-trend">Loading...</span> vs last period</div>
+                <div class="kpi-progress"><div class="kpi-progress-fill" id="kpi-sales-bar"></div></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                </div>
+                <div class="kpi-title">Total Orders</div>
+                <div class="kpi-value" id="kpi-orders" data-target="0" style="font-size:1rem;color:#9ca3af;">Loading...</div>
+                <div class="kpi-subtitle"><span class="text-muted" id="kpi-orders-trend">Loading...</span> volume</div>
+                <div class="kpi-progress"><div class="kpi-progress-fill" id="kpi-orders-bar"></div></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                </div>
+                <div class="kpi-title">Revenue per Order</div>
+                <div class="kpi-value" id="kpi-rev-order" data-target="0" style="font-size:1rem;color:#9ca3af;">Loading...</div>
+                <div class="kpi-subtitle"><span class="text-muted">Average ticket size</span></div>
+                <div class="kpi-progress"><div class="kpi-progress-fill" id="kpi-rev-bar"></div></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                </div>
+                <div class="kpi-title">Gross Profit</div>
+                <div class="kpi-value" id="kpi-profit" data-target="0" style="font-size:1rem;color:#9ca3af;">Loading...</div>
+                <div class="kpi-subtitle"><span class="text-muted" id="kpi-profit-trend">Loading...</span> margin</div>
+                <div class="kpi-progress"><div class="kpi-progress-fill" id="kpi-profit-bar"></div></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                </div>
+                <div class="kpi-title">Sales Growth %</div>
+                <div class="kpi-value" id="kpi-growth" data-target="0" style="font-size:1rem;color:#9ca3af;">Loading...</div>
+                <div class="kpi-subtitle"><span class="text-muted">Month over Month</span></div>
+                <div class="kpi-progress"><div class="kpi-progress-fill" id="kpi-growth-bar"></div></div>
+            </div>
+        </div>
+
+        <!-- MAIN CHARTS -->
+        <div class="charts-grid" id="charts-section" style="display:none;">
+
+            <!-- Sales Trend -->
+            <div class="chart-card col-span-8">
+                <div class="card-accent-bar"></div>
+                <h2 class="chart-title"><div class="chart-title-bar"></div>Sales Trend</h2>
+                <div class="chart-container"><canvas id="salesTrendChart"></canvas></div>
+            </div>
+
+            <!-- Category Performance -->
+            <div class="chart-card col-span-4">
+                <div class="card-accent-bar" style="background:linear-gradient(90deg,#34d399,#059669);"></div>
+                <h2 class="chart-title"><div class="chart-title-bar" style="background:linear-gradient(180deg,#34d399,#059669);"></div>Category Performance</h2>
+                <div class="chart-container"><canvas id="categoryChart"></canvas></div>
+            </div>
+
+            <!-- Customer Segments -->
+            <div class="chart-card col-span-6">
+                <div class="card-accent-bar" style="background:linear-gradient(90deg,#a78bfa,#7c3aed);"></div>
+                <h2 class="chart-title"><div class="chart-title-bar" style="background:linear-gradient(180deg,#a78bfa,#7c3aed);"></div>Customer Segments</h2>
+                <div class="chart-container"><canvas id="segmentChart"></canvas></div>
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="chart-card col-span-3">
+                <div class="card-accent-bar" style="background:linear-gradient(90deg,#fbbf24,#f59e0b);"></div>
+                <h2 class="chart-title"><div class="chart-title-bar" style="background:linear-gradient(180deg,#fbbf24,#f59e0b);"></div>Payment Methods</h2>
+                <div class="chart-container"><canvas id="paymentChart"></canvas></div>
+            </div>
+
+            <!-- AI / Inventory col -->
+            <div class="col-span-3" style="display:flex;flex-direction:column;gap:1rem;">
+
+                <!-- Weather & AI Predictions -->
+                <div class="chart-card ai-card" style="flex:1;">
+                    <div class="card-accent-bar" style="background:linear-gradient(90deg,#60a5fa,#38bdf8);"></div>
+                    <h2 class="chart-title"><div class="chart-title-bar"></div>Neo AI Insights</h2>
+                    <div class="weather-info">
+                        <div>
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:0.4rem;"><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/><circle cx="12" cy="12" r="4"/></svg>
+                            <div id="weather-cond" style="font-size:0.75rem;opacity:0.85;">Loading...</div>
+                        </div>
+                        <div class="weather-temp-badge">
+                            <div class="weather-temp" id="weather-temp">--</div>
+                            <div style="font-size:0.6rem;opacity:0.7;">°C</div>
+                        </div>
+                    </div>
+                    <p class="ai-section-label">Top Predicted Items Today</p>
+                    <ul class="panel-list" id="ai-predictions"></ul>
+                </div>
+
+                <!-- Inventory Alerts -->
+                <div class="chart-card" style="flex:1;">
+                    <div class="card-accent-bar" style="background:linear-gradient(90deg,#f87171,#dc2626);"></div>
+                    <h2 class="chart-title"><div class="chart-title-bar" style="background:linear-gradient(180deg,#f87171,#dc2626);"></div>Inventory Alerts</h2>
+                    <ul class="panel-list" id="inventory-alerts"></ul>
+                </div>
+            </div>
+
+            <!-- Heatmap Placeholder -->
+            <div class="chart-card col-span-12">
+                <div class="card-accent-bar" style="background:linear-gradient(90deg,#38bdf8,#60a5fa,#a78bfa);"></div>
+                <h2 class="chart-title"><div class="chart-title-bar" style="background:linear-gradient(180deg,#38bdf8,#60a5fa);"></div>Top Locations &amp; Store Heatmap</h2>
+                <div class="heatmap-placeholder">
+                    <div class="heatmap-scan"></div>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;"><circle cx="12" cy="10" r="3"></circle><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"></path></svg>
+                    <div>
+                        <p style="margin:0;font-weight:700;color:var(--text-color);">Location Heatmap — Coming Soon</p>
+                        <p style="margin:0.4rem 0 0;font-size:0.875rem;color:var(--text-muted);">Awaiting deeper geographical insights integration.</p>
+                    </div>
+                    <a href="/" class="heatmap-cta">Explore POS Data &rarr;</a>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ── Live date badge ──
+        (function(){
+            const el = document.getElementById('live-date');
+            if(el){
+                const now = new Date();
+                el.textContent = now.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+            }
+        })();
+
+        // ── Filter button pill group ──
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // ── Premium Chart.js Defaults ──
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = "#B8C0D4";
+        Chart.defaults.scale.grid.color = "rgba(255,255,255,0.05)";
+
+        // ── Custom dark tooltip plugin ──
+        const darkTooltip = {
+            backgroundColor: '#161F3D',
+            titleColor: '#FFFFFF',
+            bodyColor: '#B8C0D4',
+            borderColor: 'rgba(255,255,255,0.08)',
+            borderWidth: 1,
+            padding: 12,
+            cornerRadius: 10,
+            displayColors: true,
+            boxPadding: 4
+        };
+
+        const pbiColors = {
+            blue: '#32D7FF',
+            accent: '#7C5CFF',
+            warning: '#fbbf24',
+            success: '#34d399',
+            danger: '#f87171',
+            teal: '#32D7FF'
+        };
+
+        // Chart References
+        let salesChart, catChart, segmentChart, paymentChart;
+
+        // ── Animated counter ──
+        function animateCounter(el, targetRaw, prefix, suffix, duration) {
+            const target = parseFloat(targetRaw) || 0;
+            if (target === 0) { el.textContent = prefix + '0' + suffix; return; }
+            const start = performance.now();
+            function tick(now) {
+                const t = Math.min((now - start) / duration, 1);
+                const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+                const val = Math.round(ease * target);
+                el.textContent = prefix + new Intl.NumberFormat('en-IN').format(val) + suffix;
+                if (t < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        }
+        function animateBar(barId, pct) {
+            const bar = document.getElementById(barId);
+            if (bar) setTimeout(() => bar.style.width = Math.min(pct,100)+'%', 80);
+        }
+
+        // Init Charts
+        function initCharts() {
+            // 1. Sales Trend — vivid gradient line
+            const ctxSales = document.getElementById('salesTrendChart').getContext('2d');
+            const salesGrad = ctxSales.createLinearGradient(0, 0, 0, 320);
+            salesGrad.addColorStop(0, 'rgba(124, 92, 255, 0.45)');
+            salesGrad.addColorStop(0.6, 'rgba(124, 92, 255, 0.12)');
+            salesGrad.addColorStop(1, 'rgba(124, 92, 255, 0.0)');
+            salesChart = new Chart(ctxSales, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Sales (₹)',
+                        data: [],
+                        borderColor: '#7C5CFF',
+                        backgroundColor: salesGrad,
+                        borderWidth: 2.5,
+                        tension: 0.45,
+                        fill: true,
+                        pointBackgroundColor: '#080C1C',
+                        pointBorderColor: '#7C5CFF',
+                        pointBorderWidth: 2.5,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        pointHoverBackgroundColor: '#7C5CFF',
+                        shadowColor: 'rgba(124, 92, 255, 0.4)',
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { ...darkTooltip, callbacks: { label: ctx => ' ₹' + new Intl.NumberFormat('en-IN').format(ctx.parsed.y) } }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.04)' },
+                            ticks: { font: { size: 11 }, callback: val => '₹' + new Intl.NumberFormat('en-IN').format(val) },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // 2. Category Performance — rounded gradient bars
+            const ctxCat = document.getElementById('categoryChart').getContext('2d');
+            catChart = new Chart(ctxCat, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Sales (₹)',
+                        data: [],
+                        backgroundColor: ctx => {
+                            const g = ctx.chart.ctx.createLinearGradient(0,0,ctx.chart.width,0);
+                            g.addColorStop(0,'rgba(124, 92, 255, 0.85)');
+                            g.addColorStop(1,'rgba(50, 215, 255, 0.85)');
+                            return g;
+                        },
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { ...darkTooltip, callbacks: { label: ctx => ' ₹' + new Intl.NumberFormat('en-IN').format(ctx.parsed.x) } }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 } } },
+                        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                    }
+                }
+            });
+
+            // 3. Customer Segments — vivid pie
+            const ctxSeg = document.getElementById('segmentChart').getContext('2d');
+            segmentChart = new Chart(ctxSeg, {
+                type: 'pie',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: ['rgba(124, 92, 255, 0.9)','rgba(50, 215, 255, 0.9)','rgba(34, 211, 238, 0.9)'],
+                        borderWidth: 2,
+                        borderColor: 'rgba(18, 27, 51, 0.6)',
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 16, font: { size: 12 }, color: '#B8C0D4', boxWidth: 12 } },
+                        tooltip: { ...darkTooltip, callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(1)}%` } }
+                    }
+                }
+            });
+
+            // 4. Payment — vivid doughnut
+            const ctxPay = document.getElementById('paymentChart').getContext('2d');
+            paymentChart = new Chart(ctxPay, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            'rgba(124, 92, 255, 0.9)',
+                            'rgba(50, 215, 255, 0.9)',
+                            'rgba(16, 185, 129, 0.9)',
+                            'rgba(245, 158, 11, 0.9)',
+                            'rgba(239, 68, 68, 0.9)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: 'rgba(18, 27, 51, 0.6)',
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 16, font: { size: 12 }, color: '#B8C0D4', boxWidth: 12 } },
+                        tooltip: { ...darkTooltip, callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(1)}%` } }
+                    }
+                }
+            });
+        }
+
+        // Format currency helper
+        const fmtCurrency = (val) => new Intl.NumberFormat('en-IN').format(val);
+
+        // Chart State Handler
+        function handleChartState(chartInstance, isError = false, isDataEmpty = false) {
+            const container = chartInstance.canvas.parentNode;
+            const existingOverlay = container.querySelector('.chart-overlay');
+            if (existingOverlay) existingOverlay.remove();
+
+            if (isError || isDataEmpty) {
+                const overlay = document.createElement('div');
+                overlay.className = 'chart-overlay';
+                overlay.style.cssText = 'position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(15, 23, 42, 0.85); backdrop-filter:blur(4px); font-weight:600; z-index:10; border-radius:var(--radius-md); text-align:center; padding:10px; flex-direction:column; gap:5px;';
+                
+                if (isError) {
+                    overlay.style.color = 'var(--danger)';
+                    overlay.innerHTML = '<i style="font-size:24px;">⚠</i><br>Error Fetching Data';
+                } else {
+                    overlay.style.color = 'var(--text-muted)';
+                    overlay.innerHTML = '<i style="font-size:24px;">∅</i><br>No Data Available';
+                }
+                container.appendChild(overlay);
+            }
+        }
+
+        // Helper to update KPI natively
+        function updateKpi(id, value, isError = false) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (isError) {
+                el.innerText = 'Error';
+                el.style.color = 'var(--danger)';
+                el.style.fontSize = '1rem';
+            } else if (value === null || value === undefined) {
+                el.innerText = 'No Data';
+                el.style.color = 'var(--text-muted)';
+                el.style.fontSize = '1rem';
+            } else {
+                el.innerText = value;
+                el.style.color = ''; // restore inherited
+                el.style.fontSize = '1.875rem';
+            }
+        }
+
+        function updateKpiTrend(id, trend, isError = false) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (isError || trend === null) {
+                el.innerText = '—';
+                el.className = 'text-muted';
+            } else {
+                el.innerText = (trend >= 0 ? '↑ ' : '↓ ') + Math.abs(trend) + '%';
+                el.className = trend >= 0 ? 'text-success' : 'text-danger';
+            }
+        }
+
+        // ─── UI State Helpers ───────────────────────────────────────────────
+        function showLoading() {
+            document.getElementById('dashboard-loading').style.display = 'flex';
+            document.getElementById('dashboard-empty').style.display = 'none';
+            document.getElementById('kpi-section').style.display = 'none';
+            document.getElementById('charts-section').style.display = 'none';
+        }
+
+        function showEmpty() {
+            document.getElementById('dashboard-loading').style.display = 'none';
+            document.getElementById('dashboard-empty').style.display = 'flex';
+            document.getElementById('kpi-section').style.display = 'none';
+            document.getElementById('charts-section').style.display = 'none';
+        }
+
+        function showError() {
+            document.getElementById('dashboard-loading').style.display = 'none';
+            document.getElementById('dashboard-empty').innerHTML = `
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <h2 style="margin:0;font-size:1.25rem;font-weight:700;color:#374151;">Unable to load data</h2>
+                <p style="margin:0;color:#6b7280;">Could not reach the analytics API. Please try refreshing the page.</p>`;
+            document.getElementById('dashboard-empty').style.display = 'flex';
+            document.getElementById('kpi-section').style.display = 'none';
+            document.getElementById('charts-section').style.display = 'none';
+        }
+
+        function showDashboard(kpiData) {
+            document.getElementById('dashboard-loading').style.display = 'none';
+            document.getElementById('dashboard-empty').style.display = 'none';
+            document.getElementById('kpi-section').style.display = 'grid';
+            document.getElementById('charts-section').style.display = 'grid';
+            // Attach hover glow to all chart cards
+            document.querySelectorAll('.chart-card').forEach(card => {
+                card.addEventListener('mouseenter', () => card.classList.add('hover-glow'));
+                card.addEventListener('mouseleave', () => card.classList.remove('hover-glow'));
+            });
+            // Animate KPI progress bars (relative values)
+            if (kpiData) {
+                const sales = parseFloat(kpiData.total_sales) || 0;
+                const orders = parseFloat(kpiData.total_orders) || 0;
+                const rev = parseFloat(kpiData.revenue_per_order) || 0;
+                const profit = parseFloat(kpiData.gross_profit) || 0;
+                const maxSales = Math.max(sales, 1);
+                animateBar('kpi-sales-bar',  Math.min((sales / maxSales) * 100, 100));
+                animateBar('kpi-orders-bar', Math.min((orders / 200) * 100, 100));
+                animateBar('kpi-rev-bar',    Math.min((rev / 1000) * 100, 100));
+                animateBar('kpi-profit-bar', Math.min((profit / maxSales) * 100, 100));
+                animateBar('kpi-growth-bar', 65);
+            }
+        }
+
+        // ─── Main Data Fetch ────────────────────────────────────────────────
+        async function fetchDashboardData() {
+            try {
+                // ── STEP 1: KPI Gate ── This is the single source of truth.
+                // If total_orders is 0 or undefined we immediately show the empty state
+                // and skip ALL chart rendering entirely.
+                const resKpi = await fetch('/api/dashboard/kpi');
+                if (!resKpi.ok) { showError(); return; }
+                const dataKpi = await resKpi.json();
+
+                const totalOrders = dataKpi.total_orders || 0;
+
+                if (totalOrders === 0) {
+                    showEmpty();
+                    return; // ← hard stop: no charts, no KPIs, nothing rendered
+                }
+
+                // ── STEP 2: Orders confirmed. Populate KPI cards ─────────
+                showDashboard(dataKpi);
+                const realGrowth = (dataKpi.sales_growth === 12.5) ? 0 : (dataKpi.sales_growth || 0);
+
+                // Animated count-up for each KPI
+                const salesEl = document.getElementById('kpi-sales');
+                const ordersEl = document.getElementById('kpi-orders');
+                const revEl = document.getElementById('kpi-rev-order');
+                const profitEl = document.getElementById('kpi-profit');
+                const growthEl = document.getElementById('kpi-growth');
+
+                if (salesEl)  { salesEl.style.color=''; salesEl.style.fontSize=''; animateCounter(salesEl, dataKpi.total_sales||0, '₹','', 1400); }
+                if (ordersEl) { ordersEl.style.color=''; ordersEl.style.fontSize=''; animateCounter(ordersEl, totalOrders, '','', 1200); }
+                if (revEl)    { revEl.style.color=''; revEl.style.fontSize=''; animateCounter(revEl, dataKpi.revenue_per_order||0, '₹','', 1200); }
+                if (profitEl) { profitEl.style.color=''; profitEl.style.fontSize=''; animateCounter(profitEl, dataKpi.gross_profit||0, '₹','', 1400); }
+                if (growthEl) { growthEl.style.color=''; growthEl.style.fontSize=''; animateCounter(growthEl, realGrowth, '','%', 1000); }
+
+                updateKpiTrend('kpi-sales-trend', realGrowth);
+                updateKpiTrend('kpi-orders-trend', realGrowth);
+                updateKpiTrend('kpi-profit-trend', realGrowth);
+
+                // ── STEP 3: Sales Trend Chart ─────────────────────────────
+                // Backend now returns only real months. Bind them all.
+                try {
+                    const resSales = await fetch('/api/dashboard/sales-trend');
+                    if (!resSales.ok) throw new Error();
+                    const dataSales = await resSales.json();
+                    if (dataSales.labels && dataSales.labels.length > 0) {
+                        salesChart.data.labels = dataSales.labels;
+                        salesChart.data.datasets[0].data = dataSales.sales;
+                        salesChart.update();
+                        handleChartState(salesChart, false, false);
+                    } else {
+                        handleChartState(salesChart, false, true);
+                    }
+                } catch(e) { handleChartState(salesChart, true); }
+
+                // ── STEP 4: Category Performance Chart ───────────────────
+                try {
+                    const resCat = await fetch('/api/dashboard/category-performance');
+                    if (!resCat.ok) throw new Error();
+                    const dataCat = await resCat.json();
+                    if (dataCat.labels && dataCat.labels.length > 0) {
+                        catChart.data.labels = dataCat.labels;
+                        catChart.data.datasets[0].data = dataCat.actual;
+                        catChart.update();
+                        handleChartState(catChart, false, false);
+                    } else {
+                        handleChartState(catChart, false, true);
+                    }
+                } catch(e) { handleChartState(catChart, true); }
+
+                // ── STEP 5a: Customer Segments ─────────────────────
+                try {
+                    const resSeg = await fetch('/api/dashboard/segment-analysis');
+                    if (!resSeg.ok) throw new Error();
+                    const dataSeg = await resSeg.json();
+                    if (dataSeg.labels && dataSeg.labels.length > 0) {
+                        const total = dataSeg.values.reduce((a, b) => a + b, 0);
+                        const pcts = dataSeg.values.map(v => total > 0 ? parseFloat(((v / total) * 100).toFixed(1)) : 0);
+                        segmentChart.data.labels = dataSeg.labels;
+                        segmentChart.data.datasets[0].data = pcts;
+                        segmentChart.update();
+                        handleChartState(segmentChart, false, false);
+                    } else {
+                        handleChartState(segmentChart, false, true);
+                    }
+                } catch(e) { handleChartState(segmentChart, true); }
+
+                // ── STEP 5b: Payment Method Breakdown ───────────────────
+                try {
+                    const resPay = await fetch('/api/dashboard/payment-methods');
+                    if (!resPay.ok) throw new Error();
+                    const dataPay = await resPay.json();
+                    if (dataPay.labels && dataPay.labels.length > 0) {
+                        // Convert raw counts to percentages
+                        const total = dataPay.values.reduce((a, b) => a + b, 0);
+                        const pcts = dataPay.values.map(v => total > 0 ? parseFloat(((v / total) * 100).toFixed(1)) : 0);
+                        paymentChart.data.labels = dataPay.labels;
+                        paymentChart.data.datasets[0].data = pcts;
+                        paymentChart.update();
+                        handleChartState(paymentChart, false, false);
+                    } else {
+                        handleChartState(paymentChart, false, true);
+                    }
+                } catch(e) { handleChartState(paymentChart, true); }
+
+                // ── STEP 6: AI Insights + Weather (always shown if orders exist) ─
+                try {
+                    const resWeather = await fetch('/api/weather');
+                    if (resWeather.ok) {
+                        const dw = await resWeather.json();
+                        document.getElementById('weather-temp').innerText = (dw.temperature || '--') + '°C';
+                        document.getElementById('weather-cond').innerText = dw.condition || 'No Data Available';
+                    } else throw new Error();
+                } catch(e) {
+                    document.getElementById('weather-temp').innerText = '—';
+                    document.getElementById('weather-cond').innerText = 'Unable to load data';
+                }
+
+                try {
+                    const resAI = await fetch('/api/predictions');
+                    const aiList = document.getElementById('ai-predictions');
+                    if (!resAI.ok) throw new Error();
+                    const dataAI = await resAI.json();
+                    aiList.innerHTML = '';
+                    if (!dataAI.predictions || dataAI.predictions.length === 0) {
+                        aiList.innerHTML = '<li class="panel-item" style="color:var(--text-muted);justify-content:center;">No predictions yet</li>';
+                    } else {
+                        dataAI.predictions.forEach(item => {
+                            const li = document.createElement('li');
+                            li.className = 'panel-item';
+                            li.innerHTML = `<span>⚡ ${item}</span> <span class="badge badge-info">High Demand</span>`;
+                            aiList.appendChild(li);
+                        });
+                    }
+                } catch(e) {
+                    document.getElementById('ai-predictions').innerHTML = '<li class="panel-item" style="color:var(--danger);justify-content:center;">Unable to load data</li>';
+                }
+
+                // ── STEP 7: Inventory Alerts ─────────────────────────────
+                try {
+                    const resInv = await fetch('/api/inventory/status');
+                    const invList = document.getElementById('inventory-alerts');
+                    if (!resInv.ok) throw new Error();
+                    const dataInv = await resInv.json();
+                    invList.innerHTML = '';
+                    let items = [];
+                    if (dataInv.critical) dataInv.critical.forEach(i => items.push({...i, type: 'critical'}));
+                    if (dataInv.low_stock) dataInv.low_stock.forEach(i => items.push({...i, type: 'low'}));
+                    if (items.length === 0) {
+                        invList.innerHTML = '<li class="panel-item" style="justify-content:center;color:var(--text-muted);">All stock levels normal</li>';
+                    } else {
+                        items.slice(0, 5).forEach(item => {
+                            const li = document.createElement('li');
+                            li.className = 'panel-item ' + (item.type === 'critical' ? 'item-critical' : 'item-low');
+                            const badge = item.type === 'critical' ? '<span class="badge badge-danger">Critical</span>' : '<span class="badge badge-warning">Low</span>';
+                            li.innerHTML = `<span>${item.name} <span style="color:var(--text-muted);font-size:0.75rem">(${item.current}${item.unit||''})</span></span> ${badge}`;
+                            invList.appendChild(li);
+                        });
+                    }
+                } catch(e) {
+                    document.getElementById('inventory-alerts').innerHTML = '<li class="panel-item" style="color:var(--danger);justify-content:center;">Unable to load data</li>';
+                }
+
+            } catch (err) {
+                console.error("[Dashboard] Critical failure:", err);
+                showError();
+            }
+        }
+
+        // Initialize & Start Poll
+        window.onload = () => {
+            showLoading();
+            initCharts();
+            fetchDashboardData();
+            // Re-poll every 15 seconds (reduced from 5 to avoid hammering API)
+            setInterval(fetchDashboardData, 15000);
+        };
+    </script>
+</body>
+</html>

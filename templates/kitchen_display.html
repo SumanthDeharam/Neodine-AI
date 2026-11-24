@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neo Dine AI — Kitchen Display</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0d14; --surface: #131722; --surface2: #1a1f2e;
+      --border: #252d40; --accent: #f59e0b; --green: #22c55e;
+      --red: #ef4444; --blue: #3b82f6; --text: #f1f5f9;
+      --muted: #64748b; --muted2: #94a3b8;
+      --radius: 20px; --radius-sm: 12px;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* TOP BAR */
+    .top-bar { height: 68px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; flex-shrink: 0; }
+    .top-left { display: flex; align-items: center; gap: 14px; }
+    .kds-icon { width: 42px; height: 42px; border-radius: 14px; background: linear-gradient(135deg, #ef4444, #dc2626); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; box-shadow: 0 4px 14px rgba(239,68,68,0.4); }
+    .kds-title { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; }
+    .kds-sub { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: var(--green); font-size: 12px; font-weight: 800; padding: 6px 14px; border-radius: 20px; }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+    .top-right { display: flex; align-items: center; gap: 12px; }
+    .top-clock { font-size: 16px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+    .btn-nav { display: flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: transparent; color: var(--muted2); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+    .btn-nav:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* STATS BAR */
+    .stats-bar { display: flex; gap: 16px; padding: 16px 28px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .stat-pill { display: flex; align-items: center; gap: 10px; padding: 10px 20px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface2); }
+    .stat-pill-num { font-size: 22px; font-weight: 900; }
+    .stat-pill-label { font-size: 12px; color: var(--muted); font-weight: 600; line-height: 1.2; }
+
+    /* MAIN CONTENT */
+    .main-content { flex: 1; padding: 24px 28px; overflow-y: auto; }
+    .main-content::-webkit-scrollbar { width: 5px; }
+    .main-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; gap: 16px; }
+    .empty-icon { font-size: 80px; opacity: 0.2; }
+    .empty-text { font-size: 22px; font-weight: 800; color: var(--muted); }
+    .empty-sub { font-size: 14px; color: var(--muted); font-weight: 600; }
+
+    .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+    /* ORDER CARD */
+    .order-card {
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      transition: all 0.2s; animation: cardIn 0.3s ease;
+    }
+    @keyframes cardIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .order-card:hover { border-color: var(--accent); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+    .order-card.urgent { border-color: var(--red); }
+    .order-card.urgent .order-card-header { background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05)); }
+
+    .order-card-header { padding: 18px 20px; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .order-table-num { font-size: 24px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+    .order-meta { text-align: right; }
+    .order-time-badge { font-size: 12px; font-weight: 800; padding: 4px 12px; border-radius: 20px; }
+    .order-time-ok { background: rgba(34,197,94,0.15); color: var(--green); }
+    .order-time-warn { background: rgba(245,158,11,0.15); color: var(--accent); }
+    .order-time-urgent { background: rgba(239,68,68,0.15); color: var(--red); }
+    .order-id { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 600; }
+
+    .order-items-list { padding: 16px 20px; }
+    .order-item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .order-item-row:last-child { border-bottom: none; }
+    .order-item-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .order-item-qty { font-size: 20px; font-weight: 900; color: var(--accent); min-width: 30px; text-align: right; }
+
+    .order-card-footer { padding: 14px 20px; border-top: 1px solid var(--border); }
+    .btn-ready { width: 100%; padding: 14px; background: linear-gradient(135deg, #22c55e, #16a34a); border: none; border-radius: var(--radius-sm); color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(34,197,94,0.3); transition: all 0.2s; }
+    .btn-ready:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(34,197,94,0.4); }
+    .btn-ready:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .order-action-row { display: flex; gap: 10px; margin-top: 12px; }
+    .order-action-row .btn-ready,
+    .order-action-row .btn-prepare { width: auto; flex: 1; }
+    .btn-prepare { padding: 14px; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: var(--radius-sm); color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(59,130,246,0.3); transition: all 0.2s; }
+    .btn-prepare:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(59,130,246,0.4); }
+    .btn-prepare:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .order-note { font-size: 12px; color: var(--accent); font-weight: 700; padding: 0 20px; }
+
+    .refresh-bar { text-align: center; padding: 12px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); flex-shrink: 0; }
+    .refresh-bar span { color: var(--accent); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="top-left">
+      <div class="kds-icon"><i class="fa-solid fa-kitchen-set"></i></div>
+      <div>
+        <div class="kds-title">Kitchen Display</div>
+        <div class="kds-sub">Neo Dine AI — KDS</div>
+      </div>
+      <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+    </div>
+    <div class="top-right">
+      <span class="top-clock" id="topClock">--:--:--</span>
+      <a href="/waiter/portal" class="btn-nav"><i class="fa-solid fa-user-tie"></i> Waiter Portal</a>
+      <a href="/logout" class="btn-nav" style="border-color:rgba(239,68,68,0.3);color:#ef4444;"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat-pill">
+      <div>
+        <div class="stat-pill-num" style="color:var(--red);">{{ kitchen_orders | length }}</div>
+        <div class="stat-pill-label">Active<br>Orders</div>
+      </div>
+      <i class="fa-solid fa-fire-flame-curved" style="font-size:28px;color:var(--red);opacity:0.6;"></i>
+    </div>
+    <div class="stat-pill">
+      <div>
+        <div class="stat-pill-num" style="color:var(--accent);" id="totalItemsStat">0</div>
+        <div class="stat-pill-label">Total<br>Items</div>
+      </div>
+      <i class="fa-solid fa-bowl-food" style="font-size:28px;color:var(--accent);opacity:0.6;"></i>
+    </div>
+    <div class="stat-pill" style="margin-left:auto;">
+      <div>
+        <div class="stat-pill-num" style="color:var(--green);font-size:14px;" id="autoRefreshCounter">30</div>
+        <div class="stat-pill-label">Auto<br>Refresh</div>
+      </div>
+      <i class="fa-solid fa-arrows-rotate" style="font-size:24px;color:var(--green);opacity:0.6;"></i>
+    </div>
+  </div>
+
+  <div class="main-content">
+    {% if not kitchen_orders %}
+    <div class="empty-state">
+      <div class="empty-icon">🍳</div>
+      <div class="empty-text">No active kitchen orders</div>
+      <div class="empty-sub">Orders from waiters will appear here in real-time</div>
+    </div>
+    {% else %}
+    <div class="orders-grid" id="ordersGrid">
+      {% for order in kitchen_orders %}
+      <div class="order-card" id="orderCard_{{ order.id }}" data-revision="{{ order.items|length }}" data-version="{{ order.order_status }}-{{ order.items|length }}" data-ordered="{{ order.date.isoformat() if order.date else '' }}">
+        <div class="order-card-header">
+          <div class="order-table-num">
+            🪑 Table {{ order.table_num if order.table_num is not none else '—' }}
+          </div>
+          <div class="order-meta">
+            <div class="order-time-badge order-time-ok" id="timeBadge_{{ order.id }}">
+              <i class="fa-regular fa-clock"></i> <span id="timeDisplay_{{ order.id }}">--</span>
+            </div>
+            <div class="order-id">#{{ order.order_uuid[:8] if order.order_uuid else order.id }}</div>
+          </div>
+        </div>
+        <div class="order-items-list">
+          {% for item in order.kitchen_items %}
+          <div class="order-item-row">
+            <div class="order-item-name">{{ item.item_name }}</div>
+            <div class="order-item-qty">×{{ item.quantity }}</div>
+          </div>
+          {% else %}
+          <div class="order-item-row" style="color:var(--muted);">
+            ⚠ No items recorded for this order
+          </div>
+          {% endfor %}
+        </div>
+        <div class="order-card-footer">
+          {% if order.waiter_note %}<div class="order-note">📝 {{ order.waiter_note }}</div>{% endif %}
+          <div class="order-action-row">
+            <button class="btn-prepare" id="btnPrepare_{{ order.id }}" onclick="updateStatus({{ order.id }},'PREPARING')" {{ "disabled" if order.order_status == "PREPARING" else "" }}>
+              <i class="fa-solid fa-fire-burner"></i> Preparing
+            </button>
+            <button class="btn-ready" id="btnReady_{{ order.id }}" onclick="markReady({{ order.id }})">
+              <i class="fa-solid fa-check-double"></i> Mark Ready
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="refresh-bar">
+    Auto-refreshing in <span id="refreshCountdown">30</span>s &nbsp;|&nbsp;
+    <a href="/kitchen" onclick="event.preventDefault(); refreshKitchen()" style="color:var(--accent);font-weight:700;text-decoration:none;">Refresh now</a>
+  </div>
+
+  <script>
+    // Clock
+    function updateClock() {
+      const now = new Date();
+      const h = now.getHours() % 12 || 12;
+      const m = String(now.getMinutes()).padStart(2,'0');
+      const s = String(now.getSeconds()).padStart(2,'0');
+      document.getElementById('topClock').textContent = h+':'+m+':'+s+' '+(now.getHours()>=12?'PM':'AM');
+    }
+    updateClock(); setInterval(updateClock, 1000);
+
+    // Order times + urgency
+    function updateTimers() {
+      const cards = document.querySelectorAll('.order-card');
+      document.querySelector('.stat-pill-num').textContent = cards.length;
+      document.getElementById('totalItemsStat').textContent = [...document.querySelectorAll('.order-item-qty')]
+        .reduce((sum, el) => sum + Number(el.textContent.replace('×', '')), 0);
+      const now = new Date();
+      cards.forEach(function(card) {
+        const id = card.id.slice('orderCard_'.length);
+        const dt = card.dataset.ordered;
+        if (!dt) return;
+        const orderTime = new Date(dt + (dt.includes('+') ? '' : 'Z'));
+        const elapsed = Math.floor((now - orderTime) / 60000);
+        const badge = document.getElementById('timeBadge_'+id);
+        const disp = document.getElementById('timeDisplay_'+id);
+        if (!badge) return;
+        if (disp) disp.textContent = elapsed < 1 ? 'Just now' : elapsed+'m ago';
+        badge.className = 'order-time-badge';
+        if (card) card.classList.remove('urgent');
+        if (elapsed >= 15) {
+          badge.classList.add('order-time-urgent');
+          if (card) card.classList.add('urgent');
+        } else if (elapsed >= 8) {
+          badge.classList.add('order-time-warn');
+        } else {
+          badge.classList.add('order-time-ok');
+        }
+      });
+    }
+    updateTimers(); setInterval(updateTimers, 30000);
+
+    // Update order status
+    async function updateStatus(orderId, status) {
+      try {
+        const res = await fetch('/kitchen/update-status/' + orderId, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status, revision:Number(document.getElementById('orderCard_'+orderId).dataset.revision) })
+        });
+        const data = await res.json();
+        if (data.success) { await refreshKitchen(); }
+        else { alert('Error: ' + (data.error || 'Failed')); }
+      } catch (e) { alert('Network error!'); }
+    }
+
+    // Mark ready
+    async function markReady(orderId) {
+      const btn = document.getElementById('btnReady_'+orderId);
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Marking...';
+      try {
+        const res = await fetch('/kitchen/mark-ready/'+orderId, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({revision:Number(document.getElementById('orderCard_'+orderId).dataset.revision)})});
+        const data = await res.json();
+        if (data.success) {
+          const card = document.getElementById('orderCard_'+orderId);
+          if (card) {
+            card.style.transition = 'all 0.4s';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.9)';
+            setTimeout(() => { card.remove(); checkEmpty(); refreshKitchen(); }, 400);
+          }
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Mark as Ready';
+          alert('Error: ' + (data.error || 'Failed'));
+        }
+      } catch(e) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Mark as Ready';
+      }
+    }
+
+    function checkEmpty() {
+      const grid = document.getElementById('ordersGrid');
+      if (grid && !grid.querySelector('.order-card')) {
+        grid.parentElement.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">All orders ready!</div><div class="empty-sub">Great work — kitchen is clear</div></div>';
+      }
+    }
+
+    let refreshSequence = 0;
+    async function refreshKitchen() {
+      const seq = ++refreshSequence;
+      try {
+        const res = await fetch('/kitchen', {cache:'no-store'});
+        const page = new DOMParser().parseFromString(await res.text(), 'text/html');
+        if (!res.ok || !page.querySelector('.main-content') || seq !== refreshSequence) return;
+        const current = document.querySelector('.main-content');
+        const incoming = page.querySelector('.main-content');
+        const grid = current.querySelector('.orders-grid');
+        const nextGrid = incoming.querySelector('.orders-grid');
+        if (grid && nextGrid) {
+          const ids = new Set();
+          for (const next of [...nextGrid.children]) {
+            ids.add(next.id);
+            const old = document.getElementById(next.id);
+            if (!old) grid.append(next);
+            else if (old.dataset.version !== next.dataset.version) old.replaceWith(next);
+          }
+          for (const card of [...grid.children]) if (!ids.has(card.id)) card.remove();
+        } else current.replaceChildren(...incoming.childNodes);
+        updateTimers();
+      } catch { countdownEl.textContent = 'retrying'; }
+    }
+    // Auto-refresh countdown
+    let countdown = 30;
+    const countdownEl = document.getElementById('refreshCountdown');
+    const autoCounter = document.getElementById('autoRefreshCounter');
+    setInterval(function() {
+      countdown--;
+      if (countdownEl) countdownEl.textContent = countdown;
+      if (autoCounter) autoCounter.textContent = countdown;
+      if (countdown <= 0) { countdown = 30; refreshKitchen(); }
+    }, 1000);
+  </script>
+</body>
+</html>

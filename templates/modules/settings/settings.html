@@ -9,35 +9,299 @@
       <strong>System Settings</strong>
     </div>
     <div style="display:flex;gap:10px;">
-      <button class="mod-btn mod-btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+      <button type="button" class="mod-btn mod-btn-primary" id="btnSaveTopSettings"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
       <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
     </div>
   </div>
   <div class="mod-body" style="padding-top:20px;">
     <div class="data-card">
-      <div class="data-card-hdr"><h3><i class="fa-solid fa-store"></i> Restaurant Info</h3></div>
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-store"></i> Restaurant Information</h3></div>
       <div class="mod-form-grid">
-        <div class="mod-form-group"><label>Restaurant Name</label><input type="text" value="Neo Dine AI"></div>
-        <div class="mod-form-group"><label>City</label><input type="text" value="Bengaluru"></div>
-        <div class="mod-form-group"><label>Address</label><input type="text" placeholder="Full address"></div>
-        <div class="mod-form-group"><label>Phone</label><input type="tel" value="7989052868"></div>
-        <div class="mod-form-group"><label>Currency</label><select><option>₹ INR</option><option>$ USD</option><option>€ EUR</option></select></div>
-        <div class="mod-form-group"><label>Time Zone</label><select><option>Asia/Kolkata (IST)</option><option>UTC</option></select></div>
+        <div class="mod-form-group"><label>Restaurant Name</label><input type="text" id="restNameInput" placeholder="Restaurant Name"></div>
+        <div class="mod-form-group"><label>City</label><input type="text" id="restCityInput" placeholder="City (e.g. Bengaluru)"></div>
+        <div class="mod-form-group"><label>Address</label><input type="text" id="restAddressInput" placeholder="Full address"></div>
+        <div class="mod-form-group"><label>Phone</label><input type="tel" id="restPhoneInput" placeholder="Phone Number"></div>
+        <div class="mod-form-group">
+          <label>Currency</label>
+          <select id="restCurrencyInput">
+            <option value="₹ INR">₹ INR</option>
+            <option value="$ USD">$ USD</option>
+            <option value="€ EUR">€ EUR</option>
+            <option value="£ GBP">£ GBP</option>
+          </select>
+        </div>
+        <div class="mod-form-group">
+          <label>Time Zone</label>
+          <select id="restTimezoneInput">
+            <option value="Asia/Kolkata (IST)">Asia/Kolkata (IST)</option>
+            <option value="Asia/Kolkata">Asia/Kolkata</option>
+            <option value="UTC">UTC</option>
+            <option value="America/New_York (EST)">America/New_York (EST)</option>
+            <option value="Europe/London (GMT)">Europe/London (GMT)</option>
+            <option value="Asia/Dubai (GST)">Asia/Dubai (GST)</option>
+            <option value="Asia/Singapore (SGT)">Asia/Singapore (SGT)</option>
+          </select>
+        </div>
+      </div>
+      <div style="padding:16px 20px; border-top:1px solid #e2e8f0; display:flex; align-items:center; gap:12px;">
+        <button type="button" class="mod-save-btn" id="btnSaveRestInfo"><i class="fa-solid fa-floppy-disk"></i> Save Restaurant Info</button>
+        <span id="restInfoMsg" style="font-size:13px; font-weight:600;"></span>
       </div>
     </div>
+
+    <div class="data-card" style="margin-top:16px;">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-mobile-screen-button"></i> UPI Payment QR (Receipts)</h3></div>
+      <div class="mod-form-grid">
+        <div class="mod-form-group"><label>Your UPI ID (e.g. restaurant@okhdfcbank)</label><input type="text" id="upiIdInput" placeholder="name@bank"></div>
+        <div class="mod-form-group"><label>Payee Name (shown in UPI app)</label><input type="text" id="upiPayeeInput" placeholder="Restaurant name"></div>
+        <div class="mod-form-group"><label>Confirm Your Password (required to change)</label><input type="password" id="upiPwdInput" placeholder="Account password" autocomplete="current-password"></div>
+      </div>
+      <div style="padding:16px 20px; border-top:1px solid #e2e8f0; display:flex; align-items:center; gap:12px;">
+        <button type="button" class="mod-save-btn" id="btnSaveUpi"><i class="fa-solid fa-lock"></i> Save UPI ID</button>
+        <span id="upiMsg" style="font-size:13px; font-weight:600;"></span>
+      </div>
+    </div>
+
     <div class="data-card" style="margin-top:16px;">
       <div class="data-card-hdr"><h3><i class="fa-solid fa-sliders"></i> Operational Settings</h3></div>
-      {% set opts = [('Auto-print KOT on new order',true),('Require customer name for billing',false),('Show item images on POS',false),('Enable table management',true),('Auto-apply loyalty discount',false),('Show profit margin to staff',false)] %}
-      {% for opt in opts %}
+      
       <div class="toggle-row">
-        <div class="toggle-info"><div class="t-name">{{ opt[0] }}</div></div>
-        <label class="toggle-switch"><input type="checkbox" {{ 'checked' if opt[1] else '' }}><span class="toggle-slider"></span></label>
+        <div class="toggle-info">
+          <div class="t-name">Auto-print KOT on new order</div>
+          <div style="font-size:12px; color:#64748b;">Automatically send Kitchen Order Ticket to printer upon order confirmation</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="optAutoPrintKot">
+          <span class="toggle-slider"></span>
+        </label>
       </div>
-      {% endfor %}
-      <div style="padding:16px 20px;">
-        <button class="mod-save-btn"><i class="fa-solid fa-floppy-disk"></i> Save All Settings</button>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="t-name">Auto-print receipt on settlement</div>
+          <div style="font-size:12px; color:#64748b;">Trigger receipt print prompt immediately when payment is recorded</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="optAutoPrintReceipt">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="t-name">Require customer name for billing</div>
+          <div style="font-size:12px; color:#64748b;">Prompts cashier for customer name before creating an invoice</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="optRequireCustomerName">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="t-name">Show item images on POS</div>
+          <div style="font-size:12px; color:#64748b;">Display product thumbnails on the main POS menu grid</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="optShowItemImages">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="t-name">Enable table management</div>
+          <div style="font-size:12px; color:#64748b;">Track dining table status (Empty, Dining, Reserved)</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="optEnableTableManagement" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="t-name">Auto-apply loyalty discount</div>
+          <div style="font-size:12px; color:#64748b;">Apply VIP/regular customer discounts automatically at checkout</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="optAutoApplyLoyalty">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="t-name">Show profit margin to staff</div>
+          <div style="font-size:12px; color:#64748b;">Display recipe margins and item profitability in POS order view</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="optShowProfitMargin">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div style="padding:16px 20px; border-top:1px solid #e2e8f0; display:flex; align-items:center; gap:12px;">
+        <button type="button" class="mod-save-btn" id="btnSaveOpsSettings"><i class="fa-solid fa-floppy-disk"></i> Save Operational Settings</button>
+        <span id="opsMsg" style="font-size:13px; font-weight:600;"></span>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const nameInput = document.getElementById('restNameInput');
+  const cityInput = document.getElementById('restCityInput');
+  const addrInput = document.getElementById('restAddressInput');
+  const phoneInput = document.getElementById('restPhoneInput');
+  const currInput = document.getElementById('restCurrencyInput');
+  const tzInput = document.getElementById('restTimezoneInput');
+  const restMsg = document.getElementById('restInfoMsg');
+  const opsMsg = document.getElementById('opsMsg');
+  
+  const saveRestBtn = document.getElementById('btnSaveRestInfo');
+  const saveTopBtn = document.getElementById('btnSaveTopSettings');
+  const saveOpsBtn = document.getElementById('btnSaveOpsSettings');
+
+  const idInput = document.getElementById('upiIdInput');
+  const payeeInput = document.getElementById('upiPayeeInput');
+  const pwdInput = document.getElementById('upiPwdInput');
+  const upiBtn = document.getElementById('btnSaveUpi');
+  const upiMsg = document.getElementById('upiMsg');
+
+  const chkAutoKot = document.getElementById('optAutoPrintKot');
+  const chkAutoReceipt = document.getElementById('optAutoPrintReceipt');
+  const chkReqCustName = document.getElementById('optRequireCustomerName');
+  const chkShowImages = document.getElementById('optShowItemImages');
+  const chkTableMgmt = document.getElementById('optEnableTableManagement');
+  const chkLoyalty = document.getElementById('optAutoApplyLoyalty');
+  const chkProfitMargin = document.getElementById('optShowProfitMargin');
+
+  // 1) Load currently saved settings from backend
+  fetch('/api/settings', { credentials: 'same-origin' })
+    .then(res => res.json())
+    .then(data => {
+      if (data) {
+        if (nameInput && data.restaurant_name) nameInput.value = data.restaurant_name;
+        if (cityInput && data.city) cityInput.value = data.city;
+        if (addrInput && data.address !== undefined) addrInput.value = data.address;
+        if (phoneInput && data.phone) phoneInput.value = data.phone;
+        if (currInput && data.currency) currInput.value = data.currency;
+        if (tzInput && data.timezone) tzInput.value = data.timezone;
+        if (idInput && data.upi_id) idInput.value = data.upi_id;
+        if (payeeInput && data.upi_payee_name) payeeInput.value = data.upi_payee_name;
+
+        // Operational settings checkboxes
+        if (chkAutoKot) chkAutoKot.checked = !!data.auto_print_kot;
+        if (chkAutoReceipt) chkAutoReceipt.checked = !!data.auto_print_receipt;
+        if (chkReqCustName) chkReqCustName.checked = !!data.require_customer_name;
+        if (chkShowImages) chkShowImages.checked = !!data.show_item_images;
+        if (chkTableMgmt) chkTableMgmt.checked = (data.enable_table_management !== false);
+        if (chkLoyalty) chkLoyalty.checked = !!data.auto_apply_loyalty;
+        if (chkProfitMargin) chkProfitMargin.checked = !!data.show_profit_margin;
+      }
+    })
+    .catch(err => console.error('Error loading settings:', err));
+
+  // 2) Function to save settings
+  async function saveAllSettings(triggerMsgEl) {
+    const msgEl = triggerMsgEl || restMsg || opsMsg;
+    if (msgEl) {
+      msgEl.textContent = 'Saving...';
+      msgEl.style.color = '#64748b';
+    }
+
+    const payload = {
+      restaurant_name: nameInput ? nameInput.value.trim() : '',
+      city: cityInput ? cityInput.value.trim() : '',
+      address: addrInput ? addrInput.value.trim() : '',
+      phone: phoneInput ? phoneInput.value.trim() : '',
+      currency: currInput ? currInput.value : '₹ INR',
+      timezone: tzInput ? tzInput.value : 'Asia/Kolkata (IST)',
+      auto_print_kot: chkAutoKot ? chkAutoKot.checked : false,
+      auto_print_receipt: chkAutoReceipt ? chkAutoReceipt.checked : false,
+      require_customer_name: chkReqCustName ? chkReqCustName.checked : false,
+      show_item_images: chkShowImages ? chkShowImages.checked : false,
+      enable_table_management: chkTableMgmt ? chkTableMgmt.checked : true,
+      auto_apply_loyalty: chkLoyalty ? chkLoyalty.checked : false,
+      show_profit_margin: chkProfitMargin ? chkProfitMargin.checked : false
+    };
+
+    try {
+      const res = await fetch('/api/settings/save', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (restMsg) { restMsg.textContent = '✅ Settings saved successfully!'; restMsg.style.color = '#16a34a'; }
+        if (opsMsg) { opsMsg.textContent = '✅ Operational settings saved successfully!'; opsMsg.style.color = '#16a34a'; }
+        setTimeout(() => {
+          if (restMsg) restMsg.textContent = '';
+          if (opsMsg) opsMsg.textContent = '';
+        }, 3000);
+      } else {
+        const errText = '❌ ' + (data.error || 'Failed to save settings');
+        if (restMsg) { restMsg.textContent = errText; restMsg.style.color = '#dc2626'; }
+        if (opsMsg) { opsMsg.textContent = errText; opsMsg.style.color = '#dc2626'; }
+      }
+    } catch (err) {
+      const errText = '❌ Network error while saving settings';
+      if (restMsg) { restMsg.textContent = errText; restMsg.style.color = '#dc2626'; }
+      if (opsMsg) { opsMsg.textContent = errText; opsMsg.style.color = '#dc2626'; }
+    }
+  }
+
+  if (saveRestBtn) saveRestBtn.addEventListener('click', () => saveAllSettings(restMsg));
+  if (saveTopBtn) saveTopBtn.addEventListener('click', () => saveAllSettings(restMsg));
+  if (saveOpsBtn) saveOpsBtn.addEventListener('click', () => saveAllSettings(opsMsg));
+
+  // 3) UPI Save Handler
+  if (upiBtn) {
+    upiBtn.addEventListener('click', async function (e) {
+      if (e) e.preventDefault();
+      const pwd = pwdInput ? pwdInput.value.trim() : '';
+      if (!pwd) {
+        upiMsg.textContent = '❌ Password is required to save UPI ID';
+        upiMsg.style.color = '#dc2626';
+        if (pwdInput) pwdInput.focus();
+        return;
+      }
+      upiMsg.textContent = 'Saving...';
+      upiMsg.style.color = '#64748b';
+      try {
+        const res = await fetch('/api/settings/upi', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            upi_id: idInput.value,
+            upi_payee_name: payeeInput.value,
+            current_password: pwd
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          upiMsg.textContent = '✅ Saved! Receipts will now show your UPI QR';
+          upiMsg.style.color = '#16a34a';
+          if (idInput && data.upi_id) idInput.value = data.upi_id;
+          if (payeeInput && data.upi_payee_name) payeeInput.value = data.upi_payee_name;
+          if (pwdInput) pwdInput.value = '';
+          setTimeout(() => { upiMsg.textContent = ''; }, 3000);
+        } else {
+          upiMsg.textContent = '❌ ' + (data.error || 'Failed to save UPI ID');
+          upiMsg.style.color = '#dc2626';
+        }
+      } catch (err) {
+        upiMsg.textContent = '❌ Network error while saving';
+        upiMsg.style.color = '#dc2626';
+      }
+    });
+  }
+});
+</script>
 {% endblock %}

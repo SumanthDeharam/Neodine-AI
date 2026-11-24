@@ -1,83 +1,167 @@
 {% extends 'base.html' %}
 {% block content %}
 <style>
-    .auth-container {
-        display: flex; justify-content: center; align-items: center; min-height: 80vh; padding: 20px;
+    /* ===== REGISTER PAGE - NEO DINE AI 2.0 PREMIUM LIGHT ===== */
+    .auth-bg {
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        position: relative;
+        overflow: hidden;
     }
-    .auth-box {
-        background: #fff; border-radius: 24px; width: 100%; max-width: 480px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.08); padding: 50px 40px; position: relative; overflow: hidden;
+    .auth-bg::before {
+        content: '';
+        position: absolute;
+        width: 450px; height: 450px;
+        background: radial-gradient(circle, rgba(124,92,255,0.14) 0%, transparent 70%);
+        top: -80px; right: -80px;
+        pointer-events: none;
     }
-    .auth-box::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: linear-gradient(90deg, var(--brand-secondary), var(--brand-primary)); }
-    
-    .auth-header { text-align: center; margin-bottom: 40px; }
-    .auth-icon { width: 70px; height: 70px; background: #f1f5f9; border-radius: 20px; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px; font-size: 28px; color: var(--brand-secondary); }
-    .auth-title { font-size: 28px; font-weight: 800; color: #0f172a; margin: 0 0 10px; letter-spacing: -0.5px; }
-    .auth-sub { color: #64748b; font-size: 15px; }
-
-    .input-grp { margin-bottom: 25px; position: relative; }
+    .auth-bg::after {
+        content: '';
+        position: absolute;
+        width: 380px; height: 380px;
+        background: radial-gradient(circle, rgba(111,175,75,0.12) 0%, transparent 70%);
+        bottom: -60px; left: -60px;
+        pointer-events: none;
+    }
+    .auth-card {
+        background: #ffffff;
+        border-radius: 24px;
+        border: 1px solid #D8DFC7;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 12px 40px rgba(0,0,0,0.05);
+        padding: 52px 44px 44px;
+        width: 100%;
+        max-width: 460px;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        transition: box-shadow 0.3s ease;
+    }
+    .auth-card:hover {
+        box-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 16px 48px rgba(0,0,0,0.07);
+    }
+    .auth-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 4px;
+        background: linear-gradient(90deg, #9B7FFF 0%, #6FAF4B 100%);
+        border-radius: 24px 24px 0 0;
+    }
+    .auth-brand {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 32px;
+    }
+    .auth-brand-icon {
+        width: 52px; height: 52px;
+        background: linear-gradient(135deg, #6FAF4B 0%, #82C05A 100%);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 22px;
+        box-shadow: 0 4px 16px rgba(111,175,75,0.30);
+    }
+    .auth-brand-text { line-height: 1.1; }
+    .auth-brand-name { font-size: 20px; font-weight: 800; color: #25302A; letter-spacing: -0.5px; }
+    .auth-brand-sub { font-size: 11px; color: #6B7280; font-weight: 500; letter-spacing: 0.5px; }
+    .auth-title { font-size: 26px; font-weight: 800; color: #25302A; text-align: center; margin: 0 0 6px; letter-spacing: -0.5px; }
+    .auth-sub { color: #6B7280; font-size: 14px; text-align: center; margin: 0 0 32px; font-weight: 400; line-height: 1.5; }
+    .input-grp { margin-bottom: 18px; position: relative; }
+    .input-grp label { display: block; font-size: 12px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+    .input-grp .input-wrap { position: relative; }
     .input-grp input {
-        width: 100%; padding: 16px 20px 16px 50px; border: 2px solid #e2e8f0; border-radius: 14px;
-        font-family: inherit; font-size: 15px; color: #1e293b; font-weight: 600; box-sizing: border-box; transition: 0.3s;
+        width: 100%; padding: 13px 18px 13px 46px;
+        border: 1.5px solid #D8DFC7; border-radius: 12px;
+        font-family: inherit; font-size: 14px; color: #25302A;
+        font-weight: 500; background: #F5F8EC; box-sizing: border-box;
+        transition: all 0.25s ease; outline: none;
     }
-    .input-grp input:focus { outline: none; border-color: var(--brand-secondary); box-shadow: 0 0 0 4px rgba(8,217,214,0.15); }
-    .input-grp i { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px; transition: 0.3s; }
-    .input-grp input:focus + i { color: var(--brand-secondary); }
-
-    .btn-auth {
-        width: 100%; padding: 16px; border: none; border-radius: 14px;
-        background: #1e293b; color: white;
-        font-size: 16px; font-weight: 800; font-family: inherit; cursor: pointer;
-        box-shadow: 0 10px 25px rgba(30, 41, 59, 0.3); transition: 0.3s; letter-spacing: 0.5px;
+    .input-grp input:focus {
+        border-color: #7C5CFF;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(124,92,255,0.15);
     }
-    .btn-auth:hover { background: #0f172a; transform: translateY(-3px); box-shadow: 0 15px 35px rgba(15, 23, 42, 0.4); }
-
-    .auth-footer { text-align: center; margin-top: 30px; }
-    .auth-link { color: #475569; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.3s; }
-    .auth-link strong { color: var(--brand-secondary); font-weight: 700; }
-    .auth-link:hover { color: #0f172a; }
-
+    .input-grp input::placeholder { color: #9CA3AF; }
+    .input-grp .input-icon {
+        position: absolute; left: 16px; top: 50%;
+        transform: translateY(-50%); color: #9CA3AF; font-size: 16px;
+        transition: color 0.2s ease;
+    }
+    .input-grp input:focus ~ .input-icon { color: #7C5CFF; }
+    .btn-register {
+        width: 100%; padding: 15px; border: none; border-radius: 14px;
+        background: linear-gradient(135deg, #7C5CFF 0%, #9B7FFF 100%);
+        color: white; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer;
+        box-shadow: 0 4px 16px rgba(124,92,255,0.35);
+        transition: all 0.25s ease; letter-spacing: 0.3px; margin-top: 8px;
+    }
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(124,92,255,0.45);
+        background: linear-gradient(135deg, #6B4FE0 0%, #8B70F0 100%);
+    }
+    .btn-register:active { transform: translateY(0); }
+    .auth-footer { text-align: center; margin-top: 24px; }
+    .auth-link { color: #6B7280; text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s ease; }
+    .auth-link strong { color: #6FAF4B; font-weight: 700; }
+    .auth-link:hover { color: #25302A; }
     .alert-box {
-        padding: 14px 20px; border-radius: 12px; margin-top: 25px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;
+        padding: 12px 16px; border-radius: 10px; margin-top: 20px; font-size: 13px; font-weight: 600;
+        display: flex; align-items: center; gap: 10px;
     }
-    .alert-error { background: #fee2e2; border: 1px solid #f87171; color: #b91c1c; }
-    .alert-success { background: #dcfce7; border: 1px solid #4ade80; color: #166534; }
+    .alert-error { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.25); color: #DC2626; border-left: 3px solid #EF4444; }
+    .alert-success { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.25); color: #16A34A; border-left: 3px solid #22C55E; }
 </style>
 
-<div class="auth-container">
-    <div class="auth-box">
-        <div class="auth-header">
-            <div class="auth-icon"><i class="fa-solid fa-server"></i></div>
-            <h2 class="auth-title">Node Provisioning</h2>
-            <div class="auth-sub">Request clearance for a new terminal</div>
+<div class="auth-bg">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <div class="auth-brand-icon"><i class="fa-solid fa-server"></i></div>
+            <div class="auth-brand-text">
+                <div class="auth-brand-name">NEO DINE AI</div>
+                <div class="auth-brand-sub">New Terminal Setup</div>
+            </div>
         </div>
-
+        <h2 class="auth-title">Request Access</h2>
+        <p class="auth-sub">Register a new terminal for your restaurant</p>
         <form method="POST">
             <div class="input-grp">
-                <input type="text" name="username" placeholder="Enterprise ID / Alias" required autocomplete="off">
-                <i class="fa-solid fa-building"></i>
+                <label>Enterprise ID / Alias</label>
+                <div class="input-wrap">
+                    <input type="text" name="username" placeholder="Choose a unique ID" required autocomplete="off">
+                    <i class="fa-solid fa-building input-icon"></i>
+                </div>
             </div>
             <div class="input-grp">
-                <input type="password" name="password" placeholder="Define Passkey" required>
-                <i class="fa-solid fa-key"></i>
+                <label>Passkey</label>
+                <div class="input-wrap">
+                    <input type="password" name="password" placeholder="Define a secure passkey" required>
+                    <i class="fa-solid fa-key input-icon"></i>
+                </div>
             </div>
-            
-            <button type="submit" class="btn-auth">Submit Application</button>
+            <button type="submit" class="btn-register">
+                <i class="fa-solid fa-user-plus" style="margin-right:8px;"></i> Submit Application
+            </button>
         </form>
-
         <div class="auth-footer">
-            <a href="{{ url_for('login') }}" class="auth-link">Already a registered node? <strong>Authenticate</strong></a>
+            <a href="{{ url_for('login') }}" class="auth-link">Already registered? <strong>Sign In</strong></a>
         </div>
-
         {% if error %}
         <div class="alert-box alert-error">
             <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
         </div>
         {% endif %}
-        
         {% if success %}
-        <div class="alert-box alert-success" style="flex-direction: column; text-align:center;">
-            <div><i class="fa-solid fa-check-circle" style="font-size:24px; margin-bottom:5px;"></i></div>
+        <div class="alert-box alert-success" style="flex-direction:column; text-align:center;">
+            <div><i class="fa-solid fa-check-circle" style="font-size:22px; margin-bottom:4px;"></i></div>
             {{ success }}
         </div>
         {% endif %}

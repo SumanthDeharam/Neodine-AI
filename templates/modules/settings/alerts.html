@@ -8,28 +8,267 @@
       <span>Settings</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
       <strong>Alerts &amp; Notifications</strong>
     </div>
-    <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    <div style="display:flex; gap:10px;">
+      <button type="button" class="mod-btn" style="background:#eeebff; color:#6C63FF; border:1px solid #dcd7ff; font-weight:700; display:inline-flex; align-items:center; gap:6px;" onclick="testAlertSound()"><i class="fa-solid fa-volume-high"></i> Test Sound</button>
+      <button type="button" class="mod-btn" style="background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; font-weight:700; display:inline-flex; align-items:center; gap:6px;" onclick="sendTestNotification()"><i class="fa-solid fa-bell"></i> Test Banner</button>
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    </div>
   </div>
-  <div class="mod-body" style="padding-top:20px;">
-    <div class="data-card">
-      <div class="data-card-hdr"><h3><i class="fa-solid fa-bell"></i> Alert Preferences</h3></div>
-      {% set alerts = [('New Order Received','Play sound and show banner when a new order comes in',true),('Low Stock Warning','Alert when any ingredient falls below minimum level',true),('Payment Pending','Notify when a bill is awaiting payment confirmation',true),('High Traffic Alert','Warn when active orders exceed 10 simultaneously',false),('Daily Sales Report','Send end-of-day summary notification',true),('Printer Error','Alert immediately if printer goes offline',true),('Sync Failure','Notify if cloud sync fails for more than 5 minutes',false)] %}
-      {% for alert in alerts %}
-      <div class="toggle-row">
-        <div class="toggle-info">
-          <div class="t-name"><i class="fa-solid fa-bell" style="color:#FF2E63;font-size:12px;margin-right:6px;"></i>{{ alert[0] }}</div>
-          <div class="t-desc">{{ alert[1] }}</div>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" {{ 'checked' if alert[2] else '' }}>
-          <span class="toggle-slider"></span>
-        </label>
+
+  <div class="mod-body">
+    
+    <!-- Success / Status Toast Message -->
+    <div id="alertSaveMsg" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; color:#15803d; padding:12px 18px; border-radius:12px; font-weight:700; font-size:14px; align-items:center; gap:10px;">
+      <i class="fa-solid fa-circle-check" style="font-size:18px;"></i>
+      <span id="alertSaveMsgText">Notification preferences saved successfully!</span>
+    </div>
+
+    <!-- Live Active Alerts Feed Card -->
+    <div class="data-card" style="border-top:4px solid #1E90FF;">
+      <div class="data-card-hdr" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3><i class="fa-solid fa-triangle-exclamation" style="color:#1E90FF;"></i> Live Active System Alerts</h3>
+        <button type="button" class="mod-btn" style="padding:4px 12px; font-size:12px;" onclick="loadLiveAlerts()"><i class="fa-solid fa-rotate-right"></i> Refresh Alerts</button>
       </div>
-      {% endfor %}
-      <div style="padding:16px 20px;">
-        <button class="mod-save-btn"><i class="fa-solid fa-floppy-disk"></i> Save Preferences</button>
+      <div id="liveAlertsContainer" style="padding:16px 20px;">
+        <div style="text-align:center; color:#94a3b8; padding:16px;">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size:20px; margin-bottom:8px;"></i><br>Checking active system alerts...
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert Preferences Settings Card -->
+    <div class="data-card">
+      <div class="data-card-hdr"><h3><i class="fa-solid fa-sliders" style="color:#FF2E63;"></i> Alert &amp; Notification Preferences</h3></div>
+      
+      <div id="alertTogglesContainer">
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="t-name"><i class="fa-solid fa-bell" style="color:#FF2E63;font-size:12px;margin-right:6px;"></i>New Order Received</div>
+            <div class="t-desc">Play audio chime and display a top notification banner when a new order arrives.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="alert_new_order" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="t-name"><i class="fa-solid fa-boxes-stacked" style="color:#f59e0b;font-size:12px;margin-right:6px;"></i>Low Stock Warning</div>
+            <div class="t-desc">Alert immediately when any ingredient or menu item stock falls below minimum levels.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="alert_low_stock" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="t-name"><i class="fa-solid fa-credit-card" style="color:#10b981;font-size:12px;margin-right:6px;"></i>Payment Pending</div>
+            <div class="t-desc">Notify when a table bill or online order is awaiting payment confirmation.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="alert_payment_pending" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="t-name"><i class="fa-solid fa-fire-burner" style="color:#6366f1;font-size:12px;margin-right:6px;"></i>High Kitchen Traffic</div>
+            <div class="t-desc">Warn kitchen staff when active pending orders exceed 10 simultaneously.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="alert_high_traffic">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="t-name"><i class="fa-solid fa-chart-line" style="color:#0284c7;font-size:12px;margin-right:6px;"></i>Daily Sales Summary</div>
+            <div class="t-desc">Display end-of-day revenue, order volume, and profit summary.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="alert_daily_sales" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="t-name"><i class="fa-solid fa-print" style="color:#ec4899;font-size:12px;margin-right:6px;"></i>Printer Error</div>
+            <div class="t-desc">Alert immediately if receipt or KOT thermal printer goes offline.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="alert_printer" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="t-name"><i class="fa-solid fa-rotate" style="color:#8b5cf6;font-size:12px;margin-right:6px;"></i>Sync Failure</div>
+            <div class="t-desc">Notify if cloud server synchronization fails or disconnects.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="alert_sync">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div style="padding:20px; border-top:1px solid #f1f5f9; background:#f8fafc; border-radius:0 0 16px 16px;">
+        <button class="mod-save-btn" id="btnSaveAlerts" onclick="saveAlertPreferences()" style="display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
+          <i class="fa-solid fa-floppy-disk"></i> Save Preferences
+        </button>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  // Web Audio Chime Generator for Sound Testing
+  function testAlertSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 note
+      osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.15); // E6 note
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.3);
+      showToast('🔊 Playing test alert audio chime!');
+    } catch (e) {
+      alert('🔊 Audio test chime triggered!');
+    }
+  }
+
+  function sendTestNotification() {
+    showToast('🔔 Test Notification Banner: System online and ready!');
+  }
+
+  function showToast(msg) {
+    const box = document.getElementById('alertSaveMsg');
+    const txt = document.getElementById('alertSaveMsgText');
+    if (box && txt) {
+      txt.textContent = msg;
+      box.style.display = 'flex';
+      setTimeout(() => { box.style.display = 'none'; }, 3500);
+    } else {
+      alert(msg);
+    }
+  }
+
+  // Load Saved Preferences from localStorage
+  function loadAlertPreferences() {
+    const keys = ['alert_new_order', 'alert_low_stock', 'alert_payment_pending', 'alert_high_traffic', 'alert_daily_sales', 'alert_printer', 'alert_sync'];
+    keys.forEach(k => {
+      const el = document.getElementById(k);
+      if (el) {
+        const saved = localStorage.getItem('pref_' + k);
+        if (saved !== null) {
+          el.checked = saved === 'true';
+        }
+      }
+    });
+  }
+
+  // Save Preferences
+  async function saveAlertPreferences() {
+    const btn = document.getElementById('btnSaveAlerts');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+    }
+
+    const keys = ['alert_new_order', 'alert_low_stock', 'alert_payment_pending', 'alert_high_traffic', 'alert_daily_sales', 'alert_printer', 'alert_sync'];
+    const prefs = {};
+    keys.forEach(k => {
+      const el = document.getElementById(k);
+      if (el) {
+        localStorage.setItem('pref_' + k, el.checked ? 'true' : 'false');
+        prefs[k] = el.checked;
+      }
+    });
+
+    try {
+      const res = await fetch('/api/alerts/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preferences: prefs })
+      });
+      const data = await res.json();
+      showToast('✅ ' + (data.message || 'Alert & Notification preferences saved successfully!'));
+    } catch (e) {
+      showToast('✅ Preferences saved locally!');
+    }
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Preferences';
+    }
+  }
+
+  // Load Live Active System Alerts from API
+  async function loadLiveAlerts() {
+    const container = document.getElementById('liveAlertsContainer');
+    if (!container) return;
+
+    try {
+      const res = await fetch('/api/alerts/get');
+      const data = await res.json();
+
+      if (data.success && data.alerts && data.alerts.length > 0) {
+        let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
+        data.alerts.forEach(a => {
+          const icon = a.type === 'critical' ? 'fa-circle-xmark' : (a.type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info');
+          const color = a.type === 'critical' ? '#dc2626' : (a.type === 'warning' ? '#d97706' : '#0284c7');
+          const bg = a.type === 'critical' ? '#fef2f2' : (a.type === 'warning' ? '#fffbeb' : '#f0f9ff');
+          const border = a.type === 'critical' ? '#fecdd3' : (a.type === 'warning' ? '#fde68a' : '#bae6fd');
+
+          html += `
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; padding:12px 16px; background:${bg}; border:1px solid ${border}; border-radius:12px; gap:12px;">
+              <div style="display:flex; align-items:flex-start; gap:10px;">
+                <i class="fa-solid ${icon}" style="color:${color}; font-size:18px; margin-top:2px;"></i>
+                <div>
+                  <strong style="color:${color}; font-size:14px; display:block;">${a.title}</strong>
+                  <span style="font-size:12px; color:#475569; display:block; margin-top:2px;">${a.desc}</span>
+                </div>
+              </div>
+              <span style="font-size:11px; font-weight:700; background:#ffffff; border:1px solid ${border}; color:${color}; padding:2px 8px; border-radius:6px; white-space:nowrap;">${a.time}</span>
+            </div>
+          `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = `
+          <div style="text-align:center; padding:20px; color:#10b981; font-weight:600;">
+            <i class="fa-solid fa-circle-check" style="font-size:28px; margin-bottom:6px; color:#10b981;"></i><br>
+            All systems nominal! No critical alerts or low stock warnings.
+          </div>
+        `;
+      }
+    } catch (e) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:16px; color:#64748b;">
+          <i class="fa-solid fa-bell" style="font-size:20px; color:#1E90FF; margin-bottom:4px;"></i><br>
+          Real-time notification engine active.
+        </div>
+      `;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    loadAlertPreferences();
+    loadLiveAlerts();
+  });
+</script>
 {% endblock %}

@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+{% block title %}Subscription Plans{% endblock %}
+
+{% block content %}
+<style>
+    /* Scrollable fix */
+    body .app-body { overflow-y: auto !important; background: #030307 !important; }
+
+    .pricing-header {
+        text-align: center;
+        padding-top: 48px;
+        padding-bottom: 28px;
+        font-family: 'Inter', 'Poppins', sans-serif;
+        color: #ffffff;
+    }
+    .pricing-header h1 {
+        font-size: 34px;
+        font-weight: 900;
+        color: #ffffff;
+        letter-spacing: -1px;
+        margin-bottom: 8px;
+    }
+    .pricing-header .lead {
+        color: #94a3b8;
+        font-size: 15px;
+        font-weight: 500;
+    }
+    .pricing-card {
+        border-radius: 20px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+        border: 1.5px solid rgba(255, 255, 255, 0.08);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: rgba(10, 10, 20, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        color: #ffffff;
+    }
+    .pricing-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(139, 92, 246, 0.5);
+        box-shadow: 0 12px 28px rgba(139,92,246,0.15);
+    }
+    .pricing-card.border-primary {
+        border-color: #8b5cf6 !important;
+        border-width: 2px !important;
+        background: linear-gradient(180deg, rgba(139, 92, 246, 0.12) 0%, rgba(10, 10, 20, 0.8) 100%);
+        box-shadow: 0 0 30px rgba(139,92,246,0.2);
+    }
+    .pricing-card.border-primary:hover {
+        box-shadow: 0 16px 36px rgba(139,92,246,0.3);
+    }
+    .pricing-card.border-dark {
+        border-color: rgba(255, 255, 255, 0.08) !important;
+        background: linear-gradient(160deg, #09090b 0%, rgba(139,92,246,0.1) 100%);
+    }
+    .pricing-card.border-dark:hover {
+        border-color: #06b6d4 !important;
+        box-shadow: 0 16px 40px rgba(6,182,212,0.15);
+    }
+    .pricing-card.border-dark .pricing-card-header,
+    .pricing-card.border-dark .card-footer { background: transparent; }
+    .pricing-card.border-dark h4,
+    .pricing-card.border-dark .pricing-card-price { color: #ffffff !important; }
+    .pricing-card.border-dark li { color: #cbd5e1 !important; }
+    .pricing-card-header {
+        background-color: transparent;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 28px 24px 20px;
+        text-align: center;
+    }
+    .pricing-card-header h4 {
+        font-size: 18px;
+        letter-spacing: -0.3px;
+        color: #ffffff;
+    }
+    .pricing-card-header .badge {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+        border: none;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        padding: 4px 12px;
+        border-radius: 20px;
+    }
+    .pricing-card-price {
+        font-size: 2.8rem;
+        font-weight: 900;
+        color: #ffffff;
+        margin: 12px 0;
+        letter-spacing: -1.5px;
+    }
+    .pricing-card-price span { letter-spacing: 0; color: #94a3b8; }
+    .pricing-card-features {
+        padding: 24px;
+        flex-grow: 1;
+    }
+    .pricing-card-features ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .pricing-card-features li {
+        padding: 7px 0;
+        color: #cbd5e1;
+        font-size: 13.5px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+    }
+    .pricing-card-features li strong {
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #ffffff;
+    }
+    .pricing-card-features li i {
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+    .feature-check { color: #10b981; }
+    .feature-x { color: rgba(255, 255, 255, 0.2); }
+    .pricing-card.border-dark .feature-check { color: #34d399; }
+    .btn-upgrade {
+        width: 100% !important;
+        height: 42px !important;
+        border-radius: 12px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        margin-top: auto !important;
+        border: none !important;
+        transition: all 200ms ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+    .btn-upgrade:hover {
+        transform: translateY(-2px) !important;
+    }
+    .btn-upgrade:active {
+        transform: translateY(0) scale(0.98) !important;
+    }
+    .btn-upgrade:disabled {
+        background: #E5E7EB !important;
+        color: #9CA3AF !important;
+        opacity: 0.6 !important;
+        cursor: not-allowed !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    .btn-starter {
+        background: #ffffff !important;
+        color: #374151 !important;
+        border: 1px solid #E5E7EB !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+    }
+    .btn-starter:hover {
+        background: #F3F4F6 !important;
+        border-color: #6C63FF !important;
+        color: #6C63FF !important;
+    }
+    .btn-growth {
+        background: linear-gradient(135deg, #6C63FF, #8B5CF6) !important;
+        color: white !important;
+        box-shadow: 0 8px 20px rgba(108, 99, 255, 0.25) !important;
+    }
+    .btn-growth:hover {
+        box-shadow: 0 10px 24px rgba(108, 99, 255, 0.4) !important;
+        filter: brightness(1.05) !important;
+    }
+    .btn-enterprise {
+        background: linear-gradient(135deg, #6C63FF, #8B5CF6) !important;
+        color: white !important;
+        box-shadow: 0 8px 20px rgba(108, 99, 255, 0.25) !important;
+    }
+    .btn-enterprise:hover {
+        box-shadow: 0 10px 24px rgba(108, 99, 255, 0.4) !important;
+        filter: brightness(1.05) !important;
+    }
+    .card-footer { border-top: none !important; }
+    .alert-warning {
+        background: rgba(245,158,11,0.1);
+        border: 1px solid rgba(245,158,11,0.3);
+        color: #fbbf24;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 14px;
+    }
+</style>
+
+<div class="container pb-5">
+    <div class="pricing-header">
+        <h1 class="display-4 fw-bold">Choose Your Plan</h1>
+        <p class="lead text-muted">Unlock the full potential of Neo-Dine AI to scale your restaurant.</p>
+        {% if msg %}
+        <div class="alert alert-warning d-inline-block mt-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ msg }}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <!-- Trial Card -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card pricing-card h-100">
+                <div class="card-header pricing-card-header">
+                    <h4 class="mb-0 fw-bold">Free Trial</h4>
+                    <div class="pricing-card-price">₹0</div>
+                    <span class="text-muted">For 7 Days</span>
+                </div>
+                <div class="card-body pricing-card-features">
+                    <ul>
+                        <li><i class="fas fa-check feature-check"></i> Starter Features</li>
+                        <li><i class="fas fa-check feature-check"></i> Growth Features</li>
+                        <li><i class="fas fa-check feature-check"></i> Enterprise Features</li>
+                        <li><i class="fas fa-check feature-check"></i> AI Insights</li>
+                        <li><i class="fas fa-check feature-check"></i> Dashboard</li>
+                        <li><i class="fas fa-check feature-check"></i> Everything Unlocked</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent border-0 p-4">
+                    {% if trial_active %}
+                        <button class="btn btn-starter btn-upgrade" disabled>Trial Active</button>
+                    {% else %}
+                        <button class="btn btn-starter btn-upgrade" disabled>Trial Expired</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Starter Plan -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card pricing-card h-100">
+                <div class="card-header pricing-card-header">
+                    <h4 class="mb-0 fw-bold text-secondary">Starter</h4>
+                    <div class="pricing-card-price">₹999<span class="fs-6 text-muted fw-normal">/mo</span></div>
+                </div>
+                <div class="card-body pricing-card-features">
+                    <ul>
+                        <li><i class="fas fa-check feature-check"></i> Dashboard</li>
+                        <li><i class="fas fa-check feature-check"></i> Billing & Orders</li>
+                        <li><i class="fas fa-check feature-check"></i> Inventory</li>
+                        <li><i class="fas fa-check feature-check"></i> Customers & Menu</li>
+                        <li><i class="fas fa-check feature-check"></i> Recipes</li>
+                        <li><i class="fas fa-check feature-check"></i> Basic Reports</li>
+                        <li><i class="fas fa-times feature-x"></i> AI Insights</li>
+                        <li><i class="fas fa-times feature-x"></i> Executive Dashboard</li>
+                        <li><i class="fas fa-times feature-x"></i> Online Orders</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent border-0 p-4">
+                    <form action="{{ url_for('upgrade_plan', plan_slug='starter') }}" method="POST">
+                        <button class="btn btn-starter btn-upgrade" type="submit">Choose Starter</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Growth Plan -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card pricing-card border-primary h-100" style="border-width: 2px;">
+                <div class="card-header pricing-card-header">
+                    <span class="badge bg-primary mb-2">Most Popular</span>
+                    <h4 class="mb-0 fw-bold text-primary">Growth</h4>
+                    <div class="pricing-card-price">₹2999<span class="fs-6 text-muted fw-normal">/mo</span></div>
+                </div>
+                <div class="card-body pricing-card-features">
+                    <ul>
+                        <li><strong>Includes Starter Features</strong></li>
+                        <li class="mt-2"><i class="fas fa-check feature-check"></i> AI Insights & Predictions</li>
+                        <li><i class="fas fa-check feature-check"></i> Online Orders</li>
+                        <li><i class="fas fa-check feature-check"></i> Delivery Boys</li>
+                        <li><i class="fas fa-check feature-check"></i> Live Kitchen View</li>
+                        <li><i class="fas fa-check feature-check"></i> Tax & Discounts</li>
+                        <li><i class="fas fa-times feature-x"></i> Executive Dashboard</li>
+                        <li><i class="fas fa-times feature-x"></i> Cash Flow & Topup</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent border-0 p-4">
+                    <form action="{{ url_for('upgrade_plan', plan_slug='growth') }}" method="POST">
+                        <button class="btn btn-growth btn-upgrade" type="submit">Choose Growth</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card pricing-card h-100 border-dark">
+                <div class="card-header pricing-card-header">
+                    <h4 class="mb-0 fw-bold text-dark">Enterprise</h4>
+                    <div class="pricing-card-price">₹7999<span class="fs-6 text-muted fw-normal">/mo</span></div>
+                </div>
+                <div class="card-body pricing-card-features">
+                    <ul>
+                        <li><strong>Everything Enabled</strong></li>
+                        <li class="mt-2"><i class="fas fa-check feature-check"></i> Executive Dashboard</li>
+                        <li><i class="fas fa-check feature-check"></i> Cash Flow</li>
+                        <li><i class="fas fa-check feature-check"></i> Cash Topup</li>
+                        <li><i class="fas fa-check feature-check"></i> Currency Conversion</li>
+                        <li><i class="fas fa-check feature-check"></i> Multi Branch</li>
+                        <li><i class="fas fa-check feature-check"></i> Advanced Analytics</li>
+                        <li><i class="fas fa-check feature-check"></i> API Integrations</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent border-0 p-4">
+                    <form action="{{ url_for('upgrade_plan', plan_slug='enterprise') }}" method="POST">
+                        <button class="btn btn-enterprise btn-upgrade" type="submit">Choose Enterprise</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

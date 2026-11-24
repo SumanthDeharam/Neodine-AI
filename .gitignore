@@ -7,10 +7,38 @@ venv/
 env/
 .env
 
-# SQLite local database (Render provides a PostgreSQL DB, or uses a fresh ephemeral SQLite DB)
+# SQLite local database & instances
 saas_customers.db
 restaurant_database.xlsx
+*_database.xlsx
 *.sqlite3
+instance/
+
+# Cache & Build
+__pycache__/
+*.py[cod]
+*$py.class
+# Scratch, Tests & Analysis
+test_*.py
+verify_*.py
+scratch/
+tmp/
+catboost_info/
+*.bak*
+*.broken_backup
+original_script_backup.js
+analysis_*.py
+analysis_report.json
+check_*.py
+find_style.py
+fix_css.py
+replace_*.py
+_seed.py
+seed_library.py
+gigatos_*.xlsx
+temp_*.xlsx
+subscription_testing_report.md
+*.log
 
 # OS files
 .DS_Store

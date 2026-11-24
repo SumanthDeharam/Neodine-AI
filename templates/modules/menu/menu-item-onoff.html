@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<style>
+  .onoff-topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+  .filter-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+  .cat-pills{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+  .cat-pills::-webkit-scrollbar{display:none;}
+  .cat-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid #cbd5e1;background:#fff;color:#475569;cursor:pointer;white-space:nowrap;transition:all 0.2s;}
+  .cat-pill:hover{border-color:#2563eb;color:#2563eb;}
+  .cat-pill.active{background:#2563eb;color:#fff;border-color:#2563eb;box-shadow:0 4px 12px rgba(37,99,235,0.25);}
+  
+  .search-wrap{position:relative;min-width:240px;}
+  .search-wrap input{width:100%;padding:8px 12px 8px 34px;border:1px solid #cbd5e1;border-radius:10px;font-size:13px;outline:none;font-family:inherit;background:#fff;}
+  .search-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:13px;}
+
+  .onoff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;}
+  .onoff-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 2px 8px rgba(0,0,0,0.02);transition:all 0.2s;}
+  .onoff-card:hover{box-shadow:0 6px 18px rgba(0,0,0,0.06);border-color:#cbd5e1;}
+  .onoff-card.is-off{opacity:0.65;background:#f8fafc;}
+  .onoff-card.is-off:hover{opacity:1;}
+  
+  .item-meta{display:flex;align-items:center;gap:12px;min-width:0;}
+  .item-icon-box{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .item-icon-veg{background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.3);}
+  .item-icon-nonveg{background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);}
+  
+  .item-info{min-width:0;}
+  .item-title{font-size:14px;font-weight:700;color:#0f172a;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .item-sub{font-size:12px;color:#64748b;display:flex;align-items:center;gap:8px;}
+  .item-price-tag{font-weight:800;color:#0f172a;}
+  
+  .action-controls{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .status-badge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.3px;}
+  .badge-on{background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.25);}
+  .badge-off{background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.25);}
+
+  /* iOS Style Switch */
+  .switch-toggle{position:relative;display:inline-block;width:44px;height:24px;}
+  .switch-toggle input{opacity:0;width:0;height:0;}
+  .slider-round{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#cbd5e1;transition:.3s;border-radius:24px;}
+  .slider-round:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background-color:white;transition:.3s;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.2);}
+  input:checked + .slider-round{background-color:#10b981;}
+  input:checked + .slider-round:before{transform:translateX(20px);}
+
+  .bulk-actions{display:flex;gap:8px;}
+  .bulk-btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid #cbd5e1;background:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:0.2s;}
+  .bulk-btn:hover{background:#f1f5f9;}
+</style>
+
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Menu &amp; Inventory</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Menu Item On/Off</strong>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    </div>
+  </div>
+
+  <!-- KPI Stats Row -->
+  <div class="mod-stats">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;"><i class="fa-solid fa-utensils"></i></div>
+      <div class="stat-body">
+        <span class="stat-val" id="kpiTotal">{{ total_items|default(0) }}</span>
+        <span class="stat-lbl">Total Items</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="stat-body">
+        <span class="stat-val" id="kpiActive" style="color:#10b981;">{{ active_items|default(0) }}</span>
+        <span class="stat-lbl">Available (ON)</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;"><i class="fa-solid fa-circle-xmark"></i></div>
+      <div class="stat-body">
+        <span class="stat-val" id="kpiInactive" style="color:#ef4444;">{{ inactive_items|default(0) }}</span>
+        <span class="stat-lbl">Out of Stock (OFF)</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(168,85,247,0.1);color:#a855f7;"><i class="fa-solid fa-layer-group"></i></div>
+      <div class="stat-body">
+        <span class="stat-val">{{ categories|length if categories else 0 }}</span>
+        <span class="stat-lbl">Categories</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mod-body">
+    <!-- Notice -->
+    <div class="dev-notice">
+      <i class="fa-solid fa-toggle-on" style="color:#10b981;font-size:18px;"></i>
+      <span><strong>Live POS Availability Switch</strong> — Toggling an item <strong>OFF</strong> instantly hides it from the billing screen and prevents staff from taking out-of-stock orders.</span>
+    </div>
+
+    <!-- Filter & Search Controls -->
+    <div class="filter-bar">
+      <div class="cat-pills">
+        <button type="button" class="cat-pill active" onclick="filterCategory('ALL', this)">All Items</button>
+        {% if categories %}
+          {% for cat in categories %}
+            <button type="button" class="cat-pill" onclick="filterCategory('{{ cat }}', this)">{{ cat }}</button>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" placeholder="Search dish name..." oninput="filterSearch()">
+        </div>
+        <div class="bulk-actions">
+          <button type="button" class="bulk-btn" onclick="bulkToggle('Active')"><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Turn All ON</button>
+          <button type="button" class="bulk-btn" onclick="bulkToggle('Inactive')"><i class="fa-solid fa-circle-xmark" style="color:#ef4444;"></i> Turn All OFF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu Items Grid -->
+    <div class="onoff-grid" id="menuGrid">
+      {% if menu_items %}
+        {% for item in menu_items %}
+          {% set is_active = (item.status == 'Active' or not item.status) and not item.is_hidden %}
+          <div class="onoff-card {{ '' if is_active else 'is-off' }}" 
+               id="itemCard-{{ item.id }}" 
+               data-id="{{ item.id }}" 
+               data-name="{{ item.name|lower }}" 
+               data-category="{{ item.category or 'General' }}">
+            <div class="item-meta">
+              <div class="item-icon-box {{ 'item-icon-veg' if (item.type|lower == 'veg') else 'item-icon-nonveg' }}">
+                <i class="fa-solid {{ 'fa-leaf' if (item.type|lower == 'veg') else 'fa-drumstick-bite' }}"></i>
+              </div>
+              <div class="item-info">
+                <div class="item-title" title="{{ item.name }}">{{ item.name }}</div>
+                <div class="item-sub">
+                  <span class="badge badge-blue" style="font-size:10px;padding:2px 6px;">{{ item.category or 'General' }}</span>
+                  <span class="item-price-tag">₹{{ '%.2f'|format(item.price|default(0)) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="action-controls">
+              <span class="status-badge {{ 'badge-on' if is_active else 'badge-off' }}" id="statusBadge-{{ item.id }}">
+                {{ 'Available' if is_active else 'Out of Stock' }}
+              </span>
+              <label class="switch-toggle">
+                <input type="checkbox" id="toggleSwitch-{{ item.id }}" {{ 'checked' if is_active else '' }} onchange="toggleItemStatus({{ item.id }}, this.checked)">
+                <span class="slider-round"></span>
+              </label>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div style="grid-column: 1 / -1; background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:40px; text-align:center; color:#64748b;">
+          <i class="fa-solid fa-utensils" style="font-size:32px; color:#94a3b8; margin-bottom:10px;"></i>
+          <p style="margin:0; font-weight:600;">No menu items found. Add dishes in <strong>Menu Items</strong> first!</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+let currentCategory = 'ALL';
+
+function filterCategory(cat, btn) {
+  currentCategory = cat;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  applyFilters();
+}
+
+function filterSearch() {
+  applyFilters();
+}
+
+function applyFilters() {
+  const query = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  const cards = document.querySelectorAll('.onoff-card');
+
+  cards.forEach(card => {
+    const name = card.getAttribute('data-name') || '';
+    const cat = card.getAttribute('data-category') || '';
+
+    const matchCat = (currentCategory === 'ALL' || cat === currentCategory);
+    const matchQuery = (!query || name.includes(query) || cat.toLowerCase().includes(query));
+
+    if (matchCat && matchQuery) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+async function toggleItemStatus(itemId, isChecked) {
+  const card = document.getElementById('itemCard-' + itemId);
+  const badge = document.getElementById('statusBadge-' + itemId);
+  const targetStatus = isChecked ? 'Active' : 'Inactive';
+
+  // Optimistic UI Update
+  if (isChecked) {
+    if (card) card.classList.remove('is-off');
+    if (badge) {
+      badge.textContent = 'Available';
+      badge.className = 'status-badge badge-on';
+    }
+  } else {
+    if (card) card.classList.add('is-off');
+    if (badge) {
+      badge.textContent = 'Out of Stock';
+      badge.className = 'status-badge badge-off';
+    }
+  }
+  updateKpis();
+
+  try {
+    const res = await fetch('/api/menu/toggle_status/' + itemId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: targetStatus })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      alert('Error updating status: ' + (data.error || 'Server error'));
+      window.location.reload();
+    }
+  } catch (err) {
+    console.error('Toggle error:', err);
+    window.location.reload();
+  }
+}
+
+async function bulkToggle(statusTarget) {
+  const isChecked = (statusTarget === 'Active');
+  const confirmMsg = `Are you sure you want to turn ${statusTarget === 'Active' ? 'ON (Available)' : 'OFF (Out of Stock)'} for ${currentCategory === 'ALL' ? 'ALL items' : 'all ' + currentCategory + ' items'}?`;
+  
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const res = await fetch('/api/menu/toggle_bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: statusTarget, category: currentCategory })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      window.location.reload();
+    } else {
+      alert('Bulk toggle error: ' + (data.error || 'Server error'));
+    }
+  } catch (err) {
+    alert('Network error while updating items.');
+  }
+}
+
+function updateKpis() {
+  const allCards = document.querySelectorAll('.onoff-card');
+  let active = 0;
+  let inactive = 0;
+
+  allCards.forEach(card => {
+    const chk = card.querySelector('input[type="checkbox"]');
+    if (chk && chk.checked) active++;
+    else inactive++;
+  });
+
+  const kpiAct = document.getElementById('kpiActive');
+  const kpiInact = document.getElementById('kpiInactive');
+  if (kpiAct) kpiAct.textContent = active;
+  if (kpiInact) kpiInact.textContent = inactive;
+}
+</script>
+{% endblock %}

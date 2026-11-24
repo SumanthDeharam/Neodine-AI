@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Operations</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Due Payment Tracker</strong>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    </div>
+  </div>
+
+  <div class="mod-stats">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+      <div class="stat-body"><span class="stat-val">{{ due_count|default(0) }}</span><span class="stat-lbl">Due Bills</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+      <div class="stat-body"><span class="stat-val">₹{{ '%.2f' | format(total_due|default(0)) }}</span><span class="stat-lbl">Total Due Balance</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-calendar-xmark"></i></div>
+      <div class="stat-body"><span class="stat-val">{{ overdue_count|default(0) }}</span><span class="stat-lbl">Overdue (&gt; 24h)</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="stat-body"><span class="stat-val">₹{{ '%.2f' | format(recovered_today|default(0)) }}</span><span class="stat-lbl">Settled Revenue</span></div>
+    </div>
+  </div>
+
+  <div class="mod-body">
+    <div class="dev-notice" style="background:#fef2f2; border-color:#fecdd3; color:#991b1b;">
+      <i class="fa-solid fa-hand-holding-dollar" style="color:#ef4444;"></i>
+      <span><strong>Due Payment Tracker Active</strong> — Live tracking of all unsettled customer bills, dining table balances, and pending payments.</span>
+    </div>
+
+    <div class="data-card">
+      <div class="data-card-hdr" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <h3><i class="fa-solid fa-file-invoice-dollar" style="color:#ef4444;"></i> Outstanding Due Payments</h3>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <input type="text" id="dueSearchInput" placeholder="Search bill #, customer, table..." style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:13px;outline:none;" onkeyup="filterDueTable()">
+        </div>
+      </div>
+
+      <table class="mod-table" id="dueTable">
+        <thead>
+          <tr>
+            <th>Bill / Ticket #</th>
+            <th>Customer / Table</th>
+            <th>Phone</th>
+            <th>Order Date</th>
+            <th>Total Due</th>
+            <th>Payment Status</th>
+            <th style="text-align:right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if due_orders %}
+          {% for o in due_orders %}
+          <tr class="due-row" id="dueRow_{{ o.id }}" data-search="kot-{{ o.id }} {{ o.customer_name | default('') | lower }} {{ o.customer_phone | default('') | lower }} table-{{ o.table_num }}">
+            <td><strong>#KOT-{{ o.id }}</strong></td>
+            <td>
+              <strong>{{ o.customer_name or ('Table ' ~ o.table_num if o.table_num else 'Walk-in Customer') }}</strong>
+            </td>
+            <td style="font-size:12px; color:#64748b;">{{ o.customer_phone or '—' }}</td>
+            <td style="font-size:12px; color:#64748b;">{{ o.date.strftime('%d %b %H:%M') if o.date else '—' }}</td>
+            <td><strong style="color:#dc2626;">₹{{ '%.2f' | format(o.total_price or 0) }}</strong></td>
+            <td><span class="badge badge-red">UNPAID / DUE</span></td>
+            <td style="text-align:right;">
+              <button class="mod-btn" style="background:#10b981; color:#ffffff; border:none; font-weight:700; padding:6px 14px; border-radius:8px; display:inline-flex; align-items:center; gap:6px; cursor:pointer;" id="btnSettle_{{ o.id }}" onclick="settleDue({{ o.id }})">
+                <i class="fa-solid fa-circle-check"></i> Settle &amp; Mark Paid
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+          {% else %}
+          <tr>
+            <td colspan="7" style="text-align:center; padding:32px;">
+              <i class="fa-solid fa-circle-check" style="font-size:32px; color:#10b981; margin-bottom:8px;"></i>
+              <p style="margin:0; font-weight:600; color:#475569;">No pending dues. All customer accounts and bills are fully settled!</p>
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+      <div id="noDueMatch" class="empty-state" style="display:none; padding:20px; text-align:center;">
+        <i class="fa-solid fa-magnifying-glass" style="font-size:24px; color:#cbd5e1;"></i>
+        <p style="margin-top:6px; color:#64748b; font-weight:600;">No due payments match your search.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function filterDueTable() {
+    const query = (document.getElementById('dueSearchInput')?.value || '').trim().toLowerCase();
+    const rows = document.querySelectorAll('#dueTable tbody tr.due-row');
+    const noMatch = document.getElementById('noDueMatch');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const text = row.getAttribute('data-search') || row.innerText.toLowerCase();
+      if (text.includes(query)) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    if (noMatch) {
+      noMatch.style.display = (query.length > 0 && visibleCount === 0) ? 'block' : 'none';
+    }
+  }
+
+  async function settleDue(orderId) {
+    const btn = document.getElementById('btnSettle_' + orderId);
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Settling...';
+    }
+
+    try {
+      const res = await fetch('/api/due/settle/' + orderId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ ' + (data.message || 'Payment settled successfully!'));
+        location.reload();
+      } else {
+        alert('❌ ' + (data.error || 'Failed to settle payment.'));
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Settle & Mark Paid';
+        }
+      }
+    } catch (e) {
+      alert('❌ Network error settling payment.');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Settle & Mark Paid';
+      }
+    }
+  }
+</script>
+{% endblock %}

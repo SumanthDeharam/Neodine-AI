@@ -1,0 +1,1691 @@
+{% extends "base.html" %}
+{% block title %}Subscription Management | Neo Dine AI{% endblock %}
+
+{% block content %}
+<style>
+    /* ==========================================================================
+       NEO DINE AI - MODERN SAAS SUBSCRIPTION MANAGEMENT SUITE (UI 2.0 PREMIUM)
+       ========================================================================== */
+
+    body .app-body {
+        overflow-y: auto !important;
+        background: var(--bg-main, #EEF3F9) !important;
+    }
+
+    .sub-management-wrapper {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 36px 24px 90px 24px;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: var(--text-main, #1B1D29);
+    }
+
+    /* ── Hero Header ── */
+    .sub-hero {
+        text-align: center;
+        margin-bottom: 36px;
+        position: relative;
+    }
+
+    .sub-pill-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, rgba(108, 99, 255, 0.12) 0%, rgba(0, 200, 150, 0.12) 100%);
+        border: 1px solid rgba(108, 99, 255, 0.25);
+        color: var(--brand-primary, #6C63FF);
+        padding: 6px 16px;
+        border-radius: 999px;
+        font-size: 11.5px;
+        font-weight: 750;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 10px rgba(108, 99, 255, 0.08);
+    }
+
+    .sub-hero h1 {
+        font-size: 40px;
+        font-weight: 900;
+        background: linear-gradient(135deg, #1B1D29 0%, #4A3E8F 50%, #6C63FF 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0 0 10px 0;
+        letter-spacing: -1.2px;
+        line-height: 1.15;
+    }
+
+    .sub-hero p {
+        color: var(--text-muted, #697386);
+        font-size: 15.5px;
+        margin: 0 auto;
+        max-width: 620px;
+        line-height: 1.5;
+        font-weight: 500;
+    }
+
+    /* ── Billing Cycle Toggle (Monthly vs Annual) ── */
+    .billing-toggle-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .billing-toggle-pill {
+        display: flex;
+        align-items: center;
+        background: #ffffff;
+        border: 1px solid var(--border-color, #D7E1EC);
+        border-radius: 999px;
+        padding: 4px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    }
+
+    .toggle-opt-btn {
+        border: none;
+        background: transparent;
+        padding: 8px 20px;
+        border-radius: 999px;
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--text-muted, #697386);
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .toggle-opt-btn.active {
+        background: linear-gradient(135deg, var(--brand-primary, #6C63FF) 0%, #8E85FF 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(108, 99, 255, 0.35);
+    }
+
+    .discount-ribbon {
+        background: linear-gradient(135deg, #00C896 0%, #059669 100%);
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 3px 8px;
+        border-radius: 20px;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        animation: pulseDiscount 2.5s infinite ease-in-out;
+    }
+
+    @keyframes pulseDiscount {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.06); }
+    }
+
+    /* ── Current License / Overview Card ── */
+    .license-overview-card {
+        background: #ffffff;
+        border-radius: 22px;
+        border: 1px solid var(--border-color, #D7E1EC);
+        padding: 28px 32px;
+        box-shadow: 0 8px 30px rgba(15, 23, 42, 0.05);
+        margin-bottom: 32px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 28px;
+    }
+
+    .license-overview-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 6px;
+        height: 100%;
+        background: linear-gradient(180deg, var(--brand-primary, #6C63FF) 0%, var(--brand-secondary, #00C896) 100%);
+    }
+
+    .license-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 32px;
+        flex: 1;
+    }
+
+    .metric-col {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .metric-tag {
+        font-size: 11px;
+        font-weight: 750;
+        text-transform: uppercase;
+        color: var(--text-muted, #697386);
+        letter-spacing: 0.8px;
+    }
+
+    .metric-main-val {
+        font-size: 22px;
+        font-weight: 850;
+        color: var(--text-main, #1B1D29);
+        letter-spacing: -0.6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .license-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: 11.5px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .status-badge-active {
+        background: rgba(0, 200, 150, 0.12);
+        color: #059669;
+        border: 1px solid rgba(0, 200, 150, 0.3);
+    }
+
+    .status-badge-trial {
+        background: rgba(108, 99, 255, 0.12);
+        color: #6C63FF;
+        border: 1px solid rgba(108, 99, 255, 0.3);
+    }
+
+    .status-badge-expired {
+        background: rgba(239, 68, 68, 0.12);
+        color: #DC2626;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .license-actions-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-end;
+    }
+
+    .btn-action-primary {
+        background: linear-gradient(135deg, var(--brand-primary, #6C63FF) 0%, #584FE3 100%);
+        color: #ffffff !important;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-size: 13.5px;
+        font-weight: 750;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px rgba(108, 99, 255, 0.3);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+    }
+
+    .btn-action-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(108, 99, 255, 0.4);
+    }
+
+    .btn-action-ghost {
+        background: transparent;
+        color: var(--text-muted, #697386);
+        border: 1px solid var(--border-color, #D7E1EC);
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 650;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .btn-action-ghost:hover {
+        background: #F8FAFD;
+        color: var(--text-main, #1B1D29);
+        border-color: #CBD5E1;
+    }
+
+    /* ── Trial Notification Bar ── */
+    .trial-highlight-bar {
+        background: linear-gradient(135deg, rgba(108, 99, 255, 0.08) 0%, rgba(0, 200, 150, 0.08) 100%);
+        border: 1px solid rgba(108, 99, 255, 0.2);
+        border-radius: 14px;
+        padding: 14px 20px;
+        margin-bottom: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--text-main, #1B1D29);
+    }
+
+    .trial-highlight-bar i {
+        color: var(--brand-primary, #6C63FF);
+        font-size: 18px;
+    }
+
+    /* ── Developer Test Mode Banner ── */
+    .test-mode-banner {
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        border-radius: 12px;
+        padding: 12px 20px;
+        margin-bottom: 28px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-weight: 800;
+        font-size: 13px;
+        color: #D97706;
+    }
+
+    /* ── Modern SaaS Pricing Grid ── */
+    .pricing-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 26px;
+        margin-bottom: 48px;
+    }
+
+    .pricing-plan-card {
+        background: #ffffff;
+        border-radius: 24px;
+        border: 1.5px solid var(--border-color, #D7E1EC);
+        padding: 34px 28px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .pricing-plan-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(108, 99, 255, 0.4);
+        box-shadow: 0 16px 36px rgba(108, 99, 255, 0.12);
+    }
+
+    /* Popular / Recommended Glow Card */
+    .pricing-plan-card.featured-card {
+        border-color: var(--brand-primary, #6C63FF);
+        border-width: 2px;
+        background: linear-gradient(180deg, rgba(108, 99, 255, 0.03) 0%, #ffffff 100%);
+        box-shadow: 0 12px 36px rgba(108, 99, 255, 0.16);
+    }
+
+    .pricing-plan-card.featured-card:hover {
+        box-shadow: 0 20px 48px rgba(108, 99, 255, 0.22);
+    }
+
+    /* Enterprise VIP Card */
+    .pricing-plan-card.enterprise-tier {
+        background: linear-gradient(160deg, #F9FBFC 0%, #ffffff 100%);
+        border-color: rgba(0, 200, 150, 0.4);
+    }
+
+    .pricing-plan-card.enterprise-tier:hover {
+        border-color: var(--brand-secondary, #00C896);
+        box-shadow: 0 16px 40px rgba(0, 200, 150, 0.15);
+    }
+
+    /* Floating Badges */
+    .card-floating-badge {
+        position: absolute;
+        top: -13px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 5px 18px;
+        border-radius: 999px;
+        font-size: 10.5px;
+        font-weight: 850;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        white-space: nowrap;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    }
+
+    .badge-recommended {
+        background: linear-gradient(135deg, #6C63FF 0%, #8E85FF 100%);
+        color: #ffffff;
+    }
+
+    .badge-current-plan {
+        background: linear-gradient(135deg, #00C896 0%, #059669 100%);
+        color: #ffffff;
+    }
+
+    .plan-tier-header {
+        margin-bottom: 20px;
+    }
+
+    .tier-category-pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 10px;
+        background: #F1F5F9;
+        color: var(--text-muted, #697386);
+    }
+
+    .featured-card .tier-category-pill {
+        background: rgba(108, 99, 255, 0.12);
+        color: var(--brand-primary, #6C63FF);
+    }
+
+    .enterprise-tier .tier-category-pill {
+        background: rgba(0, 200, 150, 0.12);
+        color: #059669;
+    }
+
+    .plan-tier-title {
+        font-size: 24px;
+        font-weight: 850;
+        color: var(--text-main, #1B1D29);
+        margin: 0 0 6px 0;
+        letter-spacing: -0.6px;
+    }
+
+    .plan-tier-desc {
+        font-size: 13px;
+        color: var(--text-muted, #697386);
+        margin: 0;
+        line-height: 1.4;
+        min-height: 36px;
+    }
+
+    .plan-price-block {
+        margin: 20px 0 24px 0;
+        display: flex;
+        align-items: baseline;
+        gap: 3px;
+    }
+
+    .price-currency {
+        font-size: 24px;
+        font-weight: 750;
+        color: var(--text-muted, #697386);
+    }
+
+    .price-amount {
+        font-size: 42px;
+        font-weight: 900;
+        color: var(--text-main, #1B1D29);
+        letter-spacing: -1.5px;
+        line-height: 1;
+    }
+
+    .featured-card .price-amount {
+        color: var(--brand-primary, #6C63FF);
+    }
+
+    .enterprise-tier .price-amount {
+        color: #059669;
+    }
+
+    .price-period {
+        font-size: 13.5px;
+        color: var(--text-muted, #697386);
+        font-weight: 600;
+        margin-left: 4px;
+    }
+
+    .plan-divider-line {
+        height: 1px;
+        background: var(--border-color, #D7E1EC);
+        margin: 0 0 22px 0;
+    }
+
+    .plan-perks-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 28px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        flex-grow: 1;
+    }
+
+    .plan-perks-list li {
+        font-size: 13.5px;
+        color: var(--text-main, #1B1D29);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        line-height: 1.35;
+    }
+
+    .plan-perks-list li.disabled-perk {
+        color: #94A3B8;
+    }
+
+    .plan-perks-list li i.fa-check-circle {
+        color: #10B981;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+
+    .plan-perks-list li i.fa-circle-xmark {
+        color: #CBD5E1;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+
+    .perk-highlight-tag {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 6px;
+        background: rgba(108, 99, 255, 0.1);
+        color: var(--brand-primary, #6C63FF);
+    }
+
+    .btn-select-tier {
+        width: 100%;
+        border: none;
+        padding: 14px;
+        border-radius: 14px;
+        font-family: inherit;
+        font-weight: 750;
+        font-size: 14px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-align: center;
+        background: #F1F5F9;
+        color: var(--text-main, #1B1D29);
+        cursor: pointer;
+        letter-spacing: 0.2px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .pricing-plan-card:hover .btn-select-tier:not(.btn-current-active) {
+        transform: translateY(-2px);
+    }
+
+    .featured-card .btn-select-tier:not(.btn-current-active) {
+        background: linear-gradient(135deg, var(--brand-primary, #6C63FF) 0%, #8E85FF 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 16px rgba(108, 99, 255, 0.35);
+    }
+
+    .enterprise-tier .btn-select-tier:not(.btn-current-active) {
+        background: linear-gradient(135deg, #00C896 0%, #059669 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 16px rgba(0, 200, 150, 0.3);
+    }
+
+    .btn-current-active {
+        background: #E2E8F0 !important;
+        color: #475569 !important;
+        cursor: default !important;
+        box-shadow: none !important;
+    }
+
+    /* ── Comprehensive Feature Comparison Matrix ── */
+    .comparison-section {
+        background: #ffffff;
+        border-radius: 24px;
+        border: 1px solid var(--border-color, #D7E1EC);
+        padding: 36px 32px;
+        box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04);
+        margin-bottom: 48px;
+    }
+
+    .comparison-header {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+
+    .comparison-header h2 {
+        font-size: 26px;
+        font-weight: 850;
+        color: var(--text-main, #1B1D29);
+        margin: 0 0 6px 0;
+        letter-spacing: -0.6px;
+    }
+
+    .comparison-header p {
+        color: var(--text-muted, #697386);
+        font-size: 14.5px;
+        margin: 0;
+    }
+
+    .comparison-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .matrix-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 13.5px;
+    }
+
+    .matrix-table th {
+        padding: 16px 20px;
+        font-weight: 800;
+        color: var(--text-main, #1B1D29);
+        border-bottom: 2px solid var(--border-color, #D7E1EC);
+        text-align: center;
+    }
+
+    .matrix-table th:first-child {
+        text-align: left;
+        width: 40%;
+    }
+
+    .matrix-table th.th-popular {
+        background: rgba(108, 99, 255, 0.06);
+        color: var(--brand-primary, #6C63FF);
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+    }
+
+    .matrix-category-row td {
+        background: #F8FAFC;
+        font-weight: 800;
+        font-size: 12.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--brand-primary, #6C63FF);
+        padding: 12px 20px;
+        border-top: 1px solid var(--border-color, #D7E1EC);
+        border-bottom: 1px solid var(--border-color, #D7E1EC);
+    }
+
+    .matrix-row td {
+        padding: 14px 20px;
+        border-bottom: 1px solid #EDF2F7;
+        color: var(--text-main, #1B1D29);
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .matrix-row td:first-child {
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .matrix-row td.td-popular {
+        background: rgba(108, 99, 255, 0.02);
+    }
+
+    .matrix-row:hover td {
+        background: #F8FAFD;
+    }
+
+    .matrix-row:hover td.td-popular {
+        background: rgba(108, 99, 255, 0.05);
+    }
+
+    .feature-check-icon {
+        color: #10B981;
+        font-size: 16px;
+    }
+
+    .feature-cross-icon {
+        color: #CBD5E1;
+        font-size: 14px;
+    }
+
+    .feature-ai-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: linear-gradient(135deg, rgba(108, 99, 255, 0.12) 0%, rgba(255, 107, 107, 0.12) 100%);
+        color: var(--brand-primary, #6C63FF);
+        font-size: 10px;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 6px;
+    }
+
+    /* ── FAQ & Trust Bar ── */
+    .faq-trust-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 32px;
+        margin-bottom: 48px;
+    }
+
+    .faq-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid var(--border-color, #D7E1EC);
+        padding: 28px 30px;
+    }
+
+    .faq-card h3 {
+        font-size: 20px;
+        font-weight: 850;
+        margin: 0 0 20px 0;
+        color: var(--text-main, #1B1D29);
+    }
+
+    .faq-accordion-item {
+        border-bottom: 1px solid #EDF2F7;
+        padding: 14px 0;
+    }
+
+    .faq-accordion-item:last-child {
+        border-bottom: none;
+    }
+
+    .faq-question {
+        font-size: 14px;
+        font-weight: 750;
+        color: var(--text-main, #1B1D29);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .faq-answer {
+        font-size: 13px;
+        color: var(--text-muted, #697386);
+        margin-top: 8px;
+        line-height: 1.5;
+        display: none;
+    }
+
+    .faq-accordion-item.active .faq-answer {
+        display: block;
+    }
+
+    .faq-accordion-item.active .faq-toggle-icon {
+        transform: rotate(180deg);
+        color: var(--brand-primary, #6C63FF);
+    }
+
+    .faq-toggle-icon {
+        transition: transform 0.2s ease;
+        font-size: 12px;
+        color: #94A3B8;
+    }
+
+    .trust-card {
+        background: linear-gradient(135deg, #1B1D29 0%, #2A264D 100%);
+        border-radius: 20px;
+        padding: 30px 24px;
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .trust-badge-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .trust-badge-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: #00C896;
+        flex-shrink: 0;
+    }
+
+    .trust-badge-text h4 {
+        font-size: 14px;
+        font-weight: 750;
+        margin: 0 0 2px 0;
+        color: #ffffff;
+    }
+
+    .trust-badge-text p {
+        font-size: 12px;
+        color: #CBD5E1;
+        margin: 0;
+        line-height: 1.35;
+    }
+
+    /* ── Upgrade Modal ── */
+    .modal-backdrop-sub {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(8px);
+        z-index: 9999;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+
+    .modal-backdrop-sub.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal-dialog-sub {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 32px;
+        max-width: 500px;
+        width: 92%;
+        transform: scale(0.95) translateY(10px);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border-color, #D7E1EC);
+    }
+
+    .modal-backdrop-sub.active .modal-dialog-sub {
+        transform: scale(1) translateY(0);
+    }
+
+    .modal-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .modal-header-row h3 {
+        margin: 0;
+        font-size: 21px;
+        font-weight: 850;
+        letter-spacing: -0.5px;
+    }
+
+    .modal-close-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #F1F5F9;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted, #697386);
+        transition: all 0.2s;
+    }
+
+    .modal-close-btn:hover {
+        background: #E2E8F0;
+        color: var(--text-main, #1B1D29);
+    }
+
+    .checkout-summary-box {
+        background: #F8FAFD;
+        border: 1px solid var(--border-color, #D7E1EC);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .checkout-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13.5px;
+    }
+
+    .checkout-row .label {
+        color: var(--text-muted, #697386);
+        font-weight: 600;
+    }
+
+    .checkout-row .val {
+        font-weight: 800;
+        color: var(--text-main, #1B1D29);
+    }
+
+    .checkout-total-row {
+        border-top: 1px dashed var(--border-color, #D7E1EC);
+        padding-top: 12px;
+        margin-top: 4px;
+    }
+
+    .checkout-total-row .val {
+        font-size: 18px;
+        color: var(--brand-primary, #6C63FF);
+    }
+
+    .payment-options-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 24px;
+    }
+
+    .payment-option-tile {
+        border: 1.5px solid var(--border-color, #D7E1EC);
+        border-radius: 12px;
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #ffffff;
+    }
+
+    .payment-option-tile:hover {
+        border-color: var(--brand-primary, #6C63FF);
+        background: rgba(108, 99, 255, 0.03);
+    }
+
+    .payment-option-tile:has(input[type="radio"]:checked) {
+        border-color: var(--brand-primary, #6C63FF);
+        background: rgba(108, 99, 255, 0.06);
+        box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+    }
+
+    .modal-btn-row {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-modal-action {
+        flex: 1;
+        padding: 13px;
+        border-radius: 12px;
+        font-family: inherit;
+        font-weight: 750;
+        font-size: 14px;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        text-align: center;
+    }
+
+    .btn-modal-cancel {
+        background: #F1F5F9;
+        color: var(--text-muted, #697386);
+    }
+
+    .btn-modal-cancel:hover {
+        background: #E2E8F0;
+        color: var(--text-main, #1B1D29);
+    }
+
+    .btn-modal-submit {
+        background: linear-gradient(135deg, var(--brand-primary, #6C63FF) 0%, #584FE3 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 16px rgba(108, 99, 255, 0.3);
+    }
+
+    .btn-modal-submit:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4);
+    }
+
+    /* ── Responsive Queries ── */
+    @media (max-width: 992px) {
+        .pricing-cards-grid {
+            grid-template-columns: 1fr;
+            max-width: 440px;
+            margin: 0 auto 40px auto;
+        }
+
+        .license-overview-card {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 24px;
+        }
+
+        .license-metrics-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .license-actions-wrap {
+            align-items: stretch;
+        }
+
+        .btn-action-primary {
+            justify-content: center;
+        }
+
+        .faq-trust-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="sub-management-wrapper">
+
+    <!-- PAGE HERO -->
+    <div class="sub-hero">
+        <div class="sub-pill-badge">
+            <i class="fa-solid fa-sparkles"></i> NeoDine Cloud Subscription Hub
+        </div>
+        <h1>Plans Built for Fast-Growing Restaurants</h1>
+        <p>Unlock real-time POS billing, intelligent kitchen orchestration, AI-driven demand prediction, and multi-branch management.</p>
+
+        <!-- Billing Frequency Switcher -->
+        <div class="billing-toggle-container">
+            <div class="billing-toggle-pill">
+                <button type="button" class="toggle-opt-btn active" id="btnMonthly" onclick="setBillingPeriod('monthly')">
+                    Monthly
+                </button>
+                <button type="button" class="toggle-opt-btn" id="btnAnnual" onclick="setBillingPeriod('annual')">
+                    Annual <span class="discount-ribbon">20% OFF</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 1: Active Subscription & License Status -->
+    <div class="license-overview-card">
+        <div class="license-metrics-grid">
+            <div class="metric-col">
+                <span class="metric-tag">Current Tier</span>
+                <span class="metric-main-val">
+                    {% if current_user.status == 'Admin' %}
+                        Super Admin
+                    {% elif sub and sub.status == 'TRIAL' %}
+                        Free Trial
+                    {% elif sub and sub.plan %}
+                        {{ sub.plan.name }}
+                    {% else %}
+                        No Plan
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="metric-col">
+                <span class="metric-tag">Account Status</span>
+                <div>
+                    <span class="license-status-badge {% if current_user.status == 'Admin' or (sub and sub.status == 'ACTIVE') %}status-badge-active{% elif sub and sub.status == 'TRIAL' %}status-badge-trial{% else %}status-badge-expired{% endif %}">
+                        <span class="status-dot"></span>
+                        {% if current_user.status == 'Admin' %}
+                            VIP Unlimited
+                        {% elif sub %}
+                            {{ sub.status }}
+                        {% else %}
+                            Inactive
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            {% if current_user.status != 'Admin' %}
+            <div class="metric-col">
+                <span class="metric-tag">Days Remaining</span>
+                <span class="metric-main-val">
+                    <i class="fa-regular fa-clock" style="color:var(--brand-primary); font-size:18px;"></i>
+                    <span id="overviewDaysLeft">{{ days_left }}</span> Days
+                </span>
+            </div>
+
+            <div class="metric-col">
+                <span class="metric-tag">Next Renewal / Expiry</span>
+                <span class="metric-main-val" style="font-size:18px;">
+                    <i class="fa-regular fa-calendar-check" style="color:var(--brand-secondary); font-size:18px;"></i>
+                    <span id="overviewExpiryDate">{{ expiry_date }}</span>
+                </span>
+            </div>
+            {% else %}
+            <div class="metric-col">
+                <span class="metric-tag">License Type</span>
+                <span class="metric-main-val">Platform Admin</span>
+            </div>
+            <div class="metric-col">
+                <span class="metric-tag">Expiration</span>
+                <span class="metric-main-val">Lifetime</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="license-actions-wrap">
+            {% if current_user.status != 'Admin' and (sub is none or sub.plan_id is none or sub.status != 'ACTIVE' or sub.plan.slug != 'enterprise') %}
+            <button class="btn-action-primary" onclick="scrollToPricingSection()">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Upgrade Tier
+            </button>
+            {% endif %}
+            <button class="btn-action-ghost" onclick="scrollToMatrix()">
+                <i class="fa-solid fa-table-list"></i> Feature Matrix
+            </button>
+        </div>
+    </div>
+
+    <!-- SECTION 2: Trial Alert (if trial is active) -->
+    {% if current_user.status != 'Admin' and sub and sub.status == 'TRIAL' and days_left > 0 %}
+    <div class="trial-highlight-bar">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <i class="fa-solid fa-sparkles"></i>
+            <span>Your <strong>Free Trial</strong> is active with <strong>{{ days_left }} Days Remaining</strong>. Lock in your discounted pricing now before expiration.</span>
+        </div>
+        <button class="btn-action-primary" style="padding: 8px 16px; font-size: 12.5px;" onclick="scrollToPricingSection()">
+            Claim Discount
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- ALERT BANNER -->
+    {% if msg %}
+    <div class="trial-highlight-bar" style="background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.25); color: #EF4444;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <i class="fa-solid fa-triangle-exclamation" style="color: #EF4444;"></i>
+            <span>{{ msg }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Dynamic Developer Test Mode Banner -->
+    <div class="test-mode-banner" id="testModeBanner">
+        <i class="fa-solid fa-flask-vial"></i>
+        <span>🧪 DEVELOPER TEST MODE ACTIVE — Stripe checkout bypassed. Subscriptions activate instantly with sandbox rates (₹1 / ₹2 / ₹3).</span>
+    </div>
+
+    <!-- SECTION 3: Modern SaaS Pricing Tiers Grid -->
+    {% if current_user.status != 'Admin' %}
+    <div class="pricing-cards-grid" id="pricingGridAnchor">
+
+        <!-- 1. STARTER PLAN -->
+        <div class="pricing-plan-card" id="tierCard-starter" onclick="openPlanModal('starter', 'Starter')">
+            {% if sub and sub.plan and sub.plan.slug == 'starter' and sub.status == 'ACTIVE' %}
+                <span class="card-floating-badge badge-current-plan"><i class="fa-solid fa-check"></i> Active Plan</span>
+            {% endif %}
+
+            <div>
+                <div class="plan-tier-header">
+                    <span class="tier-category-pill">Essential POS</span>
+                    <h3 class="plan-tier-title">Starter</h3>
+                    <p class="plan-tier-desc">Ideal for standalone cafes, food trucks, and quick-service counters.</p>
+                </div>
+
+                <div class="plan-price-block">
+                    <span class="price-currency">₹</span>
+                    <span class="price-amount" id="priceDisplay-starter">999</span>
+                    <span class="price-period" id="periodDisplay-starter">/mo</span>
+                </div>
+
+                <div class="plan-divider-line"></div>
+
+                <ul class="plan-perks-list">
+                    <li><i class="fa-solid fa-circle-check"></i> Full POS Billing & Table Ordering</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Customer Directory & CRM</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Live Inventory Tracking</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Menu & Category Customizer</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Recipe Formulation Engine</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Standard Sales & EOD Reports</li>
+                    <li class="disabled-perk"><i class="fa-solid fa-circle-xmark"></i> AI Forecasting & Insights</li>
+                    <li class="disabled-perk"><i class="fa-solid fa-circle-xmark"></i> Executive Dashboard</li>
+                    <li class="disabled-perk"><i class="fa-solid fa-circle-xmark"></i> Multi-branch Synchronization</li>
+                </ul>
+            </div>
+
+            {% if sub and sub.plan and sub.plan.slug == 'starter' and sub.status == 'ACTIVE' %}
+                <button class="btn-select-tier btn-current-active"><i class="fa-solid fa-check"></i> Current Plan</button>
+            {% else %}
+                <button class="btn-select-tier">Select Starter <i class="fa-solid fa-arrow-right"></i></button>
+            {% endif %}
+        </div>
+
+        <!-- 2. GROWTH PLAN (RECOMMENDED) -->
+        <div class="pricing-plan-card featured-card" id="tierCard-growth" onclick="openPlanModal('growth', 'Growth')">
+            {% if sub and sub.plan and sub.plan.slug == 'growth' and sub.status == 'ACTIVE' %}
+                <span class="card-floating-badge badge-current-plan"><i class="fa-solid fa-check"></i> Active Plan</span>
+            {% else %}
+                <span class="card-floating-badge badge-recommended"><i class="fa-solid fa-star"></i> Most Popular</span>
+            {% endif %}
+
+            <div>
+                <div class="plan-tier-header">
+                    <span class="tier-category-pill">Scaling Diners</span>
+                    <h3 class="plan-tier-title">Growth</h3>
+                    <p class="plan-tier-desc">Engineered for full-service dining restaurants seeking automation.</p>
+                </div>
+
+                <div class="plan-price-block">
+                    <span class="price-currency">₹</span>
+                    <span class="price-amount" id="priceDisplay-growth">2999</span>
+                    <span class="price-period" id="periodDisplay-growth">/mo</span>
+                </div>
+
+                <div class="plan-divider-line"></div>
+
+                <ul class="plan-perks-list">
+                    <li><i class="fa-solid fa-circle-check"></i> <strong>Everything in Starter, plus:</strong></li>
+                    <li><i class="fa-solid fa-circle-check"></i> AI Demand Insights <span class="feature-ai-pill"><i class="fa-solid fa-brain"></i> AI</span></li>
+                    <li><i class="fa-solid fa-circle-check"></i> Online Orders & Delivery Portal</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Kitchen Display System (KDS & KOT)</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Waiter Order Tablets Integration</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Smart Tax & Discount Rules</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Customer Credit & Due Ledger</li>
+                    <li class="disabled-perk"><i class="fa-solid fa-circle-xmark"></i> Multi-branch Master Control</li>
+                    <li class="disabled-perk"><i class="fa-solid fa-circle-xmark"></i> Cash Flow & Treasury Ledger</li>
+                </ul>
+            </div>
+
+            {% if sub and sub.plan and sub.plan.slug == 'growth' and sub.status == 'ACTIVE' %}
+                <button class="btn-select-tier btn-current-active"><i class="fa-solid fa-check"></i> Current Plan</button>
+            {% else %}
+                <button class="btn-select-tier">Upgrade to Growth <i class="fa-solid fa-arrow-right"></i></button>
+            {% endif %}
+        </div>
+
+        <!-- 3. ENTERPRISE PLAN -->
+        <div class="pricing-plan-card enterprise-tier" id="tierCard-enterprise" onclick="openPlanModal('enterprise', 'Enterprise')">
+            {% if sub and sub.plan and sub.plan.slug == 'enterprise' and sub.status == 'ACTIVE' %}
+                <span class="card-floating-badge badge-current-plan"><i class="fa-solid fa-check"></i> Active Plan</span>
+            {% endif %}
+
+            <div>
+                <div class="plan-tier-header">
+                    <span class="tier-category-pill">Multi-Branch VIP</span>
+                    <h3 class="plan-tier-title">Enterprise</h3>
+                    <p class="plan-tier-desc">Uncapped multi-chain analytics, AI forecasting, and executive governance.</p>
+                </div>
+
+                <div class="plan-price-block">
+                    <span class="price-currency">₹</span>
+                    <span class="price-amount" id="priceDisplay-enterprise">7999</span>
+                    <span class="price-period" id="periodDisplay-enterprise">/mo</span>
+                </div>
+
+                <div class="plan-divider-line"></div>
+
+                <ul class="plan-perks-list">
+                    <li><i class="fa-solid fa-circle-check"></i> <strong>Everything in Starter & Growth:</strong></li>
+                    <li><i class="fa-solid fa-circle-check"></i> Executive KPI Dashboard</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Weather-Driven Forecasting <span class="feature-ai-pill"><i class="fa-solid fa-cloud-bolt"></i> ML</span></li>
+                    <li><i class="fa-solid fa-circle-check"></i> Multi-Location Central Control</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Cash Flow, Top-up & Treasury</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Currency Conversion Engine</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Dedicated SLA & 24/7 Priority Support</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Custom Webhook & API Access</li>
+                </ul>
+            </div>
+
+            {% if sub and sub.plan and sub.plan.slug == 'enterprise' and sub.status == 'ACTIVE' %}
+                <button class="btn-select-tier btn-current-active"><i class="fa-solid fa-check"></i> Current Plan</button>
+            {% else %}
+                <button class="btn-select-tier">Get Enterprise <i class="fa-solid fa-arrow-right"></i></button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- SECTION 4: Comprehensive Feature Matrix -->
+    <div class="comparison-section" id="matrixSection">
+        <div class="comparison-header">
+            <h2>Detailed Feature Comparison Matrix</h2>
+            <p>Compare capabilities side-by-side to find the perfect operational stack for your restaurant.</p>
+        </div>
+
+        <div class="comparison-table-wrap">
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th>Platform Capability</th>
+                        <th>Starter</th>
+                        <th class="th-popular">Growth (Popular)</th>
+                        <th>Enterprise</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Category: POS & Kitchen Operations -->
+                    <tr class="matrix-category-row">
+                        <td colspan="4"><i class="fa-solid fa-cash-register me-2"></i> POS & Kitchen Operations</td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>Fast Table Billing & Receipt Generation</td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                        <td class="td-popular"><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>Table Floor Map & Occupancy Tracker</td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                        <td class="td-popular"><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>Kitchen Order Tickets (KOT) Printing</td>
+                        <td><i class="fa-solid fa-circle-xmark feature-cross-icon"></i></td>
+                        <td class="td-popular"><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>Live Kitchen Display Screen (KDS)</td>
+                        <td><i class="fa-solid fa-circle-xmark feature-cross-icon"></i></td>
+                        <td class="td-popular"><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>Waiter Digital Portal & Remote Punching</td>
+                        <td><i class="fa-solid fa-circle-xmark feature-cross-icon"></i></td>
+                        <td class="td-popular"><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                    </tr>
+
+                    <!-- Category: Inventory & Recipes -->
+                    <tr class="matrix-category-row">
+                        <td colspan="4"><i class="fa-solid fa-boxes-stacked me-2"></i> Menu & Inventory Control</td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>Real-time Ingredient Level Tracking</td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                        <td class="td-popular"><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>Automated Recipe Ingredient Deductions</td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                        <td class="td-popular"><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>Low Stock & Critical Threshold Alerts</td>
+                        <td>Basic In-App</td>
+                        <td class="td-popular">Real-time Banner</td>
+                        <td>Instant SMS & Webhook</td>
+                    </tr>
+
+                    <!-- Category: AI & Predictive Intelligence -->
+                    <tr class="matrix-category-row">
+                        <td colspan="4"><i class="fa-solid fa-brain me-2"></i> AI & Predictive Analytics</td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>AI Weather & Footfall Correlations <span class="feature-ai-pill">AI</span></td>
+                        <td><i class="fa-solid fa-circle-xmark feature-cross-icon"></i></td>
+                        <td class="td-popular"><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>Machine Learning Demand Forecasting <span class="feature-ai-pill">ML</span></td>
+                        <td><i class="fa-solid fa-circle-xmark feature-cross-icon"></i></td>
+                        <td class="td-popular"><i class="fa-solid fa-circle-xmark feature-cross-icon"></i></td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>AI Smart Menu Recommendations</td>
+                        <td><i class="fa-solid fa-circle-xmark feature-cross-icon"></i></td>
+                        <td class="td-popular"><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                    </tr>
+
+                    <!-- Category: Finance & Governance -->
+                    <tr class="matrix-category-row">
+                        <td colspan="4"><i class="fa-solid fa-chart-line me-2"></i> Financial & Executive Governance</td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>Executive Master KPI Dashboard</td>
+                        <td><i class="fa-solid fa-circle-xmark feature-cross-icon"></i></td>
+                        <td class="td-popular"><i class="fa-solid fa-circle-xmark feature-cross-icon"></i></td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>Cash Flow & Petty Expense Registry</td>
+                        <td><i class="fa-solid fa-circle-xmark feature-cross-icon"></i></td>
+                        <td class="td-popular"><i class="fa-solid fa-circle-xmark feature-cross-icon"></i></td>
+                        <td><i class="fa-solid fa-check-circle feature-check-icon"></i></td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>Multi-Branch Synchronization</td>
+                        <td>1 Branch</td>
+                        <td class="td-popular">Up to 3 Branches</td>
+                        <td>Unlimited Branches</td>
+                    </tr>
+                    <tr class="matrix-row">
+                        <td>Support & SLA Guarantee</td>
+                        <td>Email (48h)</td>
+                        <td class="td-popular">Priority Chat (4h)</td>
+                        <td>24/7 Dedicated Concierge</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SECTION 5: FAQs & Trust Badges -->
+    <div class="faq-trust-grid">
+        <div class="faq-card">
+            <h3>Frequently Asked Questions</h3>
+            
+            <div class="faq-accordion-item active" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Can I upgrade or downgrade my plan at any time?</span>
+                    <i class="fa-solid fa-chevron-down faq-toggle-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    Yes! You can instantly upgrade your plan at any point. Features unlock automatically upon confirmation.
+                </div>
+            </div>
+
+            <div class="faq-accordion-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>What happens when my free trial period ends?</span>
+                    <i class="fa-solid fa-chevron-down faq-toggle-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    All your stored recipes, inventory data, customer logs, and previous bills remain safely archived. You can restore access anytime by selecting any plan tier.
+                </div>
+            </div>
+
+            <div class="faq-accordion-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Which payment options are supported?</span>
+                    <i class="fa-solid fa-chevron-down faq-toggle-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    We accept UPI (Google Pay, PhonePe, Paytm), Visa, MasterCard, RuPay debit/credit cards, and Net Banking across all major banks.
+                </div>
+            </div>
+
+            <div class="faq-accordion-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Does the annual plan include a discount?</span>
+                    <i class="fa-solid fa-chevron-down faq-toggle-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    Yes, selecting the Annual billing option gives you an instant 20% discount on all tiers—equivalent to getting 2+ months completely free.
+                </div>
+            </div>
+        </div>
+
+        <div class="trust-card">
+            <div>
+                <h3 style="font-size: 20px; font-weight: 850; margin: 0 0 16px 0;">Enterprise Trust</h3>
+                <div style="display: flex; flex-direction: column; gap: 18px;">
+                    <div class="trust-badge-item">
+                        <div class="trust-badge-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div class="trust-badge-text">
+                            <h4>256-Bit Bank-Grade Encryption</h4>
+                            <p>End-to-end secured transactions & tokenized payments.</p>
+                        </div>
+                    </div>
+                    <div class="trust-badge-item">
+                        <div class="trust-badge-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                        <div class="trust-badge-text">
+                            <h4>99.9% Uptime Cloud SLA</h4>
+                            <p>Continuous reliability during peak dining rush hours.</p>
+                        </div>
+                    </div>
+                    <div class="trust-badge-item">
+                        <div class="trust-badge-icon"><i class="fa-solid fa-headset"></i></div>
+                        <div class="trust-badge-text">
+                            <h4>24/7 Dedicated POS Concierge</h4>
+                            <p>Instant phone & remote screen support for staff.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.06); padding: 12px 16px; border-radius: 12px; font-size: 12px; color: #CBD5E1; text-align: center;">
+                Need custom multi-location franchise setups? <a href="/admin_support" style="color: #00C896; text-decoration: underline; font-weight: 700;">Contact Support</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- UPGRADE / CHECKOUT MODAL -->
+<div class="modal-backdrop-sub" id="checkoutModal">
+    <div class="modal-dialog-sub">
+        <div class="modal-header-row">
+            <h3 id="modalHeading">Confirm Subscription Upgrade</h3>
+            <button type="button" class="modal-close-btn" onclick="closePlanModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <form id="planUpgradeForm" method="POST" action="">
+            <input type="hidden" name="test_mode" id="hiddenTestModeField" value="false">
+
+            <!-- Step 1: Plan Summary -->
+            <div id="modalStepDetails">
+                <div class="checkout-summary-box">
+                    <div class="checkout-row">
+                        <span class="label">Current Status</span>
+                        <span class="val">
+                            {% if sub and sub.status == 'TRIAL' %}Free Trial{% elif sub and sub.plan %}{{ sub.plan.name }}{% else %}None{% endif %}
+                        </span>
+                    </div>
+                    <div class="checkout-row">
+                        <span class="label">Target Tier</span>
+                        <span class="val" id="targetPlanTitle" style="color:var(--brand-primary);">--</span>
+                    </div>
+                    <div class="checkout-row">
+                        <span class="label">Billing Frequency</span>
+                        <span class="val" id="targetBillingCycle">Monthly (30 Days)</span>
+                    </div>
+                    <div class="checkout-row checkout-total-row">
+                        <span class="label" style="font-weight: 800; color:var(--text-main);">Payable Amount</span>
+                        <span class="val" id="targetPayablePrice">₹--</span>
+                    </div>
+                </div>
+
+                <div class="modal-btn-row">
+                    <button type="button" class="btn-modal-action btn-modal-cancel" onclick="closePlanModal()">Cancel</button>
+                    <button type="button" class="btn-modal-action btn-modal-submit" id="btnGoToPayment" onclick="showPaymentStep()">Proceed to Payment</button>
+                    <button type="submit" class="btn-modal-action btn-modal-submit" id="btnTestModeInstant" style="display:none;">Instant Test Activation</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Payment Selector -->
+            <div id="modalStepPayment" style="display:none;">
+                <h4 style="font-size: 13px; font-weight: 750; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.5px;">Select Payment Gateway</h4>
+
+                <div class="payment-options-grid">
+                    <label class="payment-option-tile">
+                        <input type="radio" name="payment_method" value="upi" checked style="accent-color:var(--brand-primary);">
+                        <div>
+                            <div style="font-size: 12.5px; font-weight: 750;">Instant UPI</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">GPay, PhonePe, Paytm</div>
+                        </div>
+                    </label>
+
+                    <label class="payment-option-tile">
+                        <input type="radio" name="payment_method" value="cards" style="accent-color:var(--brand-primary);">
+                        <div>
+                            <div style="font-size: 12.5px; font-weight: 750;">Credit / Debit Card</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">Visa, MasterCard, RuPay</div>
+                        </div>
+                    </label>
+
+                    <label class="payment-option-tile">
+                        <input type="radio" name="payment_method" value="netbanking" style="accent-color:var(--brand-primary);">
+                        <div>
+                            <div style="font-size: 12.5px; font-weight: 750;">Net Banking</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">All Indian Banks</div>
+                        </div>
+                    </label>
+
+                    <label class="payment-option-tile">
+                        <input type="radio" name="payment_method" value="qr" style="accent-color:var(--brand-primary);">
+                        <div>
+                            <div style="font-size: 12.5px; font-weight: 750;">Dynamic QR</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">Scan to Pay</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="modal-btn-row">
+                    <button type="button" class="btn-modal-action btn-modal-cancel" onclick="backToDetailsStep()">Back</button>
+                    <button type="submit" class="btn-modal-action btn-modal-submit">Pay & Activate Now</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    /* ==========================================
+       DYNAMIC PRICING & MODAL INTERACTION ENGINE
+       ========================================== */
+
+    const RATES = {
+        monthly: {
+            starter: 999,
+            growth: 2999,
+            enterprise: 7999
+        },
+        annual: {
+            starter: 799,
+            growth: 2399,
+            enterprise: 6399
+        },
+        test_mode: {
+            starter: 1,
+            growth: 2,
+            enterprise: 3
+        }
+    };
+
+    let currentBillingCycle = 'monthly';
+    const isTestMode = {{ 'true' if test_mode_enabled else 'false' }};
+    const activePlanSlug = "{% if sub and sub.plan and sub.status == 'ACTIVE' %}{{ sub.plan.slug }}{% else %}{% endif %}";
+
+    function setBillingPeriod(cycle) {
+        currentBillingCycle = cycle;
+        
+        document.getElementById('btnMonthly').classList.toggle('active', cycle === 'monthly');
+        document.getElementById('btnAnnual').classList.toggle('active', cycle === 'annual');
+
+        updatePricingDisplays();
+    }
+
+    function updatePricingDisplays() {
+        const testBanner = document.getElementById('testModeBanner');
+        
+        if (isTestMode) {
+            if (testBanner) testBanner.style.display = 'flex';
+            document.getElementById('priceDisplay-starter').innerText = RATES.test_mode.starter;
+            document.getElementById('priceDisplay-growth').innerText = RATES.test_mode.growth;
+            document.getElementById('priceDisplay-enterprise').innerText = RATES.test_mode.enterprise;
+            
+            document.getElementById('periodDisplay-starter').innerText = '/test';
+            document.getElementById('periodDisplay-growth').innerText = '/test';
+            document.getElementById('periodDisplay-enterprise').innerText = '/test';
+            return;
+        }
+
+        if (testBanner) testBanner.style.display = 'none';
+
+        const prices = RATES[currentBillingCycle];
+        const periodSuffix = currentBillingCycle === 'annual' ? '/mo (billed annually)' : '/mo';
+
+        document.getElementById('priceDisplay-starter').innerText = prices.starter;
+        document.getElementById('priceDisplay-growth').innerText = prices.growth;
+        document.getElementById('priceDisplay-enterprise').innerText = prices.enterprise;
+
+        document.getElementById('periodDisplay-starter').innerText = periodSuffix;
+        document.getElementById('periodDisplay-growth').innerText = periodSuffix;
+        document.getElementById('periodDisplay-enterprise').innerText = periodSuffix;
+    }
+
+    function scrollToPricingSection() {
+        const el = document.getElementById('pricingGridAnchor');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function scrollToMatrix() {
+        const el = document.getElementById('matrixSection');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function openPlanModal(planSlug, planTitle) {
+        if (activePlanSlug === planSlug) return;
+
+        backToDetailsStep();
+
+        const form = document.getElementById('planUpgradeForm');
+        form.action = `/subscription/upgrade/${planSlug}`;
+        document.getElementById('hiddenTestModeField').value = isTestMode ? 'true' : 'false';
+
+        document.getElementById('targetPlanTitle').innerText = planTitle;
+
+        let displayPrice = isTestMode ? `₹${RATES.test_mode[planSlug]}` : `₹${RATES[currentBillingCycle][planSlug]}/month`;
+        if (!isTestMode && currentBillingCycle === 'annual') {
+            displayPrice += ` (Billed Annually at ₹${RATES.annual[planSlug] * 12})`;
+            document.getElementById('targetBillingCycle').innerText = 'Annual (365 Days — 20% Off)';
+        } else {
+            document.getElementById('targetBillingCycle').innerText = isTestMode ? 'Developer Test Mode' : 'Monthly (30 Days)';
+        }
+
+        document.getElementById('targetPayablePrice').innerText = displayPrice;
+
+        if (isTestMode) {
+            document.getElementById('btnGoToPayment').style.display = 'none';
+            document.getElementById('btnTestModeInstant').style.display = 'block';
+        } else {
+            document.getElementById('btnGoToPayment').style.display = 'block';
+            document.getElementById('btnTestModeInstant').style.display = 'none';
+        }
+
+        document.getElementById('checkoutModal').classList.add('active');
+    }
+
+    function showPaymentStep() {
+        document.getElementById('modalHeading').innerText = "Select Payment Method";
+        document.getElementById('modalStepDetails').style.display = 'none';
+        document.getElementById('modalStepPayment').style.display = 'block';
+    }
+
+    function backToDetailsStep() {
+        document.getElementById('modalHeading').innerText = "Confirm Subscription Upgrade";
+        document.getElementById('modalStepDetails').style.display = 'block';
+        document.getElementById('modalStepPayment').style.display = 'none';
+    }
+
+    function closePlanModal() {
+        document.getElementById('checkoutModal').classList.remove('active');
+    }
+
+    function toggleFaq(el) {
+        el.classList.toggle('active');
+    }
+
+    // Modal background click to dismiss
+    document.getElementById('checkoutModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePlanModal();
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updatePricingDisplays();
+    });
+</script>
+{% endblock %}

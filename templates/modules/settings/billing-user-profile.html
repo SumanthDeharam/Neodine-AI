@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Settings</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Billing User Profile</strong>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button type="button" class="mod-btn mod-btn-primary" id="btnSaveTopProfile"><i class="fa-solid fa-floppy-disk"></i> Save Profile</button>
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    </div>
+  </div>
+  <div class="mod-body" style="padding-top:20px;">
+    <div class="data-card">
+      <div class="data-card-hdr">
+        <h3><i class="fa-solid fa-id-badge"></i> User Profile Details</h3>
+        <span class="badge badge-blue">{{ current_user.status }}</span>
+      </div>
+      <form id="profileForm" onsubmit="saveUserProfile(event)">
+        <div class="mod-form-grid">
+          <div class="mod-form-group">
+            <label for="profileFullName">Full Name *</label>
+            <input type="text" id="profileFullName" value="{{ current_user.name or current_user.username }}" placeholder="Your full name" required>
+          </div>
+          <div class="mod-form-group">
+            <label>Username</label>
+            <input type="text" value="{{ current_user.username }}" readonly style="background:#f8fafc;color:#94a3b8;cursor:not-allowed;">
+          </div>
+          <div class="mod-form-group">
+            <label>Account Role / Status</label>
+            <input type="text" value="{{ current_user.status }}" readonly style="background:#f8fafc;color:#94a3b8;cursor:not-allowed;">
+          </div>
+          <div class="mod-form-group">
+            <label for="profilePhone">Contact Number</label>
+            <input type="tel" id="profilePhone" value="{{ current_user.phone or (restaurant_detail.phone if restaurant_detail else '') }}" placeholder="10-digit mobile number">
+          </div>
+          <div class="mod-form-group">
+            <label for="profileEmail">Email Address</label>
+            <input type="email" id="profileEmail" value="{{ current_user.email or (restaurant_detail.email if restaurant_detail else '') }}" placeholder="your@email.com">
+          </div>
+          <div class="mod-form-group">
+            <label for="profileRestName">Restaurant Name</label>
+            <input type="text" id="profileRestName" value="{{ restaurant_detail.restaurant_name if restaurant_detail else 'My Restaurant' }}" placeholder="Restaurant name">
+          </div>
+          <div class="mod-form-group">
+            <label for="profileNewPassword">New Password (Optional)</label>
+            <input type="password" id="profileNewPassword" placeholder="Leave blank to keep current" autocomplete="new-password">
+          </div>
+          <div class="mod-form-group">
+            <label for="profileConfirmPassword">Confirm New Password</label>
+            <input type="password" id="profileConfirmPassword" placeholder="Re-enter new password" autocomplete="new-password">
+          </div>
+        </div>
+        <div style="padding:16px 20px; border-top:1px solid #e2e8f0; display:flex; align-items:center; gap:12px;">
+          <button type="submit" class="mod-save-btn" id="btnSubmitProfile"><i class="fa-solid fa-floppy-disk"></i> Update Profile</button>
+          <span id="profileMsg" style="font-size:13px; font-weight:600;"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+async function saveUserProfile(e) {
+  if (e) e.preventDefault();
+  const msg = document.getElementById('profileMsg');
+  const btn = document.getElementById('btnSubmitProfile');
+  
+  const payload = {
+    name: document.getElementById('profileFullName').value.trim(),
+    phone: document.getElementById('profilePhone').value.trim(),
+    email: document.getElementById('profileEmail').value.trim(),
+    restaurant_name: document.getElementById('profileRestName').value.trim(),
+    new_password: document.getElementById('profileNewPassword').value.trim(),
+    confirm_password: document.getElementById('profileConfirmPassword').value.trim()
+  };
+
+  if (msg) {
+    msg.textContent = 'Saving...';
+    msg.style.color = '#64748b';
+  }
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/profile/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (msg) {
+        msg.textContent = '✅ ' + data.message;
+        msg.style.color = '#16a34a';
+      }
+      document.getElementById('profileNewPassword').value = '';
+      document.getElementById('profileConfirmPassword').value = '';
+      setTimeout(() => { if (msg) msg.textContent = ''; }, 3500);
+    } else {
+      if (msg) {
+        msg.textContent = '❌ ' + (data.error || 'Failed to update profile.');
+        msg.style.color = '#dc2626';
+      }
+    }
+  } catch (err) {
+    if (msg) {
+      msg.textContent = '❌ Network error while updating profile.';
+      msg.style.color = '#dc2626';
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+document.getElementById('btnSaveTopProfile').addEventListener('click', () => {
+  saveUserProfile(new Event('submit'));
+});
+</script>
+{% endblock %}

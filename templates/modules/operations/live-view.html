@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<style>
+  .live-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;padding:20px;}
+  .live-tile{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.02);transition:all 0.2s ease;}
+  .live-tile:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.06);}
+  .live-dot{width:10px;height:10px;border-radius:50%;background:#10b981;animation:pulse 1.5s infinite;position:absolute;top:16px;right:16px;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.3;transform:scale(1.2);}}
+  .live-tile .section-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#94a3b8;margin-bottom:6px;}
+  .live-tile .section-count{font-size:28px;font-weight:800;color:#1e293b;}
+  .live-tile .section-status{font-size:12px;color:#64748b;margin-top:4px;}
+  .pulse-live-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);color:#059669;font-weight:700;padding:4px 10px;border-radius:20px;font-size:11px;}
+  .pulse-live-dot{width:8px;height:8px;border-radius:50%;background:#10b981;animation:pulse 1.2s infinite;}
+</style>
+
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Operations</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Live View</strong>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <div class="pulse-live-badge"><div class="pulse-live-dot"></div> Live Telemetry Active</div>
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
+    </div>
+  </div>
+
+  <div class="mod-stats">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;">
+        <i class="fa-solid fa-satellite-dish"></i>
+      </div>
+      <div class="stat-body">
+        <span class="stat-val" id="telemetryStatus">Live</span>
+        <span class="stat-lbl">System Feed</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;">
+        <i class="fa-solid fa-chair"></i>
+      </div>
+      <div class="stat-body">
+        <span class="stat-val" id="statOccupied">{{ occupied_tables|default(0) }} / {{ total_tables|default(0) }}</span>
+        <span class="stat-lbl">Occupied Tables</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;">
+        <i class="fa-solid fa-truck-fast"></i>
+      </div>
+      <div class="stat-body">
+        <span class="stat-val" id="statDeliveries">{{ active_deliveries|default(0) }}</span>
+        <span class="stat-lbl">Active Deliveries</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;">
+        <i class="fa-solid fa-fire-burner"></i>
+      </div>
+      <div class="stat-body">
+        <span class="stat-val" id="statKitchen">{{ kitchen_queue_count|default(0) }}</span>
+        <span class="stat-lbl">Kitchen Queue</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mod-body">
+    <div class="data-card">
+      <div class="data-card-hdr">
+        <h3><i class="fa-solid fa-satellite-dish"></i> Live Restaurant Operations</h3>
+        <span style="font-size:12px;color:#94a3b8;"><i class="fa-solid fa-arrows-rotate fa-spin" style="color:#08D9D6;margin-right:4px;"></i> Syncing in real-time</span>
+      </div>
+      <div class="live-grid">
+        <div class="live-tile">
+          <div class="live-dot"></div>
+          <div class="section-name">Dine-In</div>
+          <div class="section-count" id="countDineIn">{{ dine_in_count|default(0) }}</div>
+          <div class="section-status">Active dine-in orders</div>
+        </div>
+        <div class="live-tile">
+          <div class="live-dot"></div>
+          <div class="section-name">Takeaway</div>
+          <div class="section-count" id="countTakeaway">{{ takeaway_count|default(0) }}</div>
+          <div class="section-status">Pending pickup</div>
+        </div>
+        <div class="live-tile">
+          <div class="live-dot"></div>
+          <div class="section-name">Delivery</div>
+          <div class="section-count" id="countDelivery">{{ active_deliveries|default(0) }}</div>
+          <div class="section-status">Active deliveries</div>
+        </div>
+        <div class="live-tile">
+          <div class="live-dot" style="background:#f59e0b;"></div>
+          <div class="section-name">Kitchen</div>
+          <div class="section-count" id="countKitchen">{{ kitchen_queue_count|default(0) }}</div>
+          <div class="section-status">In preparation</div>
+        </div>
+        <div class="live-tile">
+          <div class="live-dot" style="background:#08D9D6;"></div>
+          <div class="section-name">Ready Orders</div>
+          <div class="section-count" id="countReady">{{ ready_count|default(0) }}</div>
+          <div class="section-status">Awaiting service / pickup</div>
+        </div>
+        <div class="live-tile">
+          <div class="live-dot" style="background:#FF2E63;"></div>
+          <div class="section-name">Today's Revenue</div>
+          <div class="section-count" id="countRevenue" style="color:#059669;font-size:24px;">₹{{ "%.2f"|format(today_revenue|default(0.0)) }}</div>
+          <div class="section-status">Live billed total</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-card" style="margin-top:20px;">
+      <div class="data-card-hdr">
+        <h3><i class="fa-solid fa-list-check"></i> Live Active Orders Feed</h3>
+        <span class="badge badge-blue" id="activeOrdersBadge">{{ active_orders|length if active_orders else 0 }} Active</span>
+      </div>
+      <table class="mod-table" id="liveOrdersTable">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Order Mode</th>
+            <th>Items</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Placed At</th>
+          </tr>
+        </thead>
+        <tbody id="liveOrdersBody">
+          {% if active_orders and active_orders|length > 0 %}
+            {% for o in active_orders %}
+            <tr>
+              <td><span style="font-family:monospace;font-size:12px;background:#f1f5f9;padding:2px 6px;border-radius:4px;font-weight:700;">#{{ o.order_uuid[:8] if o.order_uuid else o.id }}</span></td>
+              <td><strong>{{ o.customer_name or 'Guest' }}</strong></td>
+              <td><span class="badge badge-blue">{{ o.order_type or 'Dine-In' }}</span></td>
+              <td>{{ o.items|length }} item{{ 's' if o.items|length != 1 else '' }}</td>
+              <td><strong style="color:#059669;">₹{{ "%.2f"|format(o.total_price or 0.0) }}</strong></td>
+              <td>
+                {% if (o.order_status or '').upper() == 'READY' %}
+                  <span class="badge badge-green">Ready</span>
+                {% elif (o.order_status or '').upper() in ['KITCHEN', 'PREPARING', 'COOKING'] %}
+                  <span class="badge badge-yellow">Cooking</span>
+                {% else %}
+                  <span class="badge badge-purple">{{ o.order_status or 'Pending' }}</span>
+                {% endif %}
+              </td>
+              <td style="color:#64748b;font-size:12px;">{{ o.date.strftime('%I:%M %p') if o.date else 'Just now' }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" style="text-align:center;padding:35px;color:#94a3b8;">
+                <i class="fa-solid fa-circle-check" style="font-size:24px;color:#10b981;margin-bottom:8px;display:block;"></i>
+                All clear! No active orders currently in the queue.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+async function pollLiveTelemetry() {
+  try {
+    const res = await fetch('/api/live_view/status');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.success) return;
+
+    document.getElementById('statOccupied').innerText = `${data.occupied_tables} / ${data.total_tables}`;
+    document.getElementById('statDeliveries').innerText = data.active_deliveries;
+    document.getElementById('statKitchen').innerText = data.kitchen_queue_count;
+
+    document.getElementById('countDineIn').innerText = data.dine_in_count;
+    document.getElementById('countTakeaway').innerText = data.takeaway_count;
+    document.getElementById('countDelivery').innerText = data.active_deliveries;
+    document.getElementById('countKitchen').innerText = data.kitchen_queue_count;
+    document.getElementById('countReady').innerText = data.ready_count;
+    document.getElementById('countRevenue').innerText = `₹${data.today_revenue.toFixed(2)}`;
+
+    const tbody = document.getElementById('liveOrdersBody');
+    const badge = document.getElementById('activeOrdersBadge');
+
+    if (data.active_orders && data.active_orders.length > 0) {
+      if (badge) badge.innerText = `${data.active_orders.length} Active`;
+      let html = '';
+      data.active_orders.forEach(o => {
+        let statusBadge = '<span class="badge badge-purple">' + o.status + '</span>';
+        if (o.status.toUpperCase() === 'READY') {
+          statusBadge = '<span class="badge badge-green">Ready</span>';
+        } else if (['KITCHEN', 'PREPARING', 'COOKING'].includes(o.status.toUpperCase())) {
+          statusBadge = '<span class="badge badge-yellow">Cooking</span>';
+        }
+
+        html += `
+          <tr>
+            <td><span style="font-family:monospace;font-size:12px;background:#f1f5f9;padding:2px 6px;border-radius:4px;font-weight:700;">#${o.uuid}</span></td>
+            <td><strong>${o.customer}</strong></td>
+            <td><span class="badge badge-blue">${o.type}</span></td>
+            <td>${o.items_count} item${o.items_count === 1 ? '' : 's'}</td>
+            <td><strong style="color:#059669;">₹${o.amount.toFixed(2)}</strong></td>
+            <td>${statusBadge}</td>
+            <td style="color:#64748b;font-size:12px;">${o.time}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    } else {
+      if (badge) badge.innerText = '0 Active';
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center;padding:35px;color:#94a3b8;">
+            <i class="fa-solid fa-circle-check" style="font-size:24px;color:#10b981;margin-bottom:8px;display:block;"></i>
+            All clear! No active orders currently in the queue.
+          </td>
+        </tr>
+      `;
+    }
+  } catch (err) {
+    console.error("Live telemetry sync error:", err);
+  }
+}
+
+// Auto-sync every 4 seconds
+setInterval(pollLiveTelemetry, 4000);
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'modules/_mod_styles.html' %}
+<div class="mod-page">
+  <div class="mod-topbar">
+    <div class="mod-breadcrumb">
+      <span>Neo Dine</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <span>Operations</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+      <strong>Billing Screen</strong>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <a href="/" class="back-pos-btn" style="background:linear-gradient(135deg,#FF2E63,#FF5E83);"><i class="fa-solid fa-cash-register"></i> Open POS Billing</a>
+      <a href="/" class="back-pos-btn"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    </div>
+  </div>
+  <div class="mod-stats">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(255,46,99,0.1);color:#FF2E63;"><i class="fa-solid fa-desktop"></i></div>
+      <div class="stat-body"><span class="stat-val" style="color:#10b981;">Active</span><span class="stat-lbl">Billing Status</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-print"></i></div>
+      <div class="stat-body"><span class="stat-val">Online</span><span class="stat-lbl">Printer</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="fa-solid fa-percent"></i></div>
+      <div class="stat-body"><span class="stat-val">{{ tax_config.combined_gst_pct|default(5.0) }}%</span><span class="stat-lbl">Combined GST Rate</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(8,217,214,0.1);color:#08D9D6;"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+      <div class="stat-body"><span class="stat-val">₹{{ '%.2f' | format(today_sales|default(0)) }}</span><span class="stat-lbl">Today Sales</span></div>
+    </div>
+  </div>
+
+  <div class="mod-body">
+    <div class="dev-notice" style="background:#f0fdf4; border-color:#bbf7d0; color:#166534;">
+      <i class="fa-solid fa-cash-register" style="color:#10b981;"></i>
+      <span><strong>POS Billing Screen Active</strong> — Configured with combined GST tax of <strong>{{ tax_config.combined_gst_pct|default(5.0) }}%</strong> ({{ tax_config.cgst_pct|default(2.5) }}% CGST + {{ tax_config.sgst_pct|default(2.5) }}% SGST). Click "Open POS Billing" to launch the main ordering terminal.</span>
+    </div>
+
+    <div class="data-card">
+      <div class="data-card-hdr" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3><i class="fa-solid fa-gear" style="color:#6366f1;"></i> Billing &amp; Tax Configuration Overview</h3>
+        <a href="/menu/tax" class="mod-btn" style="background:#6366f1; color:#fff; font-weight:700; text-decoration:none; font-size:12px; padding:6px 14px; border-radius:8px; display:inline-flex; align-items:center; gap:6px;">
+          <i class="fa-solid fa-sliders"></i> Edit Tax Rates
+        </a>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-tile">
+          <div class="t-lbl">Combined GST Rate</div>
+          <div class="t-val" style="color:#6366f1; font-weight:800;">{{ tax_config.combined_gst_pct|default(5.0) }}%</div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">CGST / SGST Split</div>
+          <div class="t-val" style="color:#10b981; font-weight:800;">{{ tax_config.cgst_pct|default(2.5) }}% CGST + {{ tax_config.sgst_pct|default(2.5) }}% SGST</div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">Tax Billing Status</div>
+          <div class="t-val" style="color: {{ '#10b981' if tax_config.tax_enabled else '#ef4444' }};">
+            {{ 'Enabled' if tax_config.tax_enabled else 'Disabled' }}
+          </div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">GSTIN Number</div>
+          <div class="t-val">{{ tax_config.gst_number|default('29ABCDE1234F1Z5') }}</div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">Service Charge</div>
+          <div class="t-val">{{ tax_config.service_charge_pct|default(0) }}%</div>
+        </div>
+        <div class="info-tile">
+          <div class="t-lbl">Calculation Mode</div>
+          <div class="t-val">{{ 'Inclusive' if tax_config.tax_inclusive else 'Exclusive (Add-on)' }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

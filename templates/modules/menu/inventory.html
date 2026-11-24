@@ -19,21 +19,40 @@
     <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="fa-solid fa-check-circle"></i></div><div class="stat-body"><span class="stat-val">{{ well_stocked|default(0) }}</span><span class="stat-lbl">Well Stocked</span></div></div>
     <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="fa-solid fa-rotate"></i></div><div class="stat-body"><span class="stat-val">{{ critical_stock|default(0) }}</span><span class="stat-lbl">Reorder Needed</span></div></div>
   </div>
+  <div id="realtimeInventoryAlert" style="display:none; margin: 0 30px 20px 30px; padding: 15px 20px; border-radius:12px; border-left: 5px solid #ef4444; background: #fef2f2; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);">
+     <div style="display:flex; align-items:center; gap:12px; color:#b91c1c;">
+        <i class="fa-solid fa-triangle-exclamation" style="font-size:20px;"></i>
+        <div>
+           <strong style="font-size:16px;">Critical Inventory Alert</strong>
+           <div id="alertDescription" style="font-size:13px; margin-top:4px; opacity:0.9;">Some ingredients have reached critical levels and need immediate reordering.</div>
+        </div>
+     </div>
+  </div>
+
   <div class="mod-body">
     <div class="data-card">
       <div class="data-card-hdr"><h3><i class="fa-solid fa-boxes-stacked"></i> Ingredient Stock Levels</h3>
         <input type="text" placeholder="Search ingredients..." style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:13px;outline:none;">
       </div>
       <table class="mod-table">
-        <thead><tr><th>Ingredient</th><th>Current Stock</th><th>Min. Level</th><th>Status</th><th>Last Updated</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Ingredient</th><th>Current Stock</th><th>Consumed Stock</th><th>Min. Level</th><th>Status</th><th>Last Updated</th><th>Actions</th></tr></thead>
         <tbody>
           {% if inventory_items %}
           {% for ing in inventory_items %}
           <tr>
             <td><strong>{{ ing.ingredient_name }}</strong><br><span style="font-size:11px;color:#94a3b8;">{{ ing.supplier or 'No Supplier' }}</span></td>
-            <td>{{ ing.current_stock }} {{ ing.unit }}</td>
+            <td><strong>{{ ing.current_stock }}</strong> {{ ing.unit }}</td>
+            <td style="color:#64748b;">{{ ing.consumed_quantity or 0.0 }} {{ ing.unit }}</td>
             <td>{{ ing.min_level }} {{ ing.unit }}</td>
-            <td><span class="badge {{ 'badge-green' if ing.current_stock > ing.min_level else ('badge-red' if ing.current_stock <= 0 else 'badge-yellow') }}">{{ 'Good' if ing.current_stock > ing.min_level else ('Critical' if ing.current_stock <= 0 else 'Low') }}</span></td>
+            <td>
+                {% if ing.current_stock <= 0 %}
+                <span class="badge badge-red"><i class="fa-solid fa-circle-exclamation"></i> Critical</span>
+                {% elif ing.current_stock <= ing.min_level %}
+                <span class="badge badge-yellow"><i class="fa-solid fa-triangle-exclamation"></i> Low</span>
+                {% else %}
+                <span class="badge badge-green"><i class="fa-solid fa-circle-check"></i> Good</span>
+                {% endif %}
+            </td>
             <td style="color:#94a3b8;font-size:12px;">{{ ing.last_updated.strftime('%Y-%m-%d %H:%M') if ing.last_updated else 'N/A' }}</td>
             <td>
                 <button class="mod-btn" style="padding: 4px 8px; font-size: 11px;" onclick="adjustStock({{ ing.id }}, `{{ (ing.ingredient_name or '')|replace('`', '\\`') }}`, `{{ ing.unit }}`, 'add')" title="Add Stock"><i class="fa-solid fa-plus" style="color:var(--brand-secondary)"></i></button>
@@ -44,7 +63,7 @@
           </tr>
           {% endfor %}
           {% else %}
-          <tr><td colspan="6" style="text-align:center; padding: 20px;">No Inventory Data. Proceed to add stock to track ingredients.</td></tr>
+          <tr><td colspan="7" style="text-align:center; padding: 20px;">No Inventory Data. Proceed to add stock to track ingredients.</td></tr>
           {% endif %}
         </tbody>
       </table>
@@ -168,6 +187,37 @@
               .then(data => { if(data.success) location.reload(); });
           }
       }
+
+      // Check for real-time alerts
+      fetch('/api/inventory/status')
+      .then(r => r.json())
+      .then(data => {
+          if (!data.success) return;
+          const banner = document.getElementById('realtimeInventoryAlert');
+          const description = document.getElementById('alertDescription');
+          
+          let alertMsgs = [];
+          if (data.critical_count > 0) {
+              alertMsgs.push(`${data.critical_count} item(s) are OUT OF STOCK.`);
+          }
+          if (data.low_count > 0) {
+              alertMsgs.push(`${data.low_count} item(s) are at low levels.`);
+          }
+
+          if (alertMsgs.length > 0) {
+              description.innerText = alertMsgs.join(' ') + ' Please update stock to avoid service interruption.';
+              banner.style.display = 'block';
+              if (data.critical_count > 0) {
+                  banner.style.borderColor = '#ef4444';
+                  banner.style.background = '#fef2f2';
+              } else {
+                  banner.style.borderColor = '#f59e0b';
+                  banner.style.background = '#fffbeb';
+                  banner.querySelector('strong').innerText = 'Low Stock Warning';
+                  banner.querySelector('i').style.color = '#d97706';
+              }
+          }
+      });
   </script>
 </div>
 {% endblock %}
