@@ -63,7 +63,7 @@ def generate_predictive_alerts(target_date, predictions_payload):
             
     # 2. Demand Outlook & Staffing Alert
     outlook = forecast.get("demand_outlook")
-    pct_change = forecast.get("percentage_change", 0.0)
+    pct_change = float(forecast.get("percentage_change") or 0.0)
     
     if outlook == "HIGHER THAN NORMAL" or pct_change > 10:
         key = ("STAFFING_DEMAND", target_date_str)

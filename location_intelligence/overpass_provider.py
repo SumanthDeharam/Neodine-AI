@@ -38,6 +38,7 @@ class OverpassProvider(LocationDataProvider):
         a = (math.sin(dlat / 2.0) ** 2 +
              math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
              math.sin(dlon / 2.0) ** 2)
+        a = min(1.0, max(0.0, a))
         c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
         return round(R * c, 1)
 
@@ -121,13 +122,14 @@ out center;"""
         food_amenities = {'restaurant', 'cafe', 'fast_food', 'food_court', 'bakery', 'pub', 'bar', 'bistro', 'ice_cream'}
 
         for el in raw_elements:
-            tags = el.get('tags', {})
+            tags = el.get('tags') or {}
             el_type = el.get('type', 'node')
             el_id = el.get('id')
             
             # Extract coordinates (node lat/lon or way/relation center lat/lon)
-            el_lat = el.get('lat', el.get('center', {}).get('lat'))
-            el_lon = el.get('lon', el.get('center', {}).get('lon'))
+            center = el.get('center') or {}
+            el_lat = el.get('lat', center.get('lat'))
+            el_lon = el.get('lon', center.get('lon'))
 
             if el_lat is None or el_lon is None:
                 continue

@@ -226,5 +226,9 @@ def seed_database_from_csv(csv_path="modules/holiday_ai/holiday_calendar.csv", f
         db.session.commit()
         return added
     except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         print(f"[HOLIDAY SEED ERROR] {e}")
         return 0

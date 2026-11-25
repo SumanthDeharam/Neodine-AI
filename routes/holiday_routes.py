@@ -95,12 +95,14 @@ def api_holiday_predictions():
         try:
             if "-" in date_str:
                 parts = date_str.split("-")
+                if len(parts) != 3:
+                    return jsonify({"success": False, "message": "Invalid date format. Use YYYY-MM-DD"}), 400
                 if len(parts[0]) == 4: # YYYY-MM-DD
                     query_date = date(int(parts[0]), int(parts[1]), int(parts[2]))
                 else: # DD-MM-YYYY
                     query_date = date(int(parts[2]), int(parts[1]), int(parts[0]))
             else:
-                query_date = date.today() + timedelta(days=1)
+                return jsonify({"success": False, "message": "Invalid date format. Use YYYY-MM-DD"}), 400
         except Exception:
             return jsonify({"success": False, "message": "Invalid date format. Use YYYY-MM-DD"}), 400
     else:
@@ -152,7 +154,7 @@ def api_holiday_predictions():
     }
     smart_alerts = generate_predictive_alerts(query_date, payload_for_alerts)
     
-    # 7. Query Real Historical Series for ECharts Rendering
+    # 7. Query Real Historical Series for ECharts Rendering (strictly scoped to owner_id)
     comp_daily = db.session.query(
         func.date(Order.date).label("day_str"),
         func.count(Order.id).label("orders"),
@@ -160,13 +162,6 @@ def api_holiday_predictions():
     ).filter(
         Order.restaurant_id == owner_id
     ).group_by(func.date(Order.date)).order_by(func.date(Order.date).desc()).limit(14).all()
-    
-    if not comp_daily:
-        comp_daily = db.session.query(
-            func.date(Order.date).label("day_str"),
-            func.count(Order.id).label("orders"),
-            func.sum(Order.total_price).label("revenue")
-        ).group_by(func.date(Order.date)).order_by(func.date(Order.date).desc()).limit(14).all()
         
     comp_daily = sorted(comp_daily, key=lambda x: str(x.day_str))
     

@@ -67,14 +67,16 @@ def predict_footfall(restaurant_id, target_date, temperature=25, rainfall=0):
             
     # 3. Apply Weather multipliers
     weather_multiplier = 1.0
-    if rainfall > 50:
+    rain_val = float(rainfall) if rainfall is not None else 0.0
+    temp_val = float(temperature) if temperature is not None else 25.0
+    if rain_val > 50:
         weather_multiplier = 0.70  # Heavy rain decreases footfall by 30%
-    elif rainfall > 10:
+    elif rain_val > 10:
         weather_multiplier = 0.85  # Moderate rain decreases footfall by 15%
         
-    if temperature > 38:
+    if temp_val > 38:
         weather_multiplier *= 0.90  # Extreme heat decreases footfall by 10%
-    elif temperature < 12:
+    elif temp_val < 12:
         weather_multiplier *= 0.90  # Extreme cold decreases footfall by 10%
         
     # 4. Final predicted customer footfall

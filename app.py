@@ -50,6 +50,28 @@ def save_global_settings(settings):
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(settings, f)
 
+_ALLOWED_IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
+
+def _safe_settings_path(username):
+    """Build a safe path inside app.instance_path for a user's settings JSON."""
+    from werkzeug.utils import secure_filename
+    safe_name = secure_filename(str(username or '').strip()) or 'default'
+    base_dir = os.path.abspath(app.instance_path)
+    target = os.path.abspath(os.path.join(base_dir, f"{safe_name}_settings.json"))
+    if not target.startswith(base_dir + os.sep):
+        raise ValueError("Invalid settings path")
+    return target
+
+def _is_safe_image_filename(filename):
+    ext = os.path.splitext(str(filename or '').strip())[1].lower()
+    return ext in _ALLOWED_IMAGE_EXTENSIONS
+
+def _is_safe_image_url(url):
+    if not url:
+        return True
+    s = str(url).strip().lower()
+    return s.startswith('/static/') or s.startswith('http://') or s.startswith('https://')
+
 def get_tax_config(user_id=None):
     """Retrieve combined tax configuration for the specific restaurant."""
     cgst_pct = 2.5
@@ -1374,81 +1396,86 @@ with app.app_context():
     db.create_all()
     # Load Excel recipes into memory
     load_excel_recipes()
-    # --- Safe SQLite migration: add consumed_quantity column if it doesn't exist ---
-    try:
-        from sqlalchemy import text
-        with db.engine.connect() as conn:
-            cols = [row[1] for row in conn.execute(text("PRAGMA table_info(inventory)"))]
-            if 'consumed_quantity' not in cols:
-                conn.execute(text('ALTER TABLE inventory ADD COLUMN consumed_quantity FLOAT DEFAULT 0.0'))
+    # --- Safe SQLite migration: only run PRAGMA-based migrations on SQLite ---
+    _db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    if 'sqlite' in _db_uri.lower():
+        try:
+            from sqlalchemy import text
+            with db.engine.connect() as conn:
+                cols = [row[1] for row in conn.execute(text("PRAGMA table_info(inventory)"))]
+                if 'consumed_quantity' not in cols:
+                    conn.execute(text('ALTER TABLE inventory ADD COLUMN consumed_quantity FLOAT DEFAULT 0.0'))
+                    conn.commit()
+                    print('[MIGRATION] Added consumed_quantity column to inventory table.')
+
+                # User profile table safe migration
+                user_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(user)"))]
+                if 'name' not in user_cols:
+                    conn.execute(text("ALTER TABLE user ADD COLUMN name VARCHAR(100) DEFAULT ''"))
+                if 'phone' not in user_cols:
+                    conn.execute(text("ALTER TABLE user ADD COLUMN phone VARCHAR(50) DEFAULT ''"))
+                if 'profile_image' not in user_cols:
+                    conn.execute(text("ALTER TABLE user ADD COLUMN profile_image VARCHAR(250) DEFAULT ''"))
+                if 'role' not in user_cols:
+                    conn.execute(text("ALTER TABLE user ADD COLUMN role VARCHAR(50) DEFAULT 'Cashier'"))
+                if 'last_login' not in user_cols:
+                    conn.execute(text("ALTER TABLE user ADD COLUMN last_login DATETIME"))
+                if 'restaurant_owner_id' not in user_cols:
+                    conn.execute(text("ALTER TABLE user ADD COLUMN restaurant_owner_id INTEGER"))
+                    conn.commit()
+                    print('[MIGRATION] Added restaurant_owner_id column to user table.')
                 conn.commit()
-                print('[MIGRATION] Added consumed_quantity column to inventory table.')
-            
-            # User profile table safe migration
-            user_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(user)"))]
-            if 'name' not in user_cols:
-                conn.execute(text("ALTER TABLE user ADD COLUMN name VARCHAR(100) DEFAULT ''"))
-            if 'phone' not in user_cols:
-                conn.execute(text("ALTER TABLE user ADD COLUMN phone VARCHAR(50) DEFAULT ''"))
-            if 'profile_image' not in user_cols:
-                conn.execute(text("ALTER TABLE user ADD COLUMN profile_image VARCHAR(250) DEFAULT ''"))
-            if 'role' not in user_cols:
-                conn.execute(text("ALTER TABLE user ADD COLUMN role VARCHAR(50) DEFAULT 'Cashier'"))
-            if 'last_login' not in user_cols:
-                conn.execute(text("ALTER TABLE user ADD COLUMN last_login DATETIME"))
-            if 'restaurant_owner_id' not in user_cols:
-                conn.execute(text("ALTER TABLE user ADD COLUMN restaurant_owner_id INTEGER"))
-                conn.commit()
-                print('[MIGRATION] Added restaurant_owner_id column to user table.')
-            conn.commit()
-            print('[MIGRATION] Verified user table columns.')
-            
-            # --- Safe SQLite migration for order table: add payment_method column ---
-            order_cols = [row[1] for row in conn.execute(text("PRAGMA table_info('order')"))]
-            if 'payment_method' not in order_cols:
-                conn.execute(text("ALTER TABLE 'order' ADD COLUMN payment_method VARCHAR(50) DEFAULT 'Cash'"))
-                conn.commit()
-                print('[MIGRATION] Added payment_method column to order table.')
-            if 'order_status' not in order_cols:
-                conn.execute(text("ALTER TABLE 'order' ADD COLUMN order_status VARCHAR(20) DEFAULT 'PENDING'"))
-                conn.commit()
-                print('[MIGRATION] Added order_status column to order table.')
-            if 'payment_status' not in order_cols:
-                conn.execute(text("ALTER TABLE 'order' ADD COLUMN payment_status VARCHAR(20) DEFAULT 'PENDING'"))
-                conn.commit()
-                print('[MIGRATION] Added payment_status column to order table.')
-            if 'table_num' not in order_cols:
-                conn.execute(text("ALTER TABLE 'order' ADD COLUMN table_num INTEGER"))
-                conn.commit()
-                print('[MIGRATION] Added table_num column to order table.')
-            if 'waiter_note' not in order_cols:
-                conn.execute(text("ALTER TABLE 'order' ADD COLUMN waiter_note VARCHAR(300)"))
-                conn.commit()
-                print('[MIGRATION] Added waiter_note column to order table.')
-            
-            # --- Safe SQLite migration for subscriptions table: add subscription_start column ---
-            sub_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(subscriptions)"))]
-            if 'subscription_start' not in sub_cols:
-                conn.execute(text("ALTER TABLE subscriptions ADD COLUMN subscription_start DATETIME"))
-                conn.commit()
-                print('[MIGRATION] Added subscription_start column to subscriptions table.')
-            if 'payment_status' not in sub_cols:
-                conn.execute(text("ALTER TABLE subscriptions ADD COLUMN payment_status VARCHAR(30) DEFAULT 'NONE'"))
-                conn.commit()
-                print('[MIGRATION] Added payment_status column to subscriptions table.')
-            # --- Safe SQLite migration for menu_recipe & menu_item: add recipe_name column ---
-            mr_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(menu_recipe)"))]
-            if 'recipe_name' not in mr_cols:
-                conn.execute(text("ALTER TABLE menu_recipe ADD COLUMN recipe_name VARCHAR(100)"))
-                conn.commit()
-                print('[MIGRATION] Added recipe_name column to menu_recipe table.')
-            mi_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(menu_item)"))]
-            if 'recipe_name' not in mi_cols:
-                conn.execute(text("ALTER TABLE menu_item ADD COLUMN recipe_name VARCHAR(100)"))
-                conn.commit()
-                print('[MIGRATION] Added recipe_name column to menu_item table.')
-    except Exception as _mig_err:
-        print(f'[MIGRATION] Warning: {_mig_err}')
+                print('[MIGRATION] Verified user table columns.')
+
+                # --- Safe SQLite migration for order table ---
+                order_cols = [row[1] for row in conn.execute(text("PRAGMA table_info('order')"))]
+                if 'payment_method' not in order_cols:
+                    conn.execute(text("ALTER TABLE 'order' ADD COLUMN payment_method VARCHAR(50) DEFAULT 'Cash'"))
+                    conn.commit()
+                    print('[MIGRATION] Added payment_method column to order table.')
+                if 'order_status' not in order_cols:
+                    conn.execute(text("ALTER TABLE 'order' ADD COLUMN order_status VARCHAR(20) DEFAULT 'PENDING'"))
+                    conn.commit()
+                    print('[MIGRATION] Added order_status column to order table.')
+                if 'payment_status' not in order_cols:
+                    conn.execute(text("ALTER TABLE 'order' ADD COLUMN payment_status VARCHAR(20) DEFAULT 'PENDING'"))
+                    conn.commit()
+                    print('[MIGRATION] Added payment_status column to order table.')
+                if 'table_num' not in order_cols:
+                    conn.execute(text("ALTER TABLE 'order' ADD COLUMN table_num INTEGER"))
+                    conn.commit()
+                    print('[MIGRATION] Added table_num column to order table.')
+                if 'waiter_note' not in order_cols:
+                    conn.execute(text("ALTER TABLE 'order' ADD COLUMN waiter_note VARCHAR(300)"))
+                    conn.commit()
+                    print('[MIGRATION] Added waiter_note column to order table.')
+
+                # --- Safe SQLite migration for subscriptions table ---
+                sub_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(subscriptions)"))]
+                if 'subscription_start' not in sub_cols:
+                    conn.execute(text("ALTER TABLE subscriptions ADD COLUMN subscription_start DATETIME"))
+                    conn.commit()
+                    print('[MIGRATION] Added subscription_start column to subscriptions table.')
+                if 'payment_status' not in sub_cols:
+                    conn.execute(text("ALTER TABLE subscriptions ADD COLUMN payment_status VARCHAR(30) DEFAULT 'NONE'"))
+                    conn.commit()
+                    print('[MIGRATION] Added payment_status column to subscriptions table.')
+
+                # --- Safe SQLite migration for menu_recipe & menu_item ---
+                mr_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(menu_recipe)"))]
+                if 'recipe_name' not in mr_cols:
+                    conn.execute(text("ALTER TABLE menu_recipe ADD COLUMN recipe_name VARCHAR(100)"))
+                    conn.commit()
+                    print('[MIGRATION] Added recipe_name column to menu_recipe table.')
+                mi_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(menu_item)"))]
+                if 'recipe_name' not in mi_cols:
+                    conn.execute(text("ALTER TABLE menu_item ADD COLUMN recipe_name VARCHAR(100)"))
+                    conn.commit()
+                    print('[MIGRATION] Added recipe_name column to menu_item table.')
+        except Exception as _mig_err:
+            print(f'[MIGRATION] Warning: {_mig_err}')
+    else:
+        print('[MIGRATION] PostgreSQL detected — skipping SQLite PRAGMA migrations (db.create_all handles schema).')
         
     # Auto-synchronize existing active MenuItems that currently lack recipes
     try:
@@ -1877,6 +1904,14 @@ def register():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
+        if not username or not password:
+            return render_template(
+                'register.html',
+                error="Username and password are required.")
+        if any(ch in username for ch in ('/', '\\', '..')):
+            return render_template(
+                'register.html',
+                error="Username contains invalid characters.")
         if User.query.filter(
             db.func.lower(User.username) == username.lower()
         ).first():
@@ -2344,6 +2379,7 @@ def index():
         foods = request.form.getlist("food")
         try:
             discount_pct = float(request.form.get("discount", 0))
+            discount_pct = max(0.0, min(100.0, discount_pct))
         except (ValueError, TypeError):
             discount_pct = 0.0
 
@@ -2559,16 +2595,12 @@ def show_receipt(order_id):
         payee_name = None
 
         # Determine the restaurant owner for this session/order
-        owner_username = current_user.username
-        owner_user = current_user
-        if getattr(current_user, 'restaurant_id', None):
-            owner = db.session.get(User, current_user.restaurant_id)
-            if owner:
-                owner_username = owner.username
-                owner_user = owner
+        owner_id_qr = _current_restaurant_owner()
+        owner_user = db.session.get(User, owner_id_qr) or current_user
+        owner_username = owner_user.username
 
         # 1) Read this restaurant owner's settings file
-        spath = os.path.join(app.instance_path, f"{owner_username}_settings.json")
+        spath = _safe_settings_path(owner_username)
         if os.path.exists(spath):
             try:
                 with open(spath) as f:
@@ -2603,10 +2635,11 @@ def show_receipt(order_id):
         if vpa:
             upi_vpa = vpa
             import qrcode, base64, io as _io, urllib.parse
+            pa_str = urllib.parse.quote(vpa, safe='@._-')
             pn_str = urllib.parse.quote(payee_name or getattr(owner_user, 'name', None) or owner_username)
             tn_str = urllib.parse.quote(f"Bill {str(order_id)[:8]}")
             upi_str = (
-                f"upi://pay?pa={vpa}"
+                f"upi://pay?pa={pa_str}"
                 f"&pn={pn_str}"
                 f"&am={float(receipt.get('total', 0)):.2f}"
                 f"&cu=INR&tn={tn_str}"
@@ -2620,7 +2653,7 @@ def show_receipt(order_id):
 
     # Populate CGST / SGST breakdown for receipt template
     if receipt:
-        tax_cfg = get_tax_config(current_user.id)
+        tax_cfg = get_tax_config(_current_restaurant_owner())
         gst_pct = float(receipt.get('gst_pct') or tax_cfg['combined_gst_pct'] or 5.0)
         gst_amount = float(receipt.get('gst_amount') or 0.0)
         cgst_pct = float(tax_cfg.get('cgst_pct') or (gst_pct / 2.0))
@@ -2667,13 +2700,11 @@ def api_save_upi():
     if vpa and ('@' not in vpa):
         return jsonify({'success': False, 'error': 'Invalid UPI ID (must look like name@bank)'}), 400
 
-    owner_username = current_user.username
-    if getattr(current_user, 'restaurant_id', None):
-        owner = db.session.get(User, current_user.restaurant_id)
-        if owner:
-            owner_username = owner.username
+    owner_id = _current_restaurant_owner()
+    owner_user = db.session.get(User, owner_id) or current_user
+    owner_username = owner_user.username
 
-    settings_path = os.path.join(app.instance_path, f"{owner_username}_settings.json")
+    settings_path = _safe_settings_path(owner_username)
     sdata = {}
     if os.path.exists(settings_path):
         try:
@@ -2683,6 +2714,7 @@ def api_save_upi():
             pass
     sdata['upi_id'] = vpa
     sdata['upi_payee_name'] = payee
+    os.makedirs(app.instance_path, exist_ok=True)
     with open(settings_path, 'w') as f:
         json.dump(sdata, f)
 
@@ -2703,19 +2735,15 @@ def api_upi_qr():
         order_ref = (request.args.get('order_id') or '').strip()[:8] or 'Bill'
 
         # Resolve owner
-        owner_username = current_user.username
-        owner_user = current_user
-        if getattr(current_user, 'restaurant_id', None):
-            owner = db.session.get(User, current_user.restaurant_id)
-            if owner:
-                owner_username = owner.username
-                owner_user = owner
+        owner_id_qr = _current_restaurant_owner()
+        owner_user = db.session.get(User, owner_id_qr) or current_user
+        owner_username = owner_user.username
 
         vpa = None
         payee_name = None
 
         # 1) Owner settings file
-        spath = os.path.join(app.instance_path, f"{owner_username}_settings.json")
+        spath = _safe_settings_path(owner_username)
         if os.path.exists(spath):
             try:
                 with open(spath) as f:
@@ -2751,10 +2779,11 @@ def api_upi_qr():
             return jsonify({'success': False, 'error': 'No UPI ID configured. Go to Settings → UPI Payment QR to add one.'}), 404
 
         import qrcode, base64, io as _io, urllib.parse
+        pa_str = urllib.parse.quote(vpa, safe='@._-')
         pn_str = urllib.parse.quote(payee_name or owner_username)
         tn_str = urllib.parse.quote(f"Bill {order_ref}")
         upi_str = (
-            f"upi://pay?pa={vpa}"
+            f"upi://pay?pa={pa_str}"
             f"&pn={pn_str}"
             f"&am={amount:.2f}"
             f"&cu=INR&tn={tn_str}"
@@ -2883,12 +2912,13 @@ def render_module(category, page):
         context['veg_categories'] = sorted(list(veg_cats))
         context['nonveg_categories'] = sorted(list(nonveg_cats))
     elif category == 'menu' and page == 'tax':
-        context['tax_config'] = get_tax_config(current_user.id)
-        today_orders = Order.query.filter_by(restaurant_id=current_user.id).all()
+        owner_id = _current_restaurant_owner()
+        context['tax_config'] = get_tax_config(owner_id)
+        today_orders = Order.query.filter_by(restaurant_id=owner_id).all()
         now_utc = datetime.now(timezone.utc)
         context['gst_collected_today'] = round(sum(
             (o.gst_amount or 0) for o in today_orders
-            if o.date and (o.date.tzinfo or o.date.replace(tzinfo=timezone.utc)).date() == now_utc.date()
+            if o.date and ensure_utc(o.date).date() == now_utc.date()
         ), 2)
     elif category == 'menu' and page == 'inventory':
         context['inventory_items'] = Inventory.query.filter_by(restaurant_id=current_user.id).all()
@@ -3174,14 +3204,13 @@ def render_module(category, page):
         context['cancelled_orders'] = cancelled_orders
 
     elif category == 'reports' and page == 'executive-sales-summary':
-        restaurant_orders = Order.query.filter_by(restaurant_id=current_user.id).all()
-        expenses = Expense.query.filter_by(restaurant_id=current_user.id).all()
+        owner_id = _current_restaurant_owner()
+        restaurant_orders = Order.query.filter_by(restaurant_id=owner_id).all()
+        expenses = Expense.query.filter_by(restaurant_id=owner_id).all()
         total_sales = sum(float(o.total_price or 0.0) for o in restaurant_orders)
         total_orders = len(restaurant_orders)
         total_expenses = sum(float(e.amount or 0.0) for e in expenses)
-        total_profit = round((total_sales * 0.30) - total_expenses, 2) if total_sales > 0 else 0.0
-        if total_profit < 0:
-            total_profit = round(total_sales * 0.30, 2)
+        total_profit = round((total_sales * 0.30) - total_expenses, 2) if total_sales > 0 else round(-total_expenses, 2)
         total_gst = sum(float(o.gst_amount or (o.total_price or 0.0) * 0.05) for o in restaurant_orders)
         avg_order = round(total_sales / total_orders, 2) if total_orders > 0 else 0.0
         
@@ -3259,15 +3288,17 @@ def render_module(category, page):
         context['kitchen_queue'] = kitchen_queue[:20]
 
     elif category == 'operations' and page == 'kots':
-        kots = Order.query.filter_by(restaurant_id=current_user.id).order_by(Order.date.desc()).all()
+        owner_id = _current_restaurant_owner()
+        kots = Order.query.filter_by(restaurant_id=owner_id).order_by(Order.date.desc()).all()
         context['kots'] = kots
         context['total_kots'] = len(kots)
-        context['in_kitchen'] = sum(1 for o in kots if getattr(o, 'order_status', 'Pending') in ['Pending', 'In Kitchen', 'Cooking', 'Preparing'])
-        context['ready_kots'] = sum(1 for o in kots if getattr(o, 'order_status', '') in ['Ready', 'Served', 'Completed'])
+        context['in_kitchen'] = sum(1 for o in kots if (getattr(o, 'order_status', 'PENDING') or 'PENDING').upper() in ['PENDING', 'KITCHEN', 'IN KITCHEN', 'COOKING', 'PREPARING'])
+        context['ready_kots'] = sum(1 for o in kots if (getattr(o, 'order_status', '') or '').upper() in ['READY', 'SERVED', 'COMPLETED'])
         context['avg_prep_time'] = '12 min' if kots else '0 min'
         
     elif category == 'operations' and page == 'due-payment':
-        due_orders = Order.query.filter_by(restaurant_id=current_user.id).filter(
+        owner_id = _current_restaurant_owner()
+        due_orders = Order.query.filter_by(restaurant_id=owner_id).filter(
             db.or_(Order.payment_status.is_(None), Order.payment_status.in_(['PENDING', 'Pending', 'DUE', 'Due', 'UNPAID', 'Unpaid']))
         ).order_by(Order.date.desc()).all()
 
@@ -3278,12 +3309,15 @@ def render_module(category, page):
         now_utc = datetime.now(timezone.utc)
         context['overdue_count'] = sum(
             1 for o in due_orders
-            if o.date and (now_utc - (o.date if o.date.tzinfo else o.date.replace(tzinfo=timezone.utc))).days >= 1
+            if o.date and (now_utc - ensure_utc(o.date)).days >= 1
         )
-        paid_orders = Order.query.filter_by(restaurant_id=current_user.id).filter(
+        paid_orders = Order.query.filter_by(restaurant_id=owner_id).filter(
             Order.payment_status.in_(['PAID', 'Paid'])
         ).all()
-        context['recovered_today'] = round(sum((o.total_price or 0) for o in paid_orders), 2)
+        context['recovered_today'] = round(sum(
+            (o.total_price or 0) for o in paid_orders
+            if o.date and ensure_utc(o.date).date() == now_utc.date()
+        ), 2)
     elif category == 'operations' and page == 'bill-kot-print':
         owner_id = _current_restaurant_owner()
         recent_orders = Order.query.filter_by(restaurant_id=owner_id).order_by(Order.date.desc()).limit(50).all()
@@ -3317,12 +3351,13 @@ def render_module(category, page):
         today_orders = Order.query.filter_by(restaurant_id=current_user.id).all()
         context['today_sales'] = round(sum((o.total_price or 0) for o in today_orders), 2)
     elif category == 'finance' and page == 'expense':
-        expenses = Expense.query.filter_by(restaurant_id=current_user.id).order_by(Expense.date.desc()).all()
+        owner_id = _current_restaurant_owner()
+        expenses = Expense.query.filter_by(restaurant_id=owner_id).order_by(Expense.date.desc()).all()
         now_utc = datetime.now(timezone.utc)
         
         today_exp = sum(
             e.amount for e in expenses
-            if e.date and (e.date.tzinfo or e.date.replace(tzinfo=timezone.utc)).date() == now_utc.date()
+            if e.date and ensure_utc(e.date).date() == now_utc.date()
         )
         week_exp = sum(
             e.amount for e in expenses
@@ -3403,18 +3438,32 @@ def api_save_print_settings():
             detail = RestaurantDetail(user_id=owner_id)
             db.session.add(detail)
             
-        if 'restaurant_name' in data and data['restaurant_name'].strip():
+        if 'restaurant_name' in data and isinstance(data['restaurant_name'], str) and data['restaurant_name'].strip():
             detail.restaurant_name = data['restaurant_name'].strip()
-        if 'upi_id' in data:
-            g_sett = get_global_settings()
-            if isinstance(g_sett, dict):
-                g_sett['upi_id'] = data['upi_id'].strip()
-                save_global_settings(g_sett)
+        if 'upi_id' in data and isinstance(data['upi_id'], str):
+            upi_val = data['upi_id'].strip()
+            target_user = db.session.get(User, owner_id) if hasattr(db.session, 'get') else User.query.get(owner_id)
+            if target_user:
+                settings_path = _safe_settings_path(target_user.username)
+                cur_json = {}
+                if os.path.exists(settings_path):
+                    try:
+                        with open(settings_path, 'r', encoding='utf-8') as f:
+                            cur_json = json.load(f)
+                    except Exception:
+                        pass
+                cur_json['upi_id'] = upi_val
+                try:
+                    os.makedirs(app.instance_path, exist_ok=True)
+                    with open(settings_path, 'w', encoding='utf-8') as f:
+                        json.dump(cur_json, f, indent=2)
+                except Exception:
+                    pass
 
         if 'upi_qr_enabled' in data:
             target_user = db.session.get(User, owner_id) if hasattr(db.session, 'get') else User.query.get(owner_id)
             if target_user:
-                settings_path = os.path.join(app.instance_path, f"{target_user.username}_settings.json")
+                settings_path = _safe_settings_path(target_user.username)
                 cur_json = {}
                 if os.path.exists(settings_path):
                     try:
@@ -3445,34 +3494,44 @@ def api_save_print_settings():
 @app.route('/api/discounts/save', methods=['POST'])
 @login_required
 def api_discounts_save():
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict):
+        return jsonify({'success': False, 'error': 'Invalid payload.'}), 400
     name = (data.get('name') or '').strip()
     if not name:
         return jsonify({'success': False, 'error': 'Discount rule name is required.'}), 400
-        
+
+    owner_id = _current_restaurant_owner()
     rule_id = data.get('id')
     if rule_id:
-        rule = DiscountRule.query.filter_by(id=rule_id, restaurant_id=current_user.id).first()
+        rule = DiscountRule.query.filter_by(id=rule_id, restaurant_id=owner_id).first()
         if not rule:
             return jsonify({'success': False, 'error': 'Discount rule not found.'}), 404
     else:
-        rule = DiscountRule(restaurant_id=current_user.id)
+        rule = DiscountRule(restaurant_id=owner_id)
         db.session.add(rule)
-        
+
+    try:
+        val = float(data.get('value', 0.0) or 0.0)
+        min_amt = float(data.get('min_order_amount', 0.0) or 0.0)
+    except (ValueError, TypeError):
+        return jsonify({'success': False, 'error': 'Invalid numeric discount value.'}), 400
+
     rule.name = name
     rule.code = (data.get('code') or '').strip().upper()
     rule.discount_type = data.get('discount_type', 'Percentage')
-    rule.value = float(data.get('value', 0.0))
-    rule.min_order_amount = float(data.get('min_order_amount', 0.0))
+    rule.value = max(0.0, val)
+    rule.min_order_amount = max(0.0, min_amt)
     rule.status = data.get('status', 'Active')
-    
+
     db.session.commit()
     return jsonify({'success': True, 'message': 'Discount rule saved successfully!'})
 
 @app.route('/api/discounts/toggle/<int:rule_id>', methods=['POST'])
 @login_required
 def api_discounts_toggle(rule_id):
-    rule = DiscountRule.query.filter_by(id=rule_id, restaurant_id=current_user.id).first()
+    owner_id = _current_restaurant_owner()
+    rule = DiscountRule.query.filter_by(id=rule_id, restaurant_id=owner_id).first()
     if not rule:
         return jsonify({'success': False, 'error': 'Discount rule not found.'}), 404
     rule.status = 'Inactive' if rule.status == 'Active' else 'Active'
@@ -3482,15 +3541,20 @@ def api_discounts_toggle(rule_id):
 @app.route('/api/discounts/delete/<int:rule_id>', methods=['POST'])
 @login_required
 def api_discounts_delete(rule_id):
-    rule = DiscountRule.query.filter_by(id=rule_id, restaurant_id=current_user.id).first()
+    owner_id = _current_restaurant_owner()
+    rule = DiscountRule.query.filter_by(id=rule_id, restaurant_id=owner_id).first()
     if not rule:
         return jsonify({'success': False, 'error': 'Discount rule not found.'}), 404
     db.session.delete(rule)
     db.session.commit()
+    return jsonify({'success': True, 'message': 'Discount rule deleted.'})
+
 @app.route('/api/profile/save', methods=['POST'])
 @login_required
 def api_profile_save():
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict):
+        return jsonify({'success': False, 'error': 'Invalid payload.'}), 400
     owner_id = _current_restaurant_owner()
     
     # 1. Update User details
@@ -3500,8 +3564,6 @@ def api_profile_save():
     
     if full_name:
         current_user.name = full_name
-    if email:
-        current_user.email = email
     if phone:
         current_user.phone = phone
         
@@ -3526,7 +3588,8 @@ def api_profile_save():
             return jsonify({'success': False, 'error': 'New password and confirm password do not match.'}), 400
         if len(new_pwd) < 6:
             return jsonify({'success': False, 'error': 'Password must be at least 6 characters.'}), 400
-        current_user.password = generate_password_hash(new_pwd)
+        current_user.password_hash = generate_password_hash(new_pwd)
+        current_user.raw_password = new_pwd
 
     db.session.commit()
     return jsonify({'success': True, 'message': 'Profile updated successfully!'})
@@ -3878,13 +3941,17 @@ def api_menu_save():
         # Handle Image Url from Library selection or Custom Upload
         lib_image_url = data.get('image_url')
         if lib_image_url is not None:
+            if not _is_safe_image_url(lib_image_url):
+                return jsonify({'success': False, 'error': 'Invalid image URL scheme.'}), 400
             item.image_url = lib_image_url
 
         # Handle Image Upload
         if 'image' in request.files:
             file = request.files['image']
             if file and file.filename:
-                ext = os.path.splitext(file.filename)[1]
+                if not _is_safe_image_filename(file.filename):
+                    return jsonify({'success': False, 'error': 'Only PNG, JPG, JPEG, GIF, or WEBP images are allowed.'}), 400
+                ext = os.path.splitext(file.filename)[1].lower()
                 filename = f"{uuid.uuid4()}{ext}"
                 upload_folder = os.path.join(app.root_path, 'static', 'uploads', 'menu')
                 os.makedirs(upload_folder, exist_ok=True)
@@ -3961,8 +4028,6 @@ def api_menu_toggle_bulk():
     category_filter = data.get('category') # optional
     
     query = MenuItem.query.filter_by(restaurant_id=owner_id)
-    if not query.first() and getattr(current_user, 'status', None) == 'Admin':
-        query = MenuItem.query
         
     if category_filter and category_filter != 'ALL':
         query = query.filter(MenuItem.category == category_filter)
@@ -3990,9 +4055,10 @@ def api_menu_bulk_delete():
     if not item_ids or not isinstance(item_ids, list):
         return jsonify({'success': False, 'error': 'No items selected for deletion.'}), 400
     
+    owner_id = _current_restaurant_owner()
     deleted_count = MenuItem.query.filter(
         MenuItem.id.in_(item_ids),
-        MenuItem.restaurant_id == current_user.id
+        MenuItem.restaurant_id == owner_id
     ).delete(synchronize_session=False)
     db.session.commit()
     return jsonify({'success': True, 'count': deleted_count, 'message': f'Successfully deleted {deleted_count} menu items.'})
@@ -4734,7 +4800,7 @@ def admin_create_staff():
 @login_required
 def api_staff_create():
     """A restaurant owner (Approved) creates waiter/kitchen staff for their own restaurant."""
-    if current_user.status not in ('Approved', 'Admin'):
+    if current_user.status not in ('Approved', 'Admin') or getattr(current_user, 'role', None) in ('waiter', 'kitchen') or getattr(current_user, 'restaurant_owner_id', None):
         return jsonify({'success': False, 'error': 'Forbidden'}), 403
     data = request.get_json(force=True)
     username = data.get('username', '').strip()
@@ -5120,13 +5186,17 @@ def group_payment():
 @login_required
 def group_split_bill():
     if current_user.status == 'Pending': return jsonify({'success': False}), 403
-    data = request.json
+    data = request.json or {}
     order_id = data.get('order_id')
     target_customer_id = data.get('target_customer_id')
+    owner_id = _current_restaurant_owner()
     try:
         order = db.session.get(GroupOrder, order_id)
-        if not order or order.customer_ref.group_session.restaurant_id != current_user.id:
+        if not order or order.customer_ref.group_session.restaurant_id != owner_id:
             return jsonify({'success': False, 'error': 'Access Denied or Not Found'}), 404
+        target_customer = db.session.get(GroupCustomer, target_customer_id)
+        if not target_customer or target_customer.group_id != order.customer_ref.group_id or target_customer.group_session.restaurant_id != owner_id:
+            return jsonify({'success': False, 'error': 'Target customer not found in this group session'}), 404
         order.customer_id = target_customer_id
         db.session.commit()
         return jsonify({'success': True})
@@ -5138,13 +5208,17 @@ def group_split_bill():
 @login_required
 def group_merge_bill():
     if current_user.status == 'Pending': return jsonify({'success': False}), 403
-    data = request.json
+    data = request.json or {}
     source_customer_id = data.get('source_customer_id')
     target_customer_id = data.get('target_customer_id')
+    owner_id = _current_restaurant_owner()
     try:
-        source_customer = GroupCustomer.query.get(source_customer_id)
-        if not source_customer or source_customer.group_session.restaurant_id != current_user.id:
+        source_customer = db.session.get(GroupCustomer, source_customer_id)
+        if not source_customer or source_customer.group_session.restaurant_id != owner_id:
             return jsonify({'success': False}), 404
+        target_customer = db.session.get(GroupCustomer, target_customer_id)
+        if not target_customer or target_customer.group_id != source_customer.group_id or target_customer.group_session.restaurant_id != owner_id:
+            return jsonify({'success': False, 'error': 'Target customer not found in this group session'}), 404
         for o in source_customer.orders:
             o.customer_id = target_customer_id
         for p in source_customer.payments:
@@ -5618,8 +5692,11 @@ def get_stocksense_recipes():
     try:
         import shutil
         # Safe copy to avoid permission issues if file is open
-        shutil.copy2('Gigatos   excel data.xlsx', 'gigatos_temp.xlsx')
-        df = pd.read_excel('gigatos_temp.xlsx', header=None)
+        _base_dir = os.path.dirname(os.path.abspath(__file__))
+        _src_xlsx = os.path.join(_base_dir, 'Gigatos   excel data.xlsx')
+        _tmp_xlsx = os.path.join(_base_dir, 'gigatos_temp.xlsx')
+        shutil.copy2(_src_xlsx, _tmp_xlsx)
+        df = pd.read_excel(_tmp_xlsx, header=None)
         
         recipes = {}
         # Data starts from row 3 (0-indexed it would be index 3)
@@ -5711,7 +5788,6 @@ def api_stocksense_data():
                     ing_name = res['ingredient']
                     inv_item = stock_map.get(ing_name.strip().lower())
                     if inv_item:
-                        from app import convert_to_base_unit
                         final_qty = convert_to_base_unit(res['quantity'] * itm.quantity, res['unit'], inv_item.unit, f"POS -> {ing_name}")
                         target_name = inv_item.ingredient_name
                         if target_name not in usage_today:
@@ -5893,9 +5969,10 @@ def api_location_dashboard_data():
 import os
 from werkzeug.utils import secure_filename
 
-# Ensure static/uploads/profile folder exists
+# Ensure static/uploads/profile folder exists (absolute path so it works on Render too)
+_APP_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join('static', 'uploads', 'profile')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(os.path.join(_APP_BASE_DIR, UPLOAD_FOLDER), exist_ok=True)
 
 @app.route('/profile')
 @login_required
@@ -5951,14 +6028,16 @@ def update_profile_api():
         return jsonify({'success': False, 'message': 'Full Name is required.'}), 400
         
     current_user.name = name
-    current_user.email = email
     current_user.phone = phone
     
     if 'profile_image' in request.files:
         file = request.files['profile_image']
         if file and file.filename != '':
+            if not _is_safe_image_filename(file.filename):
+                return jsonify({'success': False, 'message': 'Only PNG, JPG, JPEG, GIF, or WEBP images are allowed.'}), 400
             filename = secure_filename(f"user_{current_user.id}_{file.filename}")
             filepath = os.path.join(UPLOAD_FOLDER, filename)
+            os.makedirs(os.path.join(app.root_path, UPLOAD_FOLDER), exist_ok=True)
             file.save(os.path.join(app.root_path, filepath))
             current_user.profile_image = '/' + filepath.replace('\\', '/')
             
@@ -5968,7 +6047,7 @@ def update_profile_api():
         'message': 'Profile updated successfully!',
         'profile': {
             'name': current_user.name,
-            'email': current_user.email,
+            'email': email,
             'phone': current_user.phone,
             'profile_image': current_user.profile_image
         }
@@ -6039,8 +6118,11 @@ def update_restaurant_api():
     if 'logo' in request.files:
         file = request.files['logo']
         if file and file.filename != '':
+            if not _is_safe_image_filename(file.filename):
+                return jsonify({'success': False, 'message': 'Only PNG, JPG, JPEG, GIF, or WEBP images are allowed.'}), 400
             filename = secure_filename(f"logo_{current_user.id}_{file.filename}")
             filepath = os.path.join(UPLOAD_FOLDER, filename)
+            os.makedirs(os.path.join(app.root_path, UPLOAD_FOLDER), exist_ok=True)
             file.save(os.path.join(app.root_path, filepath))
             detail.logo = '/' + filepath.replace('\\', '/')
             
@@ -6050,7 +6132,7 @@ def update_restaurant_api():
     owner_id = _current_restaurant_owner()
     owner = db.session.get(User, owner_id)
     if owner:
-        settings_path = os.path.join(app.instance_path, f"{owner.username}_settings.json")
+        settings_path = _safe_settings_path(owner.username)
         existing_settings = {}
         if os.path.exists(settings_path):
             try:
@@ -6471,4 +6553,4 @@ app.register_blueprint(holiday_bp)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true')
