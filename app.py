@@ -1934,6 +1934,16 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # If already logged in, redirect away from login page
+    if current_user.is_authenticated:
+        if current_user.role == 'waiter':
+            return redirect(url_for('waiter_portal'))
+        if current_user.role == 'kitchen':
+            return redirect(url_for('kitchen_display'))
+        if current_user.status == 'Admin':
+            return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('index'))
+
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
@@ -1945,7 +1955,7 @@ def login():
             ensure_subscription(user)
             user.last_login = datetime.now(timezone.utc)
             db.session.commit()
-            
+
             # Role-aware landing page: Waiter & Kitchen staff go to their portals.
             if user.role == 'waiter':
                 return redirect(url_for('waiter_portal'))
@@ -1953,6 +1963,11 @@ def login():
                 return redirect(url_for('kitchen_display'))
             if user.status == 'Admin':
                 return redirect(url_for('admin_dashboard'))
+
+            # Honour Flask-Login's ?next= parameter (safe redirect only)
+            next_page = request.args.get('next') or request.form.get('next')
+            if next_page and next_page.startswith('/') and not next_page.startswith('//'):
+                return redirect(next_page)
             return redirect(url_for('index'))
         return render_template('login.html',
                                error="Invalid credentials. Try again.")

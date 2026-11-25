@@ -259,7 +259,8 @@
         <h2 class="auth-title">Welcome Back</h2>
         <p class="auth-sub">Sign in to your restaurant terminal</p>
 
-        <form method="POST">
+        <form method="POST" action="{{ url_for('login', next=request.args.get('next', '')) }}">
+            <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
             <div class="input-grp">
                 <label>Employee / Node ID</label>
                 <div class="input-wrap">
