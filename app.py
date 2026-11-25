@@ -1534,25 +1534,27 @@ def get_or_train_ml_model(force_retrain=False):
     if GLOBAL_ML_MODEL is not None and not force_retrain:
         return GLOBAL_ML_MODEL, GLOBAL_ML_CLASSES
 
-    # Extract historical training data from the secure SQL database instead of
-    # Excel
-    historical_items = db.session.query(
-        Order.temperature, Order.rainfall, OrderItem.item_name) .join(
-        OrderItem, Order.id == OrderItem.order_id).all()
+    # Extract recent historical training data from SQL (capped for fast, low-memory cloud startup)
+    try:
+        historical_items = (
+            db.session.query(Order.temperature, Order.rainfall, OrderItem.item_name)
+            .join(OrderItem, Order.id == OrderItem.order_id)
+            .order_by(Order.id.desc())
+            .limit(500)
+            .all()
+        )
+    except Exception:
+        historical_items = []
 
-    # Convert SQL rows to pandas Dataframe just for ML training
     if historical_items:
-        df = pd.DataFrame(
-            historical_items,
-            columns=[
-                'Temperature',
-                'Rainfall',
-                'Item'])
+        df = pd.DataFrame(historical_items, columns=['Temperature', 'Rainfall', 'Item'])
+        # Keep top 25 most frequent items to avoid OOM/timeouts on multi-class trees
+        top_items = df['Item'].value_counts().nlargest(25).index
+        df = df[df['Item'].isin(top_items)].copy()
     else:
         df = pd.DataFrame(columns=['Temperature', 'Rainfall', 'Item'])
 
-    # 1. Synthesize baseline data if DB is empty or very small to prevent
-    # cold-starts
+    # 1. Synthesize baseline data if DB is empty or very small to prevent cold-starts
     if len(df) < 50:
         synth_data = [
             {"Temperature": 35, "Rainfall": 0, "Item": "Pepsi"},
@@ -1572,21 +1574,28 @@ def get_or_train_ml_model(force_retrain=False):
     else:
         train_df = df.copy()
 
-    # 2. Train Ensemble Model
-    train_df['Temperature'] = train_df['Temperature'].fillna(30.0)
-    train_df['Rainfall'] = train_df['Rainfall'].fillna(0.0)
-    train_df['Item'] = train_df['Item'].fillna('Item')
+    # 2. Train lightweight Ensemble Model (fast & low-memory for Render 512MB instances)
+    train_df['Temperature'] = pd.to_numeric(train_df['Temperature'], errors='coerce').fillna(30.0)
+    train_df['Rainfall'] = pd.to_numeric(train_df['Rainfall'], errors='coerce').fillna(0.0)
+    train_df['Item'] = train_df['Item'].fillna('Item').astype(str)
+
+    # Ensure at least 2 distinct classes so classifiers never raise ValueError
+    if train_df['Item'].nunique() < 2:
+        train_df = pd.concat([
+            train_df,
+            pd.DataFrame([
+                {"Temperature": 30.0, "Rainfall": 0.0, "Item": "Coffee"},
+                {"Temperature": 22.0, "Rainfall": 10.0, "Item": "Tea"},
+            ])
+        ], ignore_index=True)
 
     X = train_df[['Temperature', 'Rainfall']]
     y = train_df['Item']
 
-    rf = RandomForestClassifier(n_estimators=50, random_state=42)
-    gb = GradientBoostingClassifier(n_estimators=50, random_state=42)
-    lr = LogisticRegression(max_iter=3000, random_state=42)
+    rf = RandomForestClassifier(n_estimators=15, max_depth=5, random_state=42)
+    lr = LogisticRegression(max_iter=200, random_state=42)
 
-    clf = VotingClassifier(
-        estimators=[
-            ('rf', rf), ('gb', gb), ('lr', lr)], voting='soft')
+    clf = VotingClassifier(estimators=[('rf', rf), ('lr', lr)], voting='soft')
     clf.fit(X, y)
 
     GLOBAL_ML_MODEL = clf
